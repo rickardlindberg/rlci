@@ -1,0 +1,13 @@
+Pipeline {
+    file = block*:xs space !. -> xs
+    block = par | seq
+    innerBlock = block | stage
+    par = space 'par' space '{' innerBlock*:xs space '}' -> ["Par" ~xs]
+    seq = space 'seq' space '{' innerBlock*:xs space '}' -> ["Seq" ~xs]
+    stage = space 'stage' space '(' name:x space ')' -> ["Stage" x]
+    name = alpha:x alphaNum*:xs -> { x xs }
+    alphaNum = alpha | num
+    alpha = 'a'-'z' | 'A'-'Z'
+    num = '0'-'9'
+    space = (' ' | '\n')*
+}

@@ -1,0 +1,9 @@
+seq {
+    stage(checkout)
+    par {
+        stage(build)
+        stage(test)
+        stage(lint)
+    }
+    stage(deploy)
+}
