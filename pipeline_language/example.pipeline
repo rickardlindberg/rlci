@@ -3,7 +3,16 @@ seq {
     par {
         stage(build)
         stage(test)
-        stage(lint)
+        seq {
+            stage(lint1)
+            stage(lint2)
+        }
     }
     stage(deploy)
+}
+
+seq {
+    stage(one)
+    stage(two)
+    stage(three)
 }
