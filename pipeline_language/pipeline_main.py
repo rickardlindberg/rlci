@@ -1,12 +1,16 @@
 if __name__ == "__main__":
     import sys
     import os
-    with open(sys.argv[1]) as f:
+    path = sys.argv[1]
+    with open(path) as f:
         dot = (compile_chain([
             (Parser, "file"),
             (ToDag, "asts"),
             (ToDot, "asts"),
         ], f.read()))
-    with open(os.path.splitext(sys.argv[1])[0]+".dot", "w") as f:
+    dot_path = os.path.splitext(path)[0]+".dot"
+    with open(dot_path, "w") as f:
         f.write(dot)
-        print(dot)
+        print(f"Wrote {dot_path}:")
+        print("")
+        print("".join("    "+x for x in dot.splitlines(True)))

@@ -13,37 +13,28 @@ Parser {
 }
 
 ToDag {
-    asts = ast*:xs
-        -> list():nodes
-        -> list():links
-        -> list():parents
+    asts = ast*:xs !.
+        -> []:nodes
+        -> []:links
+        -> []:parents
         -> xs
         -> [~nodes ~links]
-
     ast = [%:x] -> x
-
     Par = ast*:xs -> [~~xs]
-
     Seq =
         | ast:x Seq:y -> x:parents -> y
         | ast:x !.    -> x
-
-    Stage = .:x
+    Stage = .:name
         -> label():id
-        -> add(nodes ["Node" id x])
+        -> add(nodes ["Node" id name])
         -> run("link" parents)
         -> [id]
-
     link = (.:parent -> add(links ["Link" parent id]))*
 }
 
 ToDot {
-    asts = ast*:xs -> {
-        "Digraph {\n" >
-            xs
-        < "}\n"
-    }
-    ast = [%:x] -> x
-    Node = .:id .:name -> { id "[label=\"" name "\"];\n" }
+    asts = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
+    ast  = [%:x]            -> x
+    Node = .:id .:name      -> { id "[label=\"" name "\"];\n" }
     Link = .:parent .:child -> { parent " -> " child ";\n" }
 }

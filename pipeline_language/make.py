@@ -7,6 +7,7 @@ import subprocess
 RLMETA_PATH = os.path.join(os.path.dirname(__file__), "..", "rlmeta", "rlmeta.py")
 
 def pipeline():
+    print("Make pipeline")
     with open("pipeline.py", "wb") as f:
         f.write(subprocess.check_output([
             "python", RLMETA_PATH,
@@ -16,11 +17,20 @@ def pipeline():
         ]))
 
 def example():
+    pipeline()
+    print("Make example")
     sys.stdout.buffer.write(subprocess.check_output([
         "python", "pipeline.py",
         "example.pipeline",
     ]))
 
-if __name__ == "__main__":
-    pipeline()
+def example_dotty():
     example()
+    print("Make example dotty")
+    subprocess.check_call([
+        "dotty",
+        "example.dot",
+    ])
+
+if __name__ == "__main__":
+    example_dotty()
