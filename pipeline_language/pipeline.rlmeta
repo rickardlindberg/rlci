@@ -1,4 +1,4 @@
-Pipeline {
+Parser {
     file = block*:xs space !. -> xs
     block = par | seq
     innerBlock = block | stage
@@ -10,4 +10,40 @@ Pipeline {
     alpha = 'a'-'z' | 'A'-'Z'
     num = '0'-'9'
     space = (' ' | '\n')*
+}
+
+ToDag {
+    asts = ast*:xs
+        -> list():nodes
+        -> list():links
+        -> list():parents
+        -> xs
+        -> [~nodes ~links]
+
+    ast = [%:x] -> x
+
+    Par = ast*:xs -> [~~xs]
+
+    Seq =
+        | ast:x Seq:y -> x:parents -> y
+        | ast:x !.    -> x
+
+    Stage = .:x
+        -> label():id
+        -> add(nodes ["Node" id x])
+        -> run("link" parents)
+        -> [id]
+
+    link = (.:parent -> add(links ["Link" parent id]))*
+}
+
+ToDot {
+    asts = ast*:xs -> {
+        "Digraph {\n" >
+            xs
+        < "}\n"
+    }
+    ast = [%:x] -> x
+    Node = .:id .:name -> { id "[label=\"" name "\"];\n" }
+    Link = .:parent .:child -> { parent " -> " child ";\n" }
 }
