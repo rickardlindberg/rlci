@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import subprocess
+
+RLMETA_PATH = os.path.join(os.path.dirname(__file__), "..", "rlmeta", "rlmeta.py")
 
 def pipeline():
     with open("pipeline.py", "wb") as f:
         f.write(subprocess.check_output([
-            "python", "rlmeta/rlmeta.py",
+            "python", RLMETA_PATH,
             "--support",
             "--compile", "pipeline.rlmeta",
             "--copy", "pipeline_main.py",
