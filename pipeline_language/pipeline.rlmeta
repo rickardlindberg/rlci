@@ -1,9 +1,10 @@
 Parser {
     file = block*:xs space !. -> xs
-    block = par | seq
+    block = par | seq | link
     innerBlock = block | stage
     par = space 'par' space '{' innerBlock*:xs space '}' -> ["Par" ~xs]
     seq = space 'seq' space '{' innerBlock*:xs space '}' -> ["Seq" ~xs]
+    link = space 'link' space '(' space name:x space name:y ')' -> ["Link" x y]
     stage = space 'stage' space '(' name:x space ')' -> ["Stage" x]
     name = alpha:x alphaNum*:xs -> { x xs }
     alphaNum = alpha | num
@@ -14,6 +15,7 @@ Parser {
 
 ToDag {
     asts = ast*:xs !.
+        -> dict():nodesByName
         -> []:nodes
         -> []:links
         -> []:parents
@@ -26,9 +28,12 @@ ToDag {
         | ast:x !.    -> x
     Stage = .:name
         -> label():id
+        -> set(nodesByName name id)
         -> add(nodes ["Node" id name])
         -> run("link" parents)
         -> [id]
+    Link = .:parent .:child
+        -> add(links ["Link" get(nodesByName parent) get(nodesByName child)])
     link = (.:parent -> add(links ["Link" parent id]))*
 }
 

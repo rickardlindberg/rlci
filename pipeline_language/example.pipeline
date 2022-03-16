@@ -16,3 +16,37 @@ seq {
     stage(two)
     stage(three)
 }
+
+seq {
+    stage(taskN1)
+    par {
+        seq {
+            par {
+                stage(taskN2)
+                stage(taskN3)
+            }
+            seq {
+                stage(taskN4)
+                stage(taskN5)
+            }
+        }
+        stage(taskN6)
+    }
+    stage(taskN7)
+}
+
+seq {
+    stage(start)
+    par {
+        stage(foo)
+        stage(bar)
+    }
+    stage(baz)
+}
+
+seq {
+    stage(fromTheSide)
+}
+
+link(fromTheSide foo)
+link(fromTheSide bar)
