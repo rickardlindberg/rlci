@@ -1,4 +1,5 @@
 seq {
+    stage(exampleRealistic)
     stage(checkout)
     par {
         stage(build)
@@ -12,30 +13,26 @@ seq {
 }
 
 seq {
-    stage(one)
-    stage(two)
-    stage(three)
-}
-
-seq {
-    stage(taskN1)
+    stage(exampleJobController)
+    stage(task1)
     par {
         seq {
             par {
-                stage(taskN2)
-                stage(taskN3)
+                stage(task2)
+                stage(task3)
             }
             seq {
-                stage(taskN4)
-                stage(taskN5)
+                stage(task4)
+                stage(task5)
             }
         }
-        stage(taskN6)
+        stage(task6)
     }
-    stage(taskN7)
+    stage(task7)
 }
 
 seq {
+    stage(exampleSeqParNotEnough)
     stage(start)
     par {
         stage(foo)
