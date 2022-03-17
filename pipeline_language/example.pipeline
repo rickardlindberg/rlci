@@ -47,3 +47,13 @@ seq {
 
 link(fromTheSide foo)
 link(fromTheSide bar)
+
+template checkout {
+    seq {
+        stage(checkout)
+        stage(postCheckout)
+    }
+}
+
+checkout()
+checkout()

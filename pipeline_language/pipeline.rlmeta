@@ -5,10 +5,14 @@ Parser {
             -> ["Par" ~xs]
         | space 'seq' space '{' statement*:xs space '}'
             -> ["Seq" ~xs]
+        | space 'template' space name:x space '{' statement*:xs space '}'
+            -> ["Template" x ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
         | space 'stage' space '(' name:x space ')'
             -> ["Stage" x]
+        | space name:x space '(' space ')'
+            -> ["ApplyTemplate" x]
     name = alpha:x alphanum*:xs -> { x xs }
     alphanum = alpha | num
     alpha = 'a'-'z' | 'A'-'Z'
@@ -19,16 +23,20 @@ Parser {
 ToDag {
     asts = ast*:xs !.
         -> dict():nodesByName
+        -> dict():templates
         -> []:nodes
         -> []:links
         -> []:parents
         -> xs
         -> [~nodes ~links]
+    statements = ast*:xs
     ast = [%:x] -> x
     Par = ast*:xs -> [~~xs]
     Seq =
         | ast:x Seq:y -> x:parents -> y
         | ast:x !.    -> x
+    Template = .:name .*:xs -> set(templates name xs)
+    ApplyTemplate = .:name -> run("statements" get(templates name))
     Stage = .:name
         -> label():id
         -> set(nodesByName name id)
