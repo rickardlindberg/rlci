@@ -50,10 +50,10 @@ link(fromTheSide bar)
 
 var checkout = template {
     seq {
-        stage("checkout")
+        stage("checkout #{repo}")
         stage("postCheckout")
     }
 }
 
-checkout()
-checkout()
+checkout(repo="ada")
+checkout(repo="python")

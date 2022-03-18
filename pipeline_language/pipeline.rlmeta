@@ -15,9 +15,13 @@ Parser {
             -> ["Link" x y]
         | space 'stage' space '(' string:x space ')'
             -> ["Stage" x]
-        | space name:x space '(' space ')'
-            -> ["ApplyTemplate" x]
-    string = '"' (!'"'.)*:xs '"' -> { xs }
+        | space name:x space '(' arg*:xs space ')'
+            -> ["ApplyTemplate" x ~xs]
+    arg = space name:x '=' string:y -> ["Arg" x y]
+    string = '"' innerString*:xs '"' -> ["String" ~xs]
+    innerString =
+        | '#{' name:x '}' -> ["TemplateVar" x]
+        | !'"' .:x        -> ["Char" x]
     name = alpha:x alphanum*:xs -> { x xs }
     alphanum = alpha | num
     alpha = 'a'-'z' | 'A'-'Z'
@@ -41,8 +45,15 @@ ToDag {
         | ast:x !.    -> x
     Template = .*
     Var = .:name ast:value -> value:x -> set(vars name x) -> x
-    ApplyTemplate = .:name -> run("statements" get(vars name))
-    Stage = .:name
+    ApplyTemplate = .:name ast*:xs
+        -> dict():templateArgs
+        -> xs
+        -> run("statements" get(vars name))
+    String = ast*:xs -> { xs }
+    Char = .
+    TemplateVar = .:name -> get(templateArgs name)
+    Arg = .:name ast:value -> set(templateArgs name value)
+    Stage = ast:name
         -> label():id
         -> add(nodes ["Node" id name])
         -> run("link" parents)
