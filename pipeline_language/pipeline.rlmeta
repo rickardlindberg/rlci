@@ -13,10 +13,11 @@ Parser {
             -> ["Template" ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
-        | space 'stage' space '(' name:x space ')'
+        | space 'stage' space '(' string:x space ')'
             -> ["Stage" x]
         | space name:x space '(' space ')'
             -> ["ApplyTemplate" x]
+    string = '"' (!'"'.)*:xs '"' -> { xs }
     name = alpha:x alphanum*:xs -> { x xs }
     alphanum = alpha | num
     alpha = 'a'-'z' | 'A'-'Z'
