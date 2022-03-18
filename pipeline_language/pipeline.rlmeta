@@ -1,12 +1,16 @@
 Parser {
     file = statement*:xs space !. -> xs
     statement =
+        | space 'var' !alphanum space name:x space '=' block:y
+            -> ["Var" x y]
+        | block
+    block =
         | space 'par' space '{' statement*:xs space '}'
             -> ["Par" ~xs]
         | space 'seq' space '{' statement*:xs space '}'
             -> ["Seq" ~xs]
-        | space 'template' space name:x space '{' statement*:xs space '}'
-            -> ["Template" x ~xs]
+        | space 'template' space '{' statement*:xs space '}'
+            -> ["Template" ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
         | space 'stage' space '(' name:x space ')'
@@ -22,8 +26,7 @@ Parser {
 
 ToDag {
     asts = ast*:xs !.
-        -> dict():nodesByName
-        -> dict():templates
+        -> dict():vars
         -> []:nodes
         -> []:links
         -> []:parents
@@ -35,16 +38,16 @@ ToDag {
     Seq =
         | ast:x Seq:y -> x:parents -> y
         | ast:x !.    -> x
-    Template = .:name .*:xs -> set(templates name xs)
-    ApplyTemplate = .:name -> run("statements" get(templates name))
+    Template = .*
+    Var = .:name ast:value -> value:x -> set(vars name x) -> x
+    ApplyTemplate = .:name -> run("statements" get(vars name))
     Stage = .:name
         -> label():id
-        -> set(nodesByName name id)
         -> add(nodes ["Node" id name])
         -> run("link" parents)
         -> [id]
     Link = .:parent .:child
-        -> add(links ["Link" get(nodesByName parent) get(nodesByName child)])
+        -> add(links ["Link" get(vars parent) get(vars child)])
     link = (.:parent -> add(links ["Link" parent id]))*
 }
 

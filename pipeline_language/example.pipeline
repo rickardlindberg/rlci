@@ -35,20 +35,20 @@ seq {
     stage(exampleSeqParNotEnough)
     stage(start)
     par {
-        stage(foo)
-        stage(bar)
+        var foo = stage(foo)
+        var bar = stage(bar)
     }
     stage(baz)
 }
 
 seq {
-    stage(fromTheSide)
+    var fromTheSide = stage(fromTheSide)
 }
 
 link(fromTheSide foo)
 link(fromTheSide bar)
 
-template checkout {
+var checkout = template {
     seq {
         stage(checkout)
         stage(postCheckout)
