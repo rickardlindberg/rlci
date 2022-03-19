@@ -9,10 +9,13 @@ Parser {
             -> ["Template" x ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
-        | space 'stage' space (name | -> ""):x space '{' space 'name = ' string:y space '}'
-            -> ["Stage" x y]
+        | space 'stage' space (name | -> ""):x space '{' stageBody*:ys space '}'
+            -> ["Stage" x ~ys]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
+    stageBody =
+        | space 'name' !alphanum space string:x
+            -> ["StageName" x]
     arg = space name:x '=' string:y -> ["Arg" x y]
     string = '"' innerString*:xs '"' -> ["String" ~xs]
     innerString =
@@ -49,12 +52,16 @@ ToDag {
     Char = .
     TemplateVar = .:name -> get(templateArgs name)
     Arg = .:name ast:value -> set(templateArgs name value)
-    Stage = .:varName ast:name
+    Stage = .:varName ast*:props
         -> label():id
+        -> dict():stageProps
+        -> set(stageProps "name" { id })
+        -> props
         -> set(stages varName id)
-        -> add(nodes ["Node" id name])
+        -> add(nodes ["Node" id get(stageProps "name")])
         -> run("link" parents)
         -> [id]
+    StageName = ast:name -> set(stageProps "name" name)
     Link = .:parent .:child
         -> add(links ["Link" get(stages parent) get(stages child)])
     link = (.:parent -> add(links ["Link" parent id]))*

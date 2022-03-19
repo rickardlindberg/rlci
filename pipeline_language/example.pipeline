@@ -1,90 +1,88 @@
 seq {
     stage {
-        name = "example  realistic"
+        name "example  realistic"
     }
     stage {
-        name = "checkout"
+        name "checkout"
     }
     par {
         stage {
-            name = "build"
+            name "build"
         }
         stage {
-            name = "test"
+            name "test"
         }
         seq {
             stage {
-                name = "lint1"
+                name "lint1"
             }
             stage {
-                name = "lint2"
+                name "lint2"
             }
         }
     }
     stage {
-        name = "deploy"
+        name "deploy"
     }
 }
 
 seq {
     stage {
-        name = "example job controller"
+        name "example job controller"
     }
     stage {
-        name = "task1"
+        name "task1"
     }
     par {
         seq {
             par {
                 stage {
-                    name = "task2"
+                    name "task2"
                 }
                 stage {
-                    name = "task3"
+                    name "task3"
                 }
             }
             seq {
                 stage {
-                    name = "task4"
+                    name "task4"
                 }
                 stage {
-                    name = "task5"
+                    name "task5"
                 }
             }
         }
         stage {
-            name = "task6"
+            name "task6"
         }
     }
     stage {
-        name = "task7"
+        name "task7"
     }
 }
 
 seq {
     stage {
-        name = "example seq par not enough"
+        name "example seq par not enough"
     }
     stage {
-        name = "start"
+        name "start"
     }
     par {
         stage foo {
-            name = "foo"
+            name "foo"
         }
         stage bar {
-            name = "bar"
+            name "bar"
         }
     }
     stage {
-        name = "baz"
+        name "baz"
     }
 }
 
-seq {
-    stage fromTheSide {
-        name = "fromTheSide"
-    }
+stage fromTheSide {
+    name "fromTheSide"
 }
 
 link(fromTheSide foo)
@@ -93,10 +91,10 @@ link(fromTheSide bar)
 template checkout {
     seq {
         stage {
-            name = "checkout #{repo}"
+            name "checkout #{repo}"
         }
         stage {
-            name = "postCheckout"
+            name "postCheckout"
         }
     }
 }
