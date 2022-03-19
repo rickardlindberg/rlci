@@ -90,7 +90,7 @@ seq {
 link(fromTheSide foo)
 link(fromTheSide bar)
 
-var checkout = template {
+template checkout {
     seq {
         stage {
             name = "checkout #{repo}"

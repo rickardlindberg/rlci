@@ -1,16 +1,12 @@
 Parser {
-    file = statement*:xs space !. -> xs
-    statement =
-        | space 'var' !alphanum space name:x space '=' block:y
-            -> ["Var" x y]
-        | block
+    file = block*:xs space !. -> xs
     block =
-        | space 'par' space '{' statement*:xs space '}'
+        | space 'par' space '{' block*:xs space '}'
             -> ["Par" ~xs]
-        | space 'seq' space '{' statement*:xs space '}'
+        | space 'seq' space '{' block*:xs space '}'
             -> ["Seq" ~xs]
-        | space 'template' space '{' statement*:xs space '}'
-            -> ["Template" ~xs]
+        | space 'template' space name:x space '{' block*:xs space '}'
+            -> ["Template" x ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
         | space 'stage' space (name | -> ""):x space '{' space 'name = ' string:y space '}'
@@ -31,7 +27,7 @@ Parser {
 
 ToDag {
     asts = ast*:xs !.
-        -> dict():vars
+        -> dict():templates
         -> dict():stages
         -> []:nodes
         -> []:links
@@ -44,12 +40,11 @@ ToDag {
     Seq =
         | ast:x Seq:y -> x:parents -> y
         | ast:x !.    -> x
-    Template = .*
-    Var = .:name ast:value -> value:x -> set(vars name x) -> x
+    Template = .:name .*:xs -> xs:x -> set(templates name x) -> x
     ApplyTemplate = .:name ast*:xs
         -> dict():templateArgs
         -> xs
-        -> run("statements" get(vars name))
+        -> run("statements" get(templates name))
     String = ast*:xs -> { xs }
     Char = .
     TemplateVar = .:name -> get(templateArgs name)
