@@ -1,48 +1,90 @@
 seq {
-    stage("example  realistic")
-    stage("checkout")
+    stage {
+        name = "example  realistic"
+    }
+    stage {
+        name = "checkout"
+    }
     par {
-        stage("build")
-        stage("test")
+        stage {
+            name = "build"
+        }
+        stage {
+            name = "test"
+        }
         seq {
-            stage("lint1")
-            stage("lint2")
+            stage {
+                name = "lint1"
+            }
+            stage {
+                name = "lint2"
+            }
         }
     }
-    stage("deploy")
+    stage {
+        name = "deploy"
+    }
 }
 
 seq {
-    stage("example job controller")
-    stage("task1")
+    stage {
+        name = "example job controller"
+    }
+    stage {
+        name = "task1"
+    }
     par {
         seq {
             par {
-                stage("task2")
-                stage("task3")
+                stage {
+                    name = "task2"
+                }
+                stage {
+                    name = "task3"
+                }
             }
             seq {
-                stage("task4")
-                stage("task5")
+                stage {
+                    name = "task4"
+                }
+                stage {
+                    name = "task5"
+                }
             }
         }
-        stage("task6")
+        stage {
+            name = "task6"
+        }
     }
-    stage("task7")
+    stage {
+        name = "task7"
+    }
 }
 
 seq {
-    stage("example seq par not enough")
-    stage("start")
+    stage {
+        name = "example seq par not enough"
+    }
+    stage {
+        name = "start"
+    }
     par {
-        var foo = stage("foo")
-        var bar = stage("bar")
+        var foo = stage {
+            name = "foo"
+        }
+        var bar = stage {
+            name = "bar"
+        }
     }
-    stage("baz")
+    stage {
+        name = "baz"
+    }
 }
 
 seq {
-    var fromTheSide = stage("fromTheSide")
+    var fromTheSide = stage {
+        name = "fromTheSide"
+    }
 }
 
 link(fromTheSide foo)
@@ -50,8 +92,12 @@ link(fromTheSide bar)
 
 var checkout = template {
     seq {
-        stage("checkout #{repo}")
-        stage("postCheckout")
+        stage {
+            name = "checkout #{repo}"
+        }
+        stage {
+            name = "postCheckout"
+        }
     }
 }
 

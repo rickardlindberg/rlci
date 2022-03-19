@@ -13,7 +13,7 @@ Parser {
             -> ["Template" ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
-        | space 'stage' space '(' string:x space ')'
+        | space 'stage' space '{' space 'name = ' string:x space '}'
             -> ["Stage" x]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
