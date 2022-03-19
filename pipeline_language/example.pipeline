@@ -69,10 +69,10 @@ seq {
         name = "start"
     }
     par {
-        var foo = stage {
+        stage foo {
             name = "foo"
         }
-        var bar = stage {
+        stage bar {
             name = "bar"
         }
     }
@@ -82,7 +82,7 @@ seq {
 }
 
 seq {
-    var fromTheSide = stage {
+    stage fromTheSide {
         name = "fromTheSide"
     }
 }
