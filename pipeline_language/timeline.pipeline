@@ -1,0 +1,45 @@
+seq {
+    stage {
+        name "timeline repo"
+    }
+    par {
+        seq {
+            stage {
+                name "build doc"
+                sh "hg clone [timeline repo] ${commit}"
+                out commit "${commit}"
+                sh doc "./tools/build-doc.py"
+                out doc "${doc}"
+            }
+            stage {
+                name "publish doc"
+                sh "wget ${doc}"
+                sh "scp ${doc} [final destination]"
+            }
+        }
+        par {
+            seq {
+                stage {
+                    name "test linux"
+                    sh "hg clone [timeline repo] ${commit}"
+                    sh "./tools/execute-specs.py"
+                    out commit "${commit}"
+                }
+                stage {
+                    name "build zip"
+                    sh "hg clone [timeline repo] ${commit}"
+                    sh zipPath "./tools/build-zip.py"
+                    out zip "${zipPath}"
+                }
+            }
+            seq {
+                stage {
+                    name "test windows"
+                }
+                stage {
+                    name "build exe"
+                }
+            }
+        }
+    }
+}

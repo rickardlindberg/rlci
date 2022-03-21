@@ -9,13 +9,18 @@ Parser {
             -> ["Template" x ~xs]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
-        | space 'stage' space (name | -> ""):x space '{' stageBody*:ys space '}'
+        | space 'stage' space maybeName:x space '{' stageBody*:ys space '}'
             -> ["Stage" x ~ys]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
     stageBody =
         | space 'name' !alphanum space string:x
             -> ["StageName" x]
+        | space 'sh' !alphanum space maybeName:x space string:y
+            -> ["StageSh" x y]
+        | space 'out' !alphanum space name:x space string:y
+            -> ["StageOut" x y]
+    maybeName = name | -> ""
     arg = space name:x '=' string:y -> ["Arg" x y]
     string = '"' innerString*:xs '"' -> ["String" ~xs]
     innerString =
@@ -62,6 +67,8 @@ ToDag {
         -> run("link" parents)
         -> [id]
     StageName = ast:name -> set(stageProps "name" name)
+    StageSh = .:name ast:command
+    StageOut = .:name ast:value
     Link = .:parent .:child
         -> add(links ["Link" get(stages parent) get(stages child)])
     link = (.:parent -> add(links ["Link" parent id]))*

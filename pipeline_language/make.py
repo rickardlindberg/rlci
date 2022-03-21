@@ -16,21 +16,25 @@ def pipeline():
             "--copy", "pipeline_main.py",
         ]))
 
-def example():
+def example(name):
     pipeline()
-    print("Make example")
+    print(f"Make {name}")
     sys.stdout.buffer.write(subprocess.check_output([
         "python", "pipeline.py",
-        "example.pipeline",
+        f"{name}.pipeline",
     ]))
 
-def example_dotty():
-    example()
+def dotty(name):
+    example(name)
     print("Make example dotty")
     subprocess.check_call([
         "dotty",
-        "example.dot",
+        f"{name}.dot",
     ])
 
 if __name__ == "__main__":
-    example_dotty()
+    if len(sys.argv) > 1:
+        name = sys.argv[1]
+    else:
+        name = "example"
+    dotty(name)
