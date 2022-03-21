@@ -1,0 +1,40 @@
+//copy
+digraph {
+Start[fillcolor="#B2FEB2",style=filled];
+Stop[fillcolor="#B2FEB2",style=filled];
+T1A[label="T1A.Delete old build dir",fillcolor="#B2FEB2",style=filled,URL="T1A.html"];
+T1B[label="T1B.Delete old dist dir",fillcolor="#B2FEB2",style=filled,URL="T1B.html"];
+T2[label="T2.Remove old build dir",fillcolor="#B2FEB2",style=filled,URL="T2.html"];
+T3[label="T3.Remove old dist dir",fillcolor="#B2FEB2",style=filled,URL="T3.html"];
+T4[label="T4.Remove content of output dir",fillcolor="#B2FEB2",style=filled,URL="T4.html"];
+T6[label="T6.Generate mo files",fillcolor="#B2FEB2",style=filled,URL="T6.html"];
+T8[label="T8.Modify paths.py",fillcolor="#B2FEB2",style=filled,URL="T8.html"];
+T9[label="T9.Modify version file and iss file",fillcolor="#B2FEB2",style=filled,URL="T9.html"];
+T11[label="T11.Create icons dir",fillcolor="#B2FEB2",style=filled,URL="T11.html"];
+T12[label="T12.Create translations dir",fillcolor="#B2FEB2",style=filled,URL="T12.html"];
+T10[label="T10.Building distribution",fillcolor="#B2FEB2",style=filled,URL="T10.html"];
+T13[label="T13.Copying icons",fillcolor="#B2FEB2",style=filled,URL="T13.html"];
+T14[label="T14.Copying translations",fillcolor="#B2FEB2",style=filled,URL="T14.html"];
+T17[label="T17.Build with inno",fillcolor="#B2FEB2",style=filled,URL="T17.html"];
+Start -> T1A;
+Start -> T1B;
+T1A -> T2;
+T1B -> T3;
+Start -> T4;
+Start -> T6;
+Start -> T8;
+Start -> T9;
+T3 -> T11;
+T3 -> T12;
+T6 -> T12;
+T8 -> T10;
+T9 -> T10;
+T11 -> T13;
+T12 -> T14;
+T2 -> T17;
+T4 -> T17;
+T10 -> T17;
+T13 -> T17;
+T14 -> T17;
+T17 -> Stop;
+}

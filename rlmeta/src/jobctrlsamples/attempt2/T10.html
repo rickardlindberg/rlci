@@ -1,0 +1,122 @@
+
+        <!DOCTYPE html>
+        <html>
+          <head>
+          </head>
+          <body>
+            <pre>
+======================================================================
+Report from task: T10:
+  Description: Building distribution
+  Input      : ['pyinstaller', 'timeline.spec']
+  Command    : pyinstaller timeline.spec
+  Status     : OK
+  Return Code: 0
+  Result     : subprocess completed successfully
+  Started at : 2022-03-20 13:03:25.477088
+  Run-time   : 252.5
+  Ended at   : 2022-03-20 13:07:37.960224
+  Cwd        : C:\Projects\OpenSourceProjects\Timeline\main\tools\winbuildtools
+  Exception  : 
+----(STDERR)-----
+140 INFO: PyInstaller: 3.5
+140 INFO: Python: 3.6.4
+141 INFO: Platform: Windows-10-10.0.19041-SP0
+144 INFO: UPX is not available.
+152 INFO: Extending PYTHONPATH with paths
+['C:\\Projects\\OpenSourceProjects\\Timeline\\main\\source',
+ 'C:\\Projects\\Timeline\\thetimelineproj-py3\\source']
+152 INFO: checking Analysis
+152 INFO: Building Analysis because Analysis-00.toc is non existent
+152 INFO: Initializing module dependency graph...
+157 INFO: Initializing module graph hooks...
+167 INFO: Analyzing base_library.zip ...
+5794 INFO: running Analysis Analysis-00.toc
+5814 INFO: Adding Microsoft.Windows.Common-Controls to dependent assemblies of final executable
+  required by c:\pgm\python36\python.exe
+9398 INFO: Caching module hooks...
+9405 INFO: Analyzing ..\..\source\timeline.py
+16718 INFO: Processing pre-safe import module hook   six.moves
+17998 INFO: Processing pre-find module path hook   distutils
+18176 INFO: Processing pre-find module path hook   site
+18177 INFO: site: retargeting to fake-dir 'c:\\pgm\\python36\\lib\\site-packages\\PyInstaller\\fake-modules'
+23922 INFO: Processing pre-safe import module hook   setuptools.extern.six.moves
+43123 INFO: Loading module hooks...
+43124 INFO: Loading module hook "hook-distutils.py"...
+43127 INFO: Loading module hook "hook-encodings.py"...
+43382 INFO: Loading module hook "hook-lib2to3.py"...
+43418 INFO: Loading module hook "hook-markdown.py"...
+48598 INFO: Loading module hook "hook-pkg_resources.py"...
+50797 INFO: Processing pre-safe import module hook   win32com
+51679 INFO: Loading module hook "hook-pycparser.py"...
+51681 INFO: Loading module hook "hook-pydoc.py"...
+51683 INFO: Loading module hook "hook-pygments.py"...
+70289 INFO: Loading module hook "hook-pythoncom.py"...
+71583 INFO: Loading module hook "hook-pytz.py"...
+71776 INFO: Loading module hook "hook-pywintypes.py"...
+73065 INFO: Loading module hook "hook-scipy.py"...
+73085 INFO: Loading module hook "hook-setuptools.py"...
+75179 INFO: Loading module hook "hook-sysconfig.py"...
+75182 INFO: Loading module hook "hook-win32com.py"...
+77045 INFO: Loading module hook "hook-xml.dom.domreg.py"...
+77047 INFO: Loading module hook "hook-xml.etree.cElementTree.py"...
+77049 INFO: Loading module hook "hook-xml.py"...
+77053 INFO: Loading module hook "hook-numpy.core.py"...
+78434 INFO: Loading module hook "hook-numpy.py"...
+78437 INFO: Loading module hook "hook-PIL.Image.py"...
+80468 INFO: Loading module hook "hook-PIL.py"...
+80471 INFO: Import to be excluded not found: 'PyQt4'
+80471 INFO: Excluding import 'PyQt5'
+80477 INFO:   Removing import of PyQt5 from module PIL.ImageQt
+80478 INFO: Import to be excluded not found: 'PySide'
+80478 INFO: Excluding import 'tkinter'
+80481 INFO:   Removing import of tkinter from module PIL.ImageTk
+80482 INFO: Import to be excluded not found: 'FixTk'
+80482 INFO: Loading module hook "hook-PIL.SpiderImagePlugin.py"...
+80487 INFO: Import to be excluded not found: 'FixTk'
+80487 INFO: Excluding import 'tkinter'
+80494 INFO: Loading module hook "hook-_tkinter.py"...
+82404 INFO: checking Tree
+82405 INFO: Building Tree because Tree-00.toc is non existent
+82405 INFO: Building Tree Tree-00.toc
+82600 INFO: checking Tree
+82600 INFO: Building Tree because Tree-01.toc is non existent
+82600 INFO: Building Tree Tree-01.toc
+82810 INFO: Looking for ctypes DLLs
+82890 INFO: Analyzing run-time hooks ...
+82909 INFO: Including run-time hook 'pyi_rth_pkgres.py'
+82922 INFO: Including run-time hook 'pyi_rth_win32comgenpy.py'
+82939 INFO: Including run-time hook 'pyi_rth_multiprocessing.py'
+82999 INFO: Looking for dynamic libraries
+180929 INFO: Looking for eggs
+180929 INFO: Using Python library c:\pgm\python36\python36.dll
+180929 INFO: Found binding redirects: 
+[]
+180959 INFO: Warnings written to C:\Projects\OpenSourceProjects\Timeline\main\tools\winbuildtools\build\timeline\warn-timeline.txt
+181495 INFO: Graph cross-reference written to C:\Projects\OpenSourceProjects\Timeline\main\tools\winbuildtools\build\timeline\xref-timeline.html
+181636 INFO: Appending 'datas' from .spec
+181679 INFO: checking PYZ
+181679 INFO: Building PYZ because PYZ-00.toc is non existent
+181679 INFO: Building PYZ (ZlibArchive) C:\Projects\OpenSourceProjects\Timeline\main\tools\winbuildtools\build\timeline\PYZ-00.pyz
+186564 INFO: Building PYZ (ZlibArchive) C:\Projects\OpenSourceProjects\Timeline\main\tools\winbuildtools\build\timeline\PYZ-00.pyz completed successfully.
+186668 INFO: checking PKG
+186668 INFO: Building PKG because PKG-00.toc is non existent
+186669 INFO: Building PKG (CArchive) PKG-00.pkg
+249670 INFO: Building PKG (CArchive) PKG-00.pkg completed successfully.
+249719 INFO: Bootloader c:\pgm\python36\lib\site-packages\PyInstaller\bootloader\Windows-64bit\runw.exe
+249719 INFO: checking EXE
+249719 INFO: Building EXE because EXE-00.toc is non existent
+249720 INFO: Building EXE from EXE-00.toc
+249874 INFO: Copying icons from ['../../icons/timeline.ico']
+250033 INFO: Writing RT_GROUP_ICON 0 resource with 34 bytes
+250033 INFO: Writing RT_ICON 1 resource with 4264 bytes
+250034 INFO: Writing RT_ICON 2 resource with 744 bytes
+250052 INFO: Updating manifest in C:\Users\roger\AppData\Local\Temp\tmp59ybmyek
+250225 INFO: Updating resource type 24 name 1 language 0
+250241 INFO: Appending archive to EXE C:\Projects\OpenSourceProjects\Timeline\main\tools\winbuildtools\dist\timeline.exe
+250538 INFO: Building EXE from EXE-00.toc completed successfully.
+
+            </pre>
+          </body>
+        </html>
+        
