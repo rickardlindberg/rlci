@@ -25,6 +25,7 @@ Parser {
     string = '"' innerString*:xs '"' -> ["String" ~xs]
     innerString =
         | '#{' name:x '}' -> ["TemplateVar" x]
+        | '${' name:x '}' -> ["InputArg" x]
         | !'"' .:x        -> ["Char" x]
     name = alpha:x alphanum*:xs -> { x xs }
     alphanum = alpha | num
@@ -53,21 +54,31 @@ ToDag {
         -> dict():templateArgs
         -> xs
         -> run("statements" get(templates name))
-    String = ast*:xs -> { xs }
-    Char = .
-    TemplateVar = .:name -> get(templateArgs name)
+    String = ast*:xs -> { "\"\".join([" join(xs ",") "])" }
+    Char = .:x -> repr(x)
+    TemplateVar = .:name -> repr(get(templateArgs name))
+    InputArg = .:x -> { "args[" repr(x) "]" }
     Arg = .:name ast:value -> set(templateArgs name value)
     Stage = .:varName ast*:props
         -> label():id
         -> dict():stageProps
+        -> []:stageCode
         -> set(stageProps "name" { id })
         -> props
         -> set(stages varName id)
-        -> add(nodes ["Node" id get(stageProps "name")])
+        -> add(nodes ["Node" id {
+            get(stageProps "name")
+            "\n\n"
+            "def stage(args):\n" >
+                "output = {}\n"
+                join(stageCode "\n")
+                "\nreturn output\n"
+            <
+        }])
         -> run("link" parents)
         -> [id]
     StageName = ast:name -> set(stageProps "name" name)
-    StageSh = .:name ast:command
+    StageSh = .:name ast:command -> add(stageCode { "output[" repr(name) "] = subprocess.check_output(" command ")" })
     StageOut = .:name ast:value
     Link = .:parent .:child
         -> add(links ["Link" get(stages parent) get(stages child)])
@@ -75,8 +86,13 @@ ToDag {
 }
 
 ToDot {
-    asts = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
-    ast  = [%:x]            -> x
-    Node = .:id .:name      -> { id "[label=\"" name "\"];\n" }
-    Link = .:parent .:child -> { parent " -> " child ";\n" }
+    asts   = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
+    ast    = [%:x]            -> x
+    Node   = .:id .:name      -> { id "[shape=rect label=" run("string" name) "];\n" }
+    Link   = .:parent .:child -> { parent " -> " child ";\n" }
+    string = char*:xs         -> { "\"" xs "\"" }
+    char   =
+        | '\n' -> "\\n"
+        | '"'  -> "\\\""
+        | .
 }
