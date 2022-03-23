@@ -4,23 +4,23 @@ import sys
 import os
 import subprocess
 
-RLMETA_PATH = os.path.join(os.path.dirname(__file__), "..", "rlmeta", "rlmeta.py")
+RLMETA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "rlmeta", "rlmeta.py")
 
-def pipeline():
-    print("Make pipeline")
-    with open("pipeline.py", "wb") as f:
+def tool():
+    print("Make tool")
+    with open("tool.py", "wb") as f:
         f.write(subprocess.check_output([
             "python", RLMETA_PATH,
             "--support",
-            "--compile", "pipeline.rlmeta",
-            "--copy", "pipeline_main.py",
+            "--compile", "tool.rlmeta",
+            "--copy", "footer.py",
         ]))
 
 def example(name):
-    pipeline()
+    tool()
     print(f"Make {name}")
     sys.stdout.buffer.write(subprocess.check_output([
-        "python", "pipeline.py",
+        "python", "tool.py",
         f"{name}.pipeline",
     ]))
 
