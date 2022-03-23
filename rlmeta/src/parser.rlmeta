@@ -23,6 +23,7 @@ Parser {
     | name:x !(space '=')                     -> ["MatchRule" x]
     | space char:x '-' char:y                 -> ["MatchObject" ["Range" x y]]
     | space '\'' (!'\'' matchChar)*:xs '\''   -> ["And" ~xs]
+    | space string:x                          -> ["MatchObject" ["Eq" x]]
     | space '.'                               -> ["MatchObject" ["Any"]]
     | space '(' choice:x space ')'            -> x
     | space '[' expr*:xs space ']'            -> ["MatchList" ["And" ~xs]]
@@ -55,6 +56,6 @@ Parser {
             | '"'  -> "\"" | 'n'  -> "\n"
   name      = space nameStart:x nameChar*:xs  -> { x xs }
   nameStart = 'a'-'z' | 'A'-'Z'
-  nameChar  = 'a'-'z' | 'A'-'Z' | '0'-'9'
+  nameChar  = 'a'-'z' | 'A'-'Z' | '0'-'9' | '_'
   space     = (' ' | '\n')*
 }

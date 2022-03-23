@@ -96,3 +96,9 @@ ToDot {
         | '"'  -> "\\\""
         | .
 }
+
+Cli {
+    interpret = command:x !. -> x
+    command =
+        | "dotty" .:x -> cmd_dotty(x)
+}
