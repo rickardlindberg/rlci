@@ -18,3 +18,5 @@ An experimental CI/CD system designed to solve problems I've had with Jenkins.
     * Store two kinds of templates: block | stageBody
 * Add concept of a pipeline with a title?
 * What should introduce a new scope? global/pipeline/template
+* RLMeta
+    * Syntax to capture location -> function that raises error at that location
