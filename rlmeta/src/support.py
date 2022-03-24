@@ -217,12 +217,25 @@ def join(items, delimiter=""):
 def indent(text, prefix="    "):
     return "".join(prefix+line for line in text.splitlines(True))
 
-def compile_chain(grammars, source, runtime={}):
+def compile_chain(grammars, source, runtime={}, debug=False):
     import os
     import sys
     import pprint
+    def print_debug(message):
+        if debug:
+            sys.stderr.write(message)
+    def print_source():
+        if isinstance(source, str):
+            lines = source.splitlines()
+        else:
+            lines = pprint.pformat(source).splitlines()
+        for line in lines:
+            print_debug(f"  {line}\n")
+    print_debug(f"=== compile_chain =========================================\n\n")
     for grammar, rule in grammars:
         try:
+            print_source()
+            print_debug(f"\n--- {grammar.__name__} -----------------------------------------\n\n")
             source = grammar().run(rule, source, runtime)
         except MatchError as e:
             marker = "<ERROR POSITION>"
@@ -237,4 +250,6 @@ def compile_chain(grammars, source, runtime={}):
                 e.pos,
                 indent(stream_string)
             ))
+    print_source()
+    print_debug(f"\n===========================================================\n")
     return source

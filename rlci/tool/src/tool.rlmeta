@@ -101,4 +101,5 @@ Cli {
     interpret = command:x !. -> x
     command =
         | "dotty" .:x -> cmd_dotty(x)
+        | "debug_dag" .:x -> cmd_debug_dag(x)
 }
