@@ -18,10 +18,10 @@ def tool():
     with open("tool.py", "wb") as f:
         f.write(subprocess.check_output([
             "python", RLMETA_PATH,
-            "--copy", "header.py",
+            "--copy", "src/header.py",
             "--support",
-            "--compile", "tool.rlmeta",
-            "--copy", "footer.py",
+            "--compile", "src/tool.rlmeta",
+            "--copy", "src/footer.py",
         ]))
 
 def example(name):
