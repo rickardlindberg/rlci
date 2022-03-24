@@ -35,7 +35,7 @@ def example(name):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     if len(sys.argv) > 1:
-        name = sys.argv[1]
+        for arg in sys.argv[1:]:
+            example(sys.argv[1])
     else:
-        name = "example"
-    example(name)
+        tool()
