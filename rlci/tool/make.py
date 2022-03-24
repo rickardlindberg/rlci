@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import sys
 import os
 import subprocess
+import sys
 
 RLMETA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "rlmeta")
 RLMETA_PATH = os.path.join(RLMETA_DIR, "rlmeta.py")
