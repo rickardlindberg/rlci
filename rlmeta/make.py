@@ -112,6 +112,7 @@ def color(message, color):
         return message
 
 if __name__ == "__main__":
+    os.chdir(os.path.dirname(__file__))
     cleanup()
     if sys.argv[1:] == ["--compile"]:
         sys.stdout.buffer.write(compile_rlmeta("rlmeta.py"))
