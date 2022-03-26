@@ -72,6 +72,31 @@ class StageRunner(unittest.TestCase):
             ]
         )
 
+class Triggers(unittest.TestCase):
+
+    def test_are_parsed(self):
+        with temporary_pipeline("""
+            pipeline {
+                stage {
+                    trigger type="commit" repo="foo"
+                }
+            }
+        """) as path:
+            result = subprocess.run(
+                ["python", "tool.py", "compile", path],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                sys.stderr.buffer.write(result.stderr)
+                self.fail("Compilation of example.pipeline failed")
+            x = json.loads(result.stdout)
+            self.assertEqual(x[0][2][2]["triggers"], [
+                {
+                    "type": "commit",
+                    "repo": "foo",
+                }
+            ])
+
 class Example(unittest.TestCase):
 
     def test_compiles(self):
