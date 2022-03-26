@@ -24,6 +24,13 @@ def tool():
             "--copy", "src/footer.py",
         ]))
 
+def test():
+    tool()
+    print("Make test")
+    subprocess.check_output([
+        "python", "test.py",
+    ])
+
 def example(name):
     tool()
     print(f"Make {name}")
@@ -34,8 +41,11 @@ def example(name):
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
-    if len(sys.argv) > 1:
-        for arg in sys.argv[1:]:
-            example(sys.argv[1])
-    else:
-        tool()
+    try:
+        if len(sys.argv) > 1:
+            for arg in sys.argv[1:]:
+                example(sys.argv[1])
+        else:
+            test()
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.returncode)

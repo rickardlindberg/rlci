@@ -37,7 +37,7 @@ def cmd_run(args):
             },
             debug=True
         )]))
-    except ProcessFailure as e:
+    except Exception as e:
         print(json.dumps(["Result", "failure", str(e)]))
 
 def sh(command):
