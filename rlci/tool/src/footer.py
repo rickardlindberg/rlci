@@ -29,7 +29,7 @@ def cmd_get_stage_definition(pipeline, stage_id):
         print(json.dumps(compile_chain([
             (Parser, "file"),
             (ToDag, "asts"),
-        ], f.read(), debug=True)[0][2][stage_id][3]))
+        ], f.read(), debug=True)[0][2+stage_id][3]))
 
 def cmd_run(args):
     try:

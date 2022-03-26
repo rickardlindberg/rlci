@@ -56,7 +56,7 @@ ToDag {
         -> []:nodes
         -> []:links
         -> xs
-        -> [["Pipeline" pipelineProps nodes links]]
+        -> [["Pipeline" pipelineProps ~nodes ~links]]
     PipelineName = ast:x -> set(pipelineProps "name" x)
     Par = ast*:xs -> [~~xs]
     Seq =
@@ -93,7 +93,7 @@ ToDag {
 ToDot {
     asts     = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
     ast      = [%:x]            -> x
-    Pipeline = . [ast*:xs] [ast*:ys] -> { xs ys }
+    Pipeline = . ast*
     Node     = .:id .:props .   -> { id "[shape=rect label=\"" get(props "name") "\"];\n" }
     Link     = .:parent .:child -> { parent " -> " child ";\n" }
 }
