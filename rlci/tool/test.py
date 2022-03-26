@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import contextlib
 import json
 import os
 import subprocess
@@ -7,11 +8,16 @@ import sys
 import tempfile
 import unittest
 
-def get_first_stage_definition(pipeline_text):
+@contextlib.contextmanager
+def temporary_pipeline(pipeline):
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "test.pipeline")
         with open(path, "w") as f:
-            f.write(pipeline_text)
+            f.write(pipeline)
+        yield path
+
+def get_first_stage_definition(pipeline_text):
+    with temporary_pipeline(pipeline_text) as path:
         return subprocess.run(
             ["python", "tool.py", "get_stage_definition", path, "0"],
             capture_output=True,
