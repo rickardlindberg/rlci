@@ -94,7 +94,7 @@ def ACTION(vm):
     vm.action = SemanticAction(vm.scope, vm.pop_arg())
 
 def PUSH_STREAM(vm):
-    if vm.pos >= len(vm.stream) or not isinstance(vm.stream[vm.pos], list):
+    if vm.pos >= len(vm.stream) or not isinstance(vm.stream[vm.pos], (list, str)):
         FAIL_(vm, ("expected list",))
     else:
         vm.stream_rest = (vm.stream, vm.stream_rest)
@@ -173,6 +173,7 @@ class Grammar(object):
             "get": lambda x, y: x[y],
             "set": lambda x, y, z: x.__setitem__(y, z),
             "len": len,
+            "int": int,
             "repr": repr,
             "join": join,
         })).run(rule, stream)

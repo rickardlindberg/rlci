@@ -66,20 +66,12 @@ ToDag {
         -> set(stageProps "name" { id })
         -> props
         -> set(stages varName id)
-        -> add(nodes ["Node" id {
-            get(stageProps "name")
-            "\n\n"
-            "def stage(args):\n" >
-                "output = {}\n"
-                join(stageCode "\n")
-                "\nreturn output\n"
-            <
-        }])
+        -> add(nodes ["Node" id stageCode])
         -> run("link" parents)
         -> [id]
     StageName = ast:name -> set(stageProps "name" name)
-    StageSh = .:name ast:command -> add(stageCode { "output[" repr(name) "] = subprocess.check_output(" command ")" })
-    StageOut = .:name ast:value
+    StageSh = .*:xs -> add(stageCode ["StageSh" ~xs])
+    StageOut = .*:xs -> add(stageCode ["StageOut" ~xs])
     Link = .:parent .:child
         -> add(links ["Link" get(stages parent) get(stages child)])
     link = (.:parent -> add(links ["Link" parent id]))*
@@ -100,6 +92,31 @@ ToDot {
 Cli {
     interpret = command:x !. -> x
     command =
-        | "dotty" .:x -> cmd_dotty(x)
-        | "debug_dag" .:x -> cmd_debug_dag(x)
+        | "dotty" .:x
+            -> cmd_dotty(x)
+        | "debug_dag" .:x
+            -> cmd_debug_dag(x)
+        | "get_stage_definition" .:pipeline number:stageId
+            -> cmd_get_stage_definition(pipeline stageId)
+        | "run" args:x
+            -> cmd_run(x)
+    args = arg*:xs -> dict():args -> xs -> args
+    arg = [name:x '=' .*:xs] -> set(args x {xs})
+    name = nameChar*:xs -> { xs }
+    number = digit:x digit*:xs -> int({ x xs })
+    digit = '0'-'9'
+    nameChar = 'a'-'z'
+}
+
+StageRunner {
+    run = ast*:xs
+        -> dict():out
+        -> xs
+        -> out
+    ast = [%:x] -> x
+    StageSh = .:name ast:x -> set(args name sh(x))
+    StageOut = .:name ast:x -> set(out name x)
+    String = ast*:xs -> { xs }
+    Char = .
+    InputArg = .:name -> { get(args name) }
 }
