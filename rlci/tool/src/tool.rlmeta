@@ -1,16 +1,24 @@
 Parser {
     file = block*:xs space !. -> xs
     block =
-        | space 'par' space '{' block*:xs space '}'
-            -> ["Par" ~xs]
-        | space 'seq' space '{' block*:xs space '}'
-            -> ["Seq" ~xs]
-        | space 'template' space name:x space '{' block*:xs space '}'
+        | space 'template' space name:x space '{' templateBody*:xs space '}'
             -> ["Template" x ~xs]
-        | space 'link' space '(' space name:x space name:y ')'
-            -> ["Link" x y]
+        | space 'pipeline' space '{' pipelineBlock*:xs space '}'
+            -> ["Pipeline" ~xs]
+        | space name:x space '(' arg*:xs space ')'
+            -> ["ApplyTemplate" x ~xs]
+    templateBody = block | pipelineBlock
+    pipelineBlock =
+        | space 'name' !alphanum space string:x
+            -> ["PipelineName" x]
+        | space 'par' space '{' pipelineBlock*:xs space '}'
+            -> ["Par" ~xs]
+        | space 'seq' space '{' pipelineBlock*:xs space '}'
+            -> ["Seq" ~xs]
         | space 'stage' space maybeName:x space '{' stageBody*:ys space '}'
             -> ["Stage" x ~ys]
+        | space 'link' space '(' space name:x space name:y ')'
+            -> ["Link" x y]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
     stageBody =
@@ -38,25 +46,30 @@ ToDag {
     asts = ast*:xs !.
         -> dict():templates
         -> dict():stages
+        -> []:parents
+        -> [~~xs]
+    statements = ast*:xs !. -> xs
+    ast = [%:x] -> x
+    Pipeline = ast*:xs
+        -> dict():pipelineProps
+        -> set(pipelineProps "name" "")
         -> []:nodes
         -> []:links
-        -> []:parents
         -> xs
-        -> [~nodes ~links]
-    statements = ast*:xs
-    ast = [%:x] -> x
+        -> [["Pipeline" pipelineProps nodes links]]
+    PipelineName = ast:x -> set(pipelineProps "name" x)
     Par = ast*:xs -> [~~xs]
     Seq =
         | ast:x Seq:y -> x:parents -> y
         | ast:x !.    -> x
-    Template = .:name .*:xs -> xs:x -> set(templates name x) -> x
+    Template = .:name .*:xs -> xs:x -> set(templates name x) -> []
     ApplyTemplate = .:name ast*:xs
         -> dict():templateArgs
         -> xs
         -> run("statements" get(templates name))
-    String = ast*:xs -> { "\"\".join([" join(xs ",") "])" }
-    Char = .:x -> repr(x)
-    TemplateVar = .:name -> repr(get(templateArgs name))
+    String = ast*:xs -> { xs }
+    Char = .
+    TemplateVar = .:name -> get(templateArgs name)
     InputArg = .:x -> { "args[" repr(x) "]" }
     Arg = .:name ast:value -> set(templateArgs name value)
     Stage = .:varName ast*:props
@@ -66,7 +79,7 @@ ToDag {
         -> set(stageProps "name" { id })
         -> props
         -> set(stages varName id)
-        -> add(nodes ["Node" id stageCode])
+        -> add(nodes ["Node" id stageProps stageCode])
         -> run("link" parents)
         -> [id]
     StageName = ast:name -> set(stageProps "name" name)
@@ -78,15 +91,11 @@ ToDag {
 }
 
 ToDot {
-    asts   = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
-    ast    = [%:x]            -> x
-    Node   = .:id .:name      -> { id "[shape=rect label=" run("string" name) "];\n" }
-    Link   = .:parent .:child -> { parent " -> " child ";\n" }
-    string = char*:xs         -> { "\"" xs "\"" }
-    char   =
-        | '\n' -> "\\n"
-        | '"'  -> "\\\""
-        | .
+    asts     = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
+    ast      = [%:x]            -> x
+    Pipeline = . [ast*:xs] [ast*:ys] -> { xs ys }
+    Node     = .:id .:props .   -> { id "[shape=rect label=\"" get(props "name") "\"];\n" }
+    Link     = .:parent .:child -> { parent " -> " child ";\n" }
 }
 
 Cli {
@@ -94,6 +103,8 @@ Cli {
     command =
         | "dotty" .:x
             -> cmd_dotty(x)
+        | "compile" .:x
+            -> cmd_compile(x)
         | "debug_dag" .:x
             -> cmd_debug_dag(x)
         | "get_stage_definition" .:pipeline number:stageId

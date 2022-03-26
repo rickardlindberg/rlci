@@ -1,92 +1,92 @@
-seq {
-    stage {
-        name "example  realistic"
-    }
-    stage {
-        name "checkout"
-    }
-    par {
+pipeline {
+    name "example  realistic"
+    seq {
         stage {
-            name "build"
+            name "checkout"
         }
-        stage {
-            name "test"
-        }
-        seq {
+        par {
             stage {
-                name "lint1"
+                name "build"
             }
             stage {
-                name "lint2"
-            }
-        }
-    }
-    stage {
-        name "deploy"
-    }
-}
-
-seq {
-    stage {
-        name "example job controller"
-    }
-    stage {
-        name "task1"
-    }
-    par {
-        seq {
-            par {
-                stage {
-                    name "task2"
-                }
-                stage {
-                    name "task3"
-                }
+                name "test"
             }
             seq {
                 stage {
-                    name "task4"
+                    name "lint1"
                 }
                 stage {
-                    name "task5"
+                    name "lint2"
                 }
             }
         }
         stage {
-            name "task6"
+            name "deploy"
         }
-    }
-    stage {
-        name "task7"
     }
 }
 
-seq {
-    stage {
-        name "example seq par not enough"
-    }
-    stage {
-        name "start"
-    }
-    par {
-        stage foo {
-            name "foo"
+pipeline {
+    name "example job controller"
+    seq {
+        stage {
+            name "task1"
         }
-        stage bar {
-            name "bar"
+        par {
+            seq {
+                par {
+                    stage {
+                        name "task2"
+                    }
+                    stage {
+                        name "task3"
+                    }
+                }
+                seq {
+                    stage {
+                        name "task4"
+                    }
+                    stage {
+                        name "task5"
+                    }
+                }
+            }
+            stage {
+                name "task6"
+            }
         }
-    }
-    stage {
-        name "baz"
+        stage {
+            name "task7"
+        }
     }
 }
 
-stage fromTheSide {
-    name "fromTheSide"
-}
+pipeline {
+    name "example seq par not enough"
+    seq {
+        stage {
+            name "start"
+        }
+        par {
+            stage foo {
+                name "foo"
+            }
+            stage bar {
+                name "bar"
+            }
+        }
+        stage {
+            name "baz"
+        }
+    }
 
-link(fromTheSide foo)
-link(fromTheSide bar)
+    stage fromTheSide {
+        name "fromTheSide"
+    }
+
+    link(fromTheSide foo)
+    link(fromTheSide bar)
+}
 
 template checkout {
     seq {
@@ -99,5 +99,10 @@ template checkout {
     }
 }
 
-checkout(repo="ada")
-checkout(repo="python")
+pipeline {
+    checkout(repo="ada")
+}
+
+pipeline {
+    checkout(repo="python")
+}

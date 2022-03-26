@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -34,11 +35,13 @@ class StageRunner(unittest.TestCase):
     def test_basic_run_happy_path(self):
         self.assertEqual(
             run_first_stage("""
-                stage {
-                    sh "echo foo = ${foo}"
-                    sh "echo bar = ${bar}"
-                    sh summary "echo ${foo} + ${bar}"
-                    out summary "out = ${summary}"
+                pipeline {
+                    stage {
+                        sh "echo foo = ${foo}"
+                        sh "echo bar = ${bar}"
+                        sh summary "echo ${foo} + ${bar}"
+                        out summary "out = ${summary}"
+                    }
                 }
             """, ["foo=123", "bar=456"]),
             [
@@ -52,14 +55,27 @@ class StageRunner(unittest.TestCase):
     def test_variable_error(self):
         self.assertEqual(
             run_first_stage("""
-                stage {
-                    sh "echo ${nonExistingInput}"
+                pipeline {
+                    stage {
+                        sh "echo ${nonExistingInput}"
+                    }
                 }
             """, []),
             [
                 ["Result", "failure", "'nonExistingInput'"],
             ]
         )
+
+class Example(unittest.TestCase):
+
+    def test_compiles(self):
+        result = subprocess.run(
+            ["python", "tool.py", "compile", "example.pipeline"],
+            capture_output=True
+        )
+        if result.returncode != 0:
+            sys.stderr.buffer.write(result.stderr)
+            self.fail("Compilation of example.pipeline failed")
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))

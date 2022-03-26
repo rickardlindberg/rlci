@@ -31,21 +31,9 @@ def test():
         "python", "test.py",
     ])
 
-def example(name):
-    tool()
-    print(f"Make {name}")
-    sys.stdout.buffer.write(subprocess.check_output([
-        "python", "tool.py",
-        "dotty", f"{name}.pipeline",
-    ]))
-
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     try:
-        if len(sys.argv) > 1:
-            for arg in sys.argv[1:]:
-                example(sys.argv[1])
-        else:
-            test()
+        test()
     except subprocess.CalledProcessError as e:
         sys.exit(e.returncode)

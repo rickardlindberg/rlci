@@ -7,8 +7,15 @@ def cmd_dotty(path):
                 (Parser, "file"),
                 (ToDag, "asts"),
                 (ToDot, "asts"),
-            ], f.read())
+            ], f.read(), debug=True)
         )
+
+def cmd_compile(path):
+    with open(path) as f:
+        print(json.dumps(compile_chain([
+            (Parser, "file"),
+            (ToDag, "asts"),
+        ], f.read(), debug=True)))
 
 def cmd_debug_dag(path):
     with open(path) as f:
@@ -22,7 +29,7 @@ def cmd_get_stage_definition(pipeline, stage_id):
         print(json.dumps(compile_chain([
             (Parser, "file"),
             (ToDag, "asts"),
-        ], f.read())[stage_id][2]))
+        ], f.read(), debug=True)[0][2][stage_id][3]))
 
 def cmd_run(args):
     try:
@@ -89,6 +96,7 @@ def stream_process(process):
 if __name__ == "__main__":
     compile_chain([(Cli, "interpret")], sys.argv[1:], {
         "cmd_dotty": cmd_dotty,
+        "cmd_compile": cmd_compile,
         "cmd_debug_dag": cmd_debug_dag,
         "cmd_get_stage_definition": cmd_get_stage_definition,
         "cmd_run": cmd_run,
