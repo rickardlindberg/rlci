@@ -72,9 +72,9 @@ class StageRunner(unittest.TestCase):
             ]
         )
 
-class Triggers(unittest.TestCase):
+class Compile(unittest.TestCase):
 
-    def test_are_parsed(self):
+    def test_triggers(self):
         with temporary_pipeline("""
             pipeline {
                 stage {
@@ -82,31 +82,28 @@ class Triggers(unittest.TestCase):
                 }
             }
         """) as path:
-            result = subprocess.run(
-                ["python", "tool.py", "compile", path],
-                capture_output=True,
+            self.assertEqual(
+                self.compile(path)[0][2][2]["triggers"],
+                [
+                    {
+                        "type": "commit",
+                        "repo": "foo",
+                    }
+                ]
             )
-            if result.returncode != 0:
-                sys.stderr.buffer.write(result.stderr)
-                self.fail("Compilation of example.pipeline failed")
-            x = json.loads(result.stdout)
-            self.assertEqual(x[0][2][2]["triggers"], [
-                {
-                    "type": "commit",
-                    "repo": "foo",
-                }
-            ])
 
-class Example(unittest.TestCase):
+    def test_example_compiles(self):
+        self.compile("example.pipeline")
 
-    def test_compiles(self):
+    def compile(self, path):
         result = subprocess.run(
-            ["python", "tool.py", "compile", "example.pipeline"],
+            ["python", "tool.py", "compile", path],
             capture_output=True
         )
         if result.returncode != 0:
             sys.stderr.buffer.write(result.stderr)
-            self.fail("Compilation of example.pipeline failed")
+            self.fail(f"Compilation of {path} failed")
+        return json.loads(result.stdout)
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
