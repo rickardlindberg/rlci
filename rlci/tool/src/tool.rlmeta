@@ -76,7 +76,7 @@ ToDag {
     InputArg = .:x -> { "args[" repr(x) "]" }
     Arg = .:name ast:value -> set(templateArgs name value)
     Stage = .:varName ast*:props
-        -> len(nodes):id
+        -> label():id
         -> dict():stageProps
         -> []:stageCode
         -> set(stageProps "name" { id })

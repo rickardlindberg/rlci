@@ -8,6 +8,10 @@ import sys
 import tempfile
 import unittest
 
+class EqAny:
+    def __eq__(self, other):
+        return True
+
 @contextlib.contextmanager
 def temporary_pipeline(pipeline):
     with tempfile.TemporaryDirectory() as tmp:
@@ -74,37 +78,94 @@ class StageRunner(unittest.TestCase):
 
 class Compile(unittest.TestCase):
 
+    maxDiff = 10000
+
+    def test_minimal(self):
+        self.assertCompilesTo("""
+            pipeline {
+            }
+        """,
+            [['Pipeline', {'name': ''}]]
+        )
+
+    def test_stage(self):
+        self.assertCompilesTo("""
+            pipeline {
+                name "test"
+                stage {
+                    name "foo"
+                    sh "echo foo"
+                }
+            }
+        """,
+            [['Pipeline',
+              {'name': 'test'},
+              ['Node',
+               0,
+               {'name': 'foo', 'triggers': []},
+               [['StageSh',
+                 '',
+                 ['String',
+                  ['Char', 'e'],
+                  ['Char', 'c'],
+                  ['Char', 'h'],
+                  ['Char', 'o'],
+                  ['Char', ' '],
+                  ['Char', 'f'],
+                  ['Char', 'o'],
+                  ['Char', 'o']]]]]]]
+        )
+
+    def test_link(self):
+        self.assertCompilesTo("""
+            pipeline {
+                seq {
+                    stage { name "foo" }
+                    stage { name "bar" }
+                }
+            }
+        """,
+            [['Pipeline',
+              {'name': ''},
+              ['Node', 0, {'name': 'foo', 'triggers': []}, []],
+              ['Node', 1, {'name': 'bar', 'triggers': []}, []],
+              ['Link', 0, 1]]]
+        )
+
     def test_triggers(self):
-        with temporary_pipeline("""
+        self.assertCompilesTo("""
             pipeline {
                 stage {
                     trigger type="commit" repo="foo"
                 }
             }
-        """) as path:
-            self.assertEqual(
-                self.compile(path)[0][2][2]["triggers"],
-                [
-                    {
-                        "type": "commit",
-                        "repo": "foo",
-                    }
-                ]
-            )
-
-    def test_example_compiles(self):
-        self.compile("example.pipeline")
-
-    def compile(self, path):
-        result = subprocess.run(
-            ["python", "tool.py", "compile", path],
-            capture_output=True
+        """,
+            [['Pipeline',
+              {'name': ''},
+              ['Node',
+               0,
+               {'name': '0', 'triggers': [{'repo': 'foo', 'type': 'commit'}]},
+               []]]]
         )
-        if result.returncode != 0:
-            sys.stderr.buffer.write(result.stderr)
-            self.fail(f"Compilation of {path} failed")
-        return json.loads(result.stdout)
+
+    def test_example(self):
+        with open("example.pipeline") as f:
+            self.assertCompilesTo(f.read(), EqAny())
+
+    def assertCompilesTo(self, pipeline, output):
+        with temporary_pipeline(pipeline) as path:
+            result = subprocess.run(
+                ["python", "tool.py", "compile", path],
+                capture_output=True
+            )
+            try:
+                if result.returncode != 0:
+                    self.fail(f"Compilation of {path} failed")
+                self.assertEqual(json.loads(result.stdout), output)
+            except:
+                sys.stderr.buffer.write(result.stderr)
+                raise
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
-    unittest.main()
+    unittest.main(verbosity=2)
