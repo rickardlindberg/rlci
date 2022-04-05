@@ -84,22 +84,30 @@ class Compile(unittest.TestCase):
         self.assertCompilesTo("""
             pipeline {
             }
-        """,
-            [['Pipeline', {'name': ''}]]
-        )
+        """, [
+            ['Pipeline', {'name': ''}]
+        ])
+
+    def test_minimal_with_name(self):
+        self.assertCompilesTo("""
+            pipeline {
+                name "foo"
+            }
+        """, [
+            ['Pipeline', {'name': 'foo'}]
+        ])
 
     def test_stage(self):
         self.assertCompilesTo("""
             pipeline {
-                name "test"
                 stage {
                     name "foo"
                     sh "echo foo"
                 }
             }
-        """,
-            [['Pipeline',
-              {'name': 'test'},
+        """, [
+            ['Pipeline',
+              {'name': ''},
               ['Node',
                0,
                {'name': 'foo', 'triggers': []},
@@ -113,8 +121,8 @@ class Compile(unittest.TestCase):
                   ['Char', ' '],
                   ['Char', 'f'],
                   ['Char', 'o'],
-                  ['Char', 'o']]]]]]]
-        )
+                  ['Char', 'o']]]]]]
+        ])
 
     def test_link(self):
         self.assertCompilesTo("""
@@ -124,13 +132,13 @@ class Compile(unittest.TestCase):
                     stage { name "bar" }
                 }
             }
-        """,
-            [['Pipeline',
+        """, [
+            ['Pipeline',
               {'name': ''},
               ['Node', 0, {'name': 'foo', 'triggers': []}, []],
               ['Node', 1, {'name': 'bar', 'triggers': []}, []],
-              ['Link', 0, 1]]]
-        )
+              ['Link', 0, 1]]
+        ])
 
     def test_triggers(self):
         self.assertCompilesTo("""
@@ -139,14 +147,14 @@ class Compile(unittest.TestCase):
                     trigger type="commit" repo="foo"
                 }
             }
-        """,
-            [['Pipeline',
+        """, [
+            ['Pipeline',
               {'name': ''},
               ['Node',
                0,
                {'name': '0', 'triggers': [{'repo': 'foo', 'type': 'commit'}]},
-               []]]]
-        )
+               []]]
+        ])
 
     def test_example(self):
         with open("example.pipeline") as f:
