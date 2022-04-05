@@ -76,12 +76,35 @@ class StageRunner(unittest.TestCase):
             ]
         )
 
-class Compile(unittest.TestCase):
+class ToolTest(unittest.TestCase):
 
     maxDiff = 10000
 
+    def assertTransformsTo(self, pipeline, output):
+        with temporary_pipeline(pipeline) as path:
+            cmd = self.tool_command(path)
+            result = subprocess.run(cmd, capture_output=True)
+            try:
+                if result.returncode != 0:
+                    self.fail(f"{cmd} failed")
+                self.assertEqual(self.output_parse(result.stdout), output)
+            except:
+                sys.stderr.buffer.write(result.stderr)
+                raise
+
+    def output_parse(self, output):
+        return output
+
+class Compile(ToolTest):
+
+    def tool_command(self, pipeline):
+        return ["python", "tool.py", "compile", pipeline]
+
+    def output_parse(self, output):
+        return json.loads(output)
+
     def test_minimal(self):
-        self.assertCompilesTo("""
+        self.assertTransformsTo("""
             pipeline {
             }
         """, [
@@ -89,7 +112,7 @@ class Compile(unittest.TestCase):
         ])
 
     def test_minimal_with_name(self):
-        self.assertCompilesTo("""
+        self.assertTransformsTo("""
             pipeline {
                 name "foo"
             }
@@ -98,7 +121,7 @@ class Compile(unittest.TestCase):
         ])
 
     def test_stage(self):
-        self.assertCompilesTo("""
+        self.assertTransformsTo("""
             pipeline {
                 stage {
                     name "foo"
@@ -125,7 +148,7 @@ class Compile(unittest.TestCase):
         ])
 
     def test_link(self):
-        self.assertCompilesTo("""
+        self.assertTransformsTo("""
             pipeline {
                 seq {
                     stage { name "foo" }
@@ -141,7 +164,7 @@ class Compile(unittest.TestCase):
         ])
 
     def test_triggers(self):
-        self.assertCompilesTo("""
+        self.assertTransformsTo("""
             pipeline {
                 stage {
                     trigger type="commit" repo="foo"
@@ -158,21 +181,29 @@ class Compile(unittest.TestCase):
 
     def test_example(self):
         with open("example.pipeline") as f:
-            self.assertCompilesTo(f.read(), EqAny())
+            self.assertTransformsTo(f.read(), EqAny())
 
-    def assertCompilesTo(self, pipeline, output):
-        with temporary_pipeline(pipeline) as path:
-            result = subprocess.run(
-                ["python", "tool.py", "compile", path],
-                capture_output=True
-            )
-            try:
-                if result.returncode != 0:
-                    self.fail(f"Compilation of {path} failed")
-                self.assertEqual(json.loads(result.stdout), output)
-            except:
-                sys.stderr.buffer.write(result.stderr)
-                raise
+class Dotty(ToolTest):
+
+    def tool_command(self, pipeline):
+        return ["python", "tool.py", "dot", pipeline]
+
+    def output_parse(self, output):
+        return output.decode("utf-8").splitlines()
+
+    def test_minimal(self):
+        self.assertTransformsTo("""
+            pipeline {
+            }
+        """, [
+            "Digraph {",
+            "    rankdir=LR;",
+            "    subgraph cluster0 {",
+            "        label=\"\";",
+            "    }",
+            "}",
+            "",
+        ])
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))

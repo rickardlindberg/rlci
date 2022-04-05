@@ -119,6 +119,8 @@ ToDot {
 Cli {
     interpret = command:x !. -> x
     command =
+        | "dot" .:x
+            -> cmd_dot(x)
         | "dotty" .:x
             -> cmd_dotty(x)
         | "compile" .:x
