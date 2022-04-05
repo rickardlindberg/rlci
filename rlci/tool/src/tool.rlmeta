@@ -4,7 +4,7 @@ Parser {
         | space 'template' space name:x space '{' templateBody*:xs space '}'
             -> ["Template" x ~xs]
         | space 'pipeline' space '{' pipelineBlock*:xs space '}'
-            -> ["Pipeline" ~xs]
+            -> ["Pipeline" ["Seq" ~xs]]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
     templateBody = block | pipelineBlock
@@ -60,11 +60,12 @@ ToDag {
         -> []:links
         -> xs
         -> [["Pipeline" pipelineProps ~nodes ~links]]
-    PipelineName = ast:x -> set(pipelineProps "name" x)
+    PipelineName = ast:x -> set(pipelineProps "name" x) -> parents
     Par = ast*:xs -> [~~xs]
-    Seq =
-        | ast:x Seq:y -> x:parents -> y
-        | ast:x !.    -> x
+    Seq = seqInner | -> parents
+    seqInner =
+        | ast:x seqInner:y -> x:parents -> y
+        | ast:x !.         -> x
     Template = .:name .*:xs -> xs:x -> set(templates name x) -> []
     ApplyTemplate = .:name ast*:xs
         -> dict():templateArgs

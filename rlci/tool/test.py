@@ -150,10 +150,8 @@ class Compile(ToolTest):
     def test_link(self):
         self.assertTransformsTo("""
             pipeline {
-                seq {
-                    stage { name "foo" }
-                    stage { name "bar" }
-                }
+                stage { name "foo" }
+                stage { name "bar" }
             }
         """, [
             ['Pipeline',
