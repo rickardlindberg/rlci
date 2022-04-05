@@ -101,9 +101,17 @@ ToDag {
 }
 
 ToDot {
-    asts     = ast*:xs !.       -> { "Digraph {\n" > xs < "}\n" }
+    asts     = ast*:xs !.       -> { "Digraph {\n" >
+                                       "rankdir=LR;\n"
+                                       xs
+                                     < "}\n"
+                                   }
     ast      = [%:x]            -> x
-    Pipeline = . ast*
+    Pipeline = .:x ast*:xs      -> { "subgraph cluster" label() " {\n" >
+                                       "label=\"" get(x "name") "\";\n"
+                                       xs
+                                      < "}\n"
+                                   }
     Node     = .:id .:props .   -> { id "[shape=rect label=\"" get(props "name") "\"];\n" }
     Link     = .:parent .:child -> { parent " -> " child ";\n" }
 }
