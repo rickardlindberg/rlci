@@ -1,43 +1,43 @@
 Parser {
-    file = block*:xs space !. -> xs
-    block =
-        | space 'template' space name:x space '{' templateBody*:xs space '}'
+    file = topLevelBlock*:xs space !. -> xs
+    topLevelBlock =
+        | space 'template' space name:x space '{' templateBlock*:xs space '}'
             -> ["Template" x ~xs]
-        | space 'pipeline' space '{' pipelineBlock*:xs space '}'
-            -> ["Pipeline" ["Seq" ~xs]]
+        | space 'pipeline' space '{' pipelineParameter*:xs pipelineBlock*:ys space '}'
+            -> ["Pipeline" ["Seq" ~xs ~ys]]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
-    templateBody = block | pipelineBlock
+    templateBlock =
+        | topLevelBlock
+        | pipelineBlock
+    pipelineParameter =
+        | parameterName:x -> "PipelineName":astName -> x
     pipelineBlock =
-        | space 'name' !alphanum space string:x
-            -> ["PipelineName" x]
-        | stageBlocks
-    stageBlocks =
-        | space 'group' space '{' groupBlock*:xs space '}'
-            -> ["Group" ~xs]
-        | space 'par' space '{' stageBlocks*:xs space '}'
+        | space 'group' space '{' groupParameter*:xs pipelineBlock*:ys space '}'
+            -> ["Group" ~xs ~ys]
+        | space 'par' space '{' pipelineBlock*:xs space '}'
             -> ["Par" ~xs]
-        | space 'seq' space '{' stageBlocks*:xs space '}'
+        | space 'seq' space '{' pipelineBlock*:xs space '}'
             -> ["Seq" ~xs]
-        | space 'stage' space maybeName:x space '{' stageBody*:ys space '}'
+        | space 'stage' space maybeName:x space '{' stageBlock*:ys space '}'
             -> ["Stage" x ~ys]
         | space 'link' space '(' space name:x space name:y ')'
             -> ["Link" x y]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
-    groupBlock =
-        | space 'name' !alphanum space string:x
-            -> ["GroupName" x]
-        | stageBlocks
-    stageBody =
-        | space 'name' !alphanum space string:x
-            -> ["StageName" x]
+    groupParameter =
+        | parameterName:x -> "GroupName":astName -> x
+    stageBlock =
+        | parameterName:x -> "StageName":astName -> x
         | space 'trigger' !alphanum space triggerArg*:xs
             -> ["StageTrigger" ~xs]
         | space 'sh' !alphanum space maybeName:x space string:y
             -> ["StageSh" x y]
         | space 'out' !alphanum space name:x space string:y
             -> ["StageOut" x y]
+    parameterName =
+        | space 'name' !alphanum space string:x
+            -> [astName x]
     maybeName = name | -> ""
     triggerArg = space name:x '=' string:y -> ["TriggerArg" x y]
     arg = space name:x '=' string:y -> ["Arg" x y]
