@@ -11,9 +11,13 @@ Parser {
     pipelineBlock =
         | space 'name' !alphanum space string:x
             -> ["PipelineName" x]
-        | space 'par' space '{' pipelineBlock*:xs space '}'
+        | stageBlocks
+    stageBlocks =
+        | space 'group' space '{' groupBlock*:xs space '}'
+            -> ["Group" ~xs]
+        | space 'par' space '{' stageBlocks*:xs space '}'
             -> ["Par" ~xs]
-        | space 'seq' space '{' pipelineBlock*:xs space '}'
+        | space 'seq' space '{' stageBlocks*:xs space '}'
             -> ["Seq" ~xs]
         | space 'stage' space maybeName:x space '{' stageBody*:ys space '}'
             -> ["Stage" x ~ys]
@@ -21,6 +25,10 @@ Parser {
             -> ["Link" x y]
         | space name:x space '(' arg*:xs space ')'
             -> ["ApplyTemplate" x ~xs]
+    groupBlock =
+        | space 'name' !alphanum space string:x
+            -> ["GroupName" x]
+        | stageBlocks
     stageBody =
         | space 'name' !alphanum space string:x
             -> ["StageName" x]
@@ -61,6 +69,14 @@ ToDag {
         -> xs
         -> [["Pipeline" pipelineProps ~nodes ~links]]
     PipelineName = ast:x -> set(pipelineProps "name" x) -> parents
+    Group = Seq:x
+        -> dict():groupProps
+        -> set(groupProps "name" "")
+        -> ["Group" groupProps]:group
+        -> add(nodes group)
+        -> group:nodes
+        -> x
+    GroupName = ast:x -> set(groupProps "name" x) -> parents
     Par = ast*:xs -> [~~xs]
     Seq = seqInner | -> parents
     seqInner =
@@ -109,6 +125,11 @@ ToDot {
                                    }
     ast      = [%:x]            -> x
     Pipeline = .:x ast*:xs      -> { "subgraph cluster" label() " {\n" >
+                                       "label=\"" get(x "name") "\";\n"
+                                       xs
+                                      < "}\n"
+                                   }
+    Group    = .:x ast*:xs      -> { "subgraph cluster" label() " {\n" >
                                        "label=\"" get(x "name") "\";\n"
                                        xs
                                       < "}\n"

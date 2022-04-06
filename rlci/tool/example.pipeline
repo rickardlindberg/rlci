@@ -1,22 +1,25 @@
 pipeline {
-    name "example  realistic"
+    name "example realistic"
     seq {
         stage {
             name "checkout"
         }
-        par {
-            stage {
-                name "build"
-            }
-            stage {
-                name "test"
-            }
-            seq {
+        group {
+            name "the bulk"
+            par {
                 stage {
-                    name "lint1"
+                    name "build"
                 }
                 stage {
-                    name "lint2"
+                    name "test"
+                }
+                seq {
+                    stage {
+                        name "lint1"
+                    }
+                    stage {
+                        name "lint2"
+                    }
                 }
             }
         }

@@ -177,6 +177,28 @@ class Compile(ToolTest):
                []]]
         ])
 
+    def test_group(self):
+        self.assertTransformsTo("""
+            pipeline {
+                group {
+                    name "foo"
+                    stage {}
+                }
+                group {
+                    name "bar"
+                    stage {}
+                }
+            }
+        """, [
+            [
+                'Pipeline',
+                {'name': ''},
+                ['Group', {'name': 'foo'}, ['Node', 0, {'name': '0', 'triggers': []}, []]],
+                ['Group', {'name': 'bar'}, ['Node', 1, {'name': '1', 'triggers': []}, []]],
+                ['Link', 0, 1],
+            ]
+        ])
+
     def test_example(self):
         with open("example.pipeline") as f:
             self.assertTransformsTo(f.read(), EqAny())
