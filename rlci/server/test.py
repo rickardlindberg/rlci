@@ -12,18 +12,21 @@ class TestServer(unittest.TestCase):
 
     def test_server(self):
         with self.server() as send:
-            x = tool.compile_pipeline("""
-                pipeline {
-                    stage {
-                        sh "echo 1"
+            self.assertEqual(send({
+                "message": "store_pipeline",
+                "payload": tool.compile_pipeline("""
+                    pipeline {
+                        stage {
+                            sh "echo 1"
+                        }
+                        stage {
+                            sh "echo 2"
+                        }
                     }
-                    stage {
-                        sh "echo 2"
-                    }
-                }
-            """)
-            # 1. compile pipeline
-            # 2. message: store pipeline
+                """)
+            }),
+                {"status": "ok"}
+            )
             # 3. message: trigger
             # 4. message: get pipeline execution
             self.assertEqual(

@@ -17,14 +17,14 @@ def cmd_dotty(path):
     )
 
 def compile_pipeline(text):
-    return json.dumps(compile_chain([
+    return compile_chain([
         (Parser, "file"),
         (ToDag, "asts"),
-    ], text, debug=True))
+    ], text, debug=True)
 
 def cmd_compile(path):
     with open(path) as f:
-        print(compile_pipeline(f.read()))
+        print(json.dumps(compile_pipeline(f.read())))
 
 def cmd_debug_dag(path):
     with open(path) as f:

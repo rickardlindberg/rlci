@@ -1,9 +1,15 @@
 import asyncio
+import json
 
 if __name__ == "__main__":
     async def handle_request(reader, writer):
-        request = await reader.readline()
-        writer.write(request)
+        request = json.loads(await reader.readline())
+        if request["message"] == "store_pipeline":
+            response = {"status": "ok"}
+        else:
+            response = request
+        writer.write(json.dumps(response).encode("utf-8"))
+        writer.write(b"\n")
         await writer.drain()
         writer.close()
         await writer.wait_closed()
