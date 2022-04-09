@@ -6,11 +6,26 @@ import json
 import os
 import subprocess
 import unittest
+import tool
 
 class TestServer(unittest.TestCase):
 
     def test_server(self):
         with self.server() as send:
+            x = tool.compile_pipeline("""
+                pipeline {
+                    stage {
+                        sh "echo 1"
+                    }
+                    stage {
+                        sh "echo 2"
+                    }
+                }
+            """)
+            # 1. compile pipeline
+            # 2. message: store pipeline
+            # 3. message: trigger
+            # 4. message: get pipeline execution
             self.assertEqual(
                 send({"message": "hello"}),
                 {"message": "hello"}
