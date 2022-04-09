@@ -27,7 +27,12 @@ class TestServer(unittest.TestCase):
             }),
                 {"status": "ok"}
             )
-            # 3. message: trigger
+            self.assertEqual(send({
+                "message": "trigger",
+                "payload": {"type": "test", "arg": 99}
+            }),
+                {"status": "ok"}
+            )
             # 4. message: get pipeline execution
             self.assertEqual(
                 send({"message": "hello"}),

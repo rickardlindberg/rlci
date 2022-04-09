@@ -6,6 +6,8 @@ if __name__ == "__main__":
         request = json.loads(await reader.readline())
         if request["message"] == "store_pipeline":
             response = {"status": "ok"}
+        elif request["message"] == "trigger":
+            response = {"status": "ok"}
         else:
             response = request
         writer.write(json.dumps(response).encode("utf-8"))
