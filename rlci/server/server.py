@@ -3,13 +3,17 @@ import json
 
 if __name__ == "__main__":
     async def handle_request(reader, writer):
-        request = json.loads(await reader.readline())
-        if request["message"] == "store_pipeline":
-            response = {"status": "ok"}
-        elif request["message"] == "trigger":
-            response = {"status": "ok"}
-        else:
-            response = request
+        request_data = await reader.readline()
+        try:
+            request = json.loads(request_data)
+            if request["message"] == "store_pipeline":
+                response = {"status": "ok"}
+            elif request["message"] == "trigger":
+                response = {"status": "ok"}
+            else:
+                raise ValueError(f"Unknown message {request['message']}")
+        except Exception as e:
+            response = {"status": "error", "message": str(e)}
         writer.write(json.dumps(response).encode("utf-8"))
         writer.write(b"\n")
         await writer.drain()
