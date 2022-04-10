@@ -9,13 +9,13 @@ TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "tool")
 
 def tool():
     subprocess.run([
-        "python", os.path.join(TOOL_DIR, "make.py"),
+        sys.executable, os.path.join(TOOL_DIR, "make.py"),
     ], check=True)
 
 def devserver():
     tool()
     subprocess.run([
-        "python", "-m", "flask", "run"
+        sys.executable, "-m", "flask", "run"
     ], check=True, cwd=SRC_DIR, env={"FLASK_APP": "rlciweb"})
 
 if __name__ == "__main__":
