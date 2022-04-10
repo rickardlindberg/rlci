@@ -12,7 +12,7 @@ def tool():
     print("Make tool")
     with open("tool.py", "wb") as f:
         f.write(subprocess.run([
-            "python", RLMETA_PATH,
+            sys.executable, RLMETA_PATH,
             "--copy", "src/header.py",
             "--support",
             "--compile", "src/tool.rlmeta",
@@ -22,7 +22,7 @@ def tool():
 def test():
     tool()
     print("Make test")
-    subprocess.run(["python", "test.py"], check=True)
+    subprocess.run([sys.executable, "test/test_tool.py"], check=True)
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))

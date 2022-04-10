@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import contextlib
 import json
 import os
@@ -7,6 +5,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+
+TOOL_CMD = [sys.executable, "../tool.py"]
 
 class EqAny:
     def __eq__(self, other):
@@ -23,7 +23,7 @@ def temporary_pipeline(pipeline):
 def get_first_stage_definition(pipeline_text):
     with temporary_pipeline(pipeline_text) as path:
         return subprocess.run(
-            ["python", "tool.py", "get_stage_definition", path, "0"],
+            TOOL_CMD + ["get_stage_definition", path, "0"],
             capture_output=True,
             check=True
         ).stdout
@@ -33,7 +33,7 @@ def run_first_stage(pipeline_text, args):
         json.loads(x)
         for x
         in subprocess.run(
-            ["python", "tool.py", "run"]+args,
+            TOOL_CMD + ["run"]+args,
             capture_output=True,
             check=True,
             input=get_first_stage_definition(pipeline_text)
@@ -98,7 +98,7 @@ class ToolTest(unittest.TestCase):
 class Compile(ToolTest):
 
     def tool_command(self, pipeline):
-        return ["python", "tool.py", "compile", pipeline]
+        return TOOL_CMD + ["compile", pipeline]
 
     def output_parse(self, output):
         return json.loads(output)
@@ -206,7 +206,7 @@ class Compile(ToolTest):
 class Dotty(ToolTest):
 
     def tool_command(self, pipeline):
-        return ["python", "tool.py", "dot", pipeline]
+        return TOOL_CMD + ["dot", pipeline]
 
     def output_parse(self, output):
         return output.decode("utf-8").splitlines()
