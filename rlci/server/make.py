@@ -9,7 +9,7 @@ TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "tool")
 
 def tool():
     subprocess.run(
-        ["python", os.path.join(TOOL_DIR, "make.py")],
+        [sys.executable, os.path.join(TOOL_DIR, "make.py")],
         check=True
     )
 
@@ -17,7 +17,7 @@ def test():
     tool()
     print("Make test")
     subprocess.run(
-        ["python", "test/test_server.py"],
+        [sys.executable, "test/test_server.py"],
         check=True
     )
 
