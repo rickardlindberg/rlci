@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import asyncio
 import contextlib
 import json
@@ -8,7 +6,7 @@ import subprocess
 import sys
 import unittest
 
-TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "tool")
+TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "tool")
 sys.path.insert(0, TOOL_DIR)
 import tool
 
@@ -51,7 +49,7 @@ class TestServer(unittest.TestCase):
             await writer.wait_closed()
             return json.loads(response)
         with subprocess.Popen(
-            ["python", "server.py"],
+            ["python", "../src/server.py"],
             stdout=subprocess.PIPE
         ) as process:
             process.stdout.readline()

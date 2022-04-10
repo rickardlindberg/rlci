@@ -17,7 +17,7 @@ def test():
     tool()
     print("Make test")
     subprocess.run(
-        ["python", "test.py"],
+        ["python", "test/test_server.py"],
         check=True
     )
 
