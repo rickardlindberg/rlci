@@ -19,10 +19,11 @@ class TestServer(unittest.TestCase):
                 "payload": tool.compile_pipeline("""
                     pipeline {
                         stage {
-                            sh "echo 1"
+                            trigger type="test"
+                            sh "echo ${arg}"
                         }
                         stage {
-                            sh "echo 2"
+                            sh "echo child"
                         }
                     }
                 """)
