@@ -5,7 +5,11 @@ import contextlib
 import json
 import os
 import subprocess
+import sys
 import unittest
+
+TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "tool")
+sys.path.insert(0, TOOL_DIR)
 import tool
 
 class TestServer(unittest.TestCase):

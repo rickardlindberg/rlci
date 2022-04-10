@@ -12,7 +12,6 @@ def tool():
         ["python", os.path.join(TOOL_DIR, "make.py")],
         check=True
     )
-    shutil.copy(os.path.join(TOOL_DIR, "tool.py"), "tool.py")
 
 def test():
     tool()
