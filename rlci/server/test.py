@@ -38,7 +38,6 @@ class TestServer(unittest.TestCase):
     @contextlib.contextmanager
     def server(self):
         async def communicate(request):
-            await asyncio.sleep(0.5)
             reader, writer = await asyncio.open_connection("localhost", 9000)
             writer.write(json.dumps(request).encode("utf-8"))
             writer.write(b"\n")
@@ -47,7 +46,11 @@ class TestServer(unittest.TestCase):
             writer.close()
             await writer.wait_closed()
             return json.loads(response)
-        with subprocess.Popen(["python", "server.py"]) as process:
+        with subprocess.Popen(
+            ["python", "server.py"],
+            stdout=subprocess.PIPE
+        ) as process:
+            process.stdout.readline()
             try:
                 yield lambda x: asyncio.run(communicate(x))
             finally:

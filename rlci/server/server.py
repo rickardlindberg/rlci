@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 
 if __name__ == "__main__":
     async def handle_request(reader, writer):
@@ -21,6 +22,8 @@ if __name__ == "__main__":
         await writer.wait_closed()
     async def server():
         server = await asyncio.start_server(handle_request, host="localhost", port=9000)
+        print("listening on port 9000")
+        sys.stdout.flush()
         async with server:
             await server.serve_forever()
     asyncio.run(server())
