@@ -8,15 +8,15 @@ SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "tool")
 
 def tool():
-    subprocess.check_call([
+    subprocess.run([
         "python", os.path.join(TOOL_DIR, "make.py"),
-    ])
+    ], check=True)
 
 def devserver():
     tool()
-    subprocess.check_call([
+    subprocess.run([
         "python", "-m", "flask", "run"
-    ], cwd=SRC_DIR, env={"FLASK_APP": "rlciweb"})
+    ], check=True, cwd=SRC_DIR, env={"FLASK_APP": "rlciweb"})
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))

@@ -16,20 +16,18 @@ def tool():
     rlmeta()
     print("Make tool")
     with open("tool.py", "wb") as f:
-        f.write(subprocess.check_output([
+        f.write(subprocess.run([
             "python", RLMETA_PATH,
             "--copy", "src/header.py",
             "--support",
             "--compile", "src/tool.rlmeta",
             "--copy", "src/footer.py",
-        ]))
+        ], check=True, stdout=subprocess.PIPE).stdout)
 
 def test():
     tool()
     print("Make test")
-    subprocess.check_output([
-        "python", "test.py",
-    ])
+    subprocess.run(["python", "test.py"], check=True)
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
