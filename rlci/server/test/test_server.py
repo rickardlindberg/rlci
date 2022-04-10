@@ -49,7 +49,7 @@ class TestServer(unittest.TestCase):
             await writer.wait_closed()
             return json.loads(response)
         with subprocess.Popen(
-            ["python", "../src/server.py"],
+            [sys.executable, "../src/server.py"],
             stdout=subprocess.PIPE
         ) as process:
             process.stdout.readline()
