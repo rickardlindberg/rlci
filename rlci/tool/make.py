@@ -4,16 +4,11 @@ import os
 import subprocess
 import sys
 
-RLMETA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "rlmeta")
-RLMETA_PATH = os.path.join(RLMETA_DIR, "rlmeta.py")
-
-def rlmeta():
-    subprocess.check_call([
-        "python", os.path.join(RLMETA_DIR, "make.py"),
-    ])
+RLMETA_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "rlmeta", "rlmeta.py"
+)
 
 def tool():
-    rlmeta()
     print("Make tool")
     with open("tool.py", "wb") as f:
         f.write(subprocess.run([
