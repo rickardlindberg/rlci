@@ -10,9 +10,16 @@ TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "tool")
 sys.path.insert(0, TOOL_DIR)
 import tool
 
+class AnyCapture:
+
+    def __eq__(self, other):
+        self.value = other
+        return True
+
 class TestServer(unittest.TestCase):
 
     def test_server(self):
+        anyCapture = AnyCapture()
         with self.server() as send:
             self.assertEqual(send({
                 "message": "store_pipeline",
@@ -28,8 +35,9 @@ class TestServer(unittest.TestCase):
                     }
                 """)
             }),
-                {"status": "ok"}
+                {"status": "ok", "ids": [anyCapture]}
             )
+            pipeline_id = anyCapture.value
             self.assertEqual(send({
                 "message": "trigger",
                 "payload": {"type": "test", "arg": 99}
