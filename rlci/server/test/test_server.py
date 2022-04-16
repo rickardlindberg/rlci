@@ -19,7 +19,7 @@ class AnyCapture:
 class TestServer(unittest.TestCase):
 
     def test_server(self):
-        anyCapture = AnyCapture()
+        any_capture = AnyCapture()
         with self.server() as send:
             self.assertEqual(send({
                 "message": "store_pipelines",
@@ -35,16 +35,16 @@ class TestServer(unittest.TestCase):
                     }
                 """)
             }),
-                {"status": "ok", "ids": [anyCapture]}
+                {"status": "ok", "ids": [any_capture]}
             )
-            pipeline_id = anyCapture.value
+            pipeline_id = any_capture.value
             self.assertEqual(send({
                 "message": "trigger",
                 "payload": {"type": "test", "arg": 99}
             }),
-                {"status": "ok", "executions": [anyCapture]}
+                {"status": "ok", "executions": [any_capture]}
             )
-            execution_id = anyCapture.value
+            execution_id = any_capture.value
             # 4. message: get pipeline execution
 
     @contextlib.contextmanager
