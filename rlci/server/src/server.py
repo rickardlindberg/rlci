@@ -28,7 +28,7 @@ class DB:
     def trigger(self, values):
         executions = []
         for pipeline_id in self.pipelines.values():
-            for ast in self.objects[self.objects[pipeline_id]["instances"][0]]:
+            for ast in self.read_object(self.read_object(pipeline_id)["instances"][0]):
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
@@ -44,6 +44,9 @@ class DB:
             if key not in values or values[key] != value:
                 return False
         return True
+
+    def read_object(self, name):
+        return self.objects[name]
 
     def create_object(self, contents):
         new_id = uuid.uuid4().hex
