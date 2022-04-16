@@ -22,7 +22,7 @@ class TestServer(unittest.TestCase):
         anyCapture = AnyCapture()
         with self.server() as send:
             self.assertEqual(send({
-                "message": "store_pipeline",
+                "message": "store_pipelines",
                 "payload": tool.compile_pipeline("""
                     pipeline {
                         stage {

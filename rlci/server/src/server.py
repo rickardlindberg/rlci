@@ -36,7 +36,7 @@ if __name__ == "__main__":
         request_data = await reader.readline()
         try:
             request = json.loads(request_data)
-            if request["message"] == "store_pipeline":
+            if request["message"] == "store_pipelines":
                 response = {
                     "status": "ok",
                     "ids": db.store_pipelines(request["payload"])
