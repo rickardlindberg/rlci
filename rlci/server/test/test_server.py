@@ -23,7 +23,7 @@ class TestServer(unittest.TestCase):
         with self.server() as send:
             self.assertEqual(send({
                 "message": "store_pipelines",
-                "payload": tool.compile_pipeline("""
+                "payload": tool.compile_pipeline_file("""
                     pipeline {
                         stage {
                             trigger type="test"

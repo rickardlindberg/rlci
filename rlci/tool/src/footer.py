@@ -16,7 +16,7 @@ def cmd_dotty(path):
         input=dot(path)
     )
 
-def compile_pipeline(text, debug=False):
+def compile_pipeline_file(text, debug=False):
     return compile_chain([
         (Parser, "file"),
         (ToDag, "asts"),
@@ -24,7 +24,7 @@ def compile_pipeline(text, debug=False):
 
 def cmd_compile(path):
     with open(path) as f:
-        print(json.dumps(compile_pipeline(f.read(), debug=True)))
+        print(json.dumps(compile_pipeline_file(f.read(), debug=True)))
 
 def cmd_debug_dag(path):
     with open(path) as f:
