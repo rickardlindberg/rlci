@@ -42,7 +42,10 @@ if __name__ == "__main__":
                     "ids": db.store_pipelines(request["payload"])
                 }
             elif request["message"] == "trigger":
-                response = {"status": "ok"}
+                response = {
+                    "status": "ok",
+                    "executions": [None]
+                }
             else:
                 raise ValueError(f"Unknown message {request['message']}")
         except Exception as e:

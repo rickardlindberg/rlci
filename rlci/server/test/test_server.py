@@ -42,8 +42,9 @@ class TestServer(unittest.TestCase):
                 "message": "trigger",
                 "payload": {"type": "test", "arg": 99}
             }),
-                {"status": "ok"}
+                {"status": "ok", "executions": [anyCapture]}
             )
+            execution_id = anyCapture.value
             # 4. message: get pipeline execution
 
     @contextlib.contextmanager
