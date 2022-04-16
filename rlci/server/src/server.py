@@ -18,12 +18,32 @@ class DB:
     def store_pipeline(self, name, pipeline):
         pipeline_id = self.create_object(pipeline)
         if name not in self.pipelines:
-            self.pipelines["name"] = self.create_object({
+            self.pipelines[name] = self.create_object({
                 "instances": [pipeline_id]
             })
         else:
             raise NotImplementedError("store existing pipeline")
         return pipeline_id
+
+    def trigger(self, values):
+        executions = []
+        for pipeline_id in self.pipelines.values():
+            for ast in self.objects[self.objects[pipeline_id]["instances"][0]]:
+                if ast[0] == "Node":
+                    for trigger in ast[2]["triggers"]:
+                        if self.trigger_matches(trigger, values):
+                            executions.append(self.create_execution())
+        return executions
+
+    def create_execution(self):
+        self.create_object({
+        })
+
+    def trigger_matches(self, trigger, values):
+        for key, value in trigger.items():
+            if key not in values or values[key] != value:
+                return False
+        return True
 
     def create_object(self, contents):
         new_id = uuid.uuid4().hex
@@ -44,7 +64,7 @@ if __name__ == "__main__":
             elif request["message"] == "trigger":
                 response = {
                     "status": "ok",
-                    "executions": [None]
+                    "executions": db.trigger(request["payload"])
                 }
             else:
                 raise ValueError(f"Unknown message {request['message']}")
