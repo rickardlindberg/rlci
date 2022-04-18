@@ -39,7 +39,7 @@ class PipelineDB:
         index = await self.store.read_object("index")
         for pipeline_id in index["pipelines"].values():
             pipeline = await self.store.read_object(pipeline_id)
-            active_id = pipeline["instances"][0]
+            active_id = pipeline["versions"][0]
             active_pipeline = await self.store.read_object(active_id)
             active_pipelines.append((active_id, active_pipeline))
         return active_pipelines
@@ -59,7 +59,7 @@ class PipelineDB:
 
     async def store_pipeline(self, name, pipeline):
         pipeline_id = await self.store.create_object({"def": pipeline, "executions": []})
-        foo = await self.store.create_object({"instances": [pipeline_id]})
+        foo = await self.store.create_object({"versions": [pipeline_id]})
         await self.store.modify_object("index", lambda index:
             index["pipelines"].__setitem__(
                 "name",
