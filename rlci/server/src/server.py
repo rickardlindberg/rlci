@@ -14,8 +14,11 @@ class DB:
             for pipeline in pipelines
         ]
 
+    def get_pipeline(self, pipeline_id):
+        return self.read_object(pipeline_id)
+
     def store_pipeline(self, name, pipeline):
-        pipeline_id = self.create_object(pipeline)
+        pipeline_id = self.create_object({"def": pipeline, "executions": []})
         self.modify_object("index", lambda index: index["pipelines"].__setitem__(
             "name",
             self.create_object({"instances": [pipeline_id]})
@@ -25,15 +28,20 @@ class DB:
     def trigger(self, values):
         executions = []
         for pipeline_id in self.read_object("index")["pipelines"].values():
-            for ast in self.read_object(self.read_object(pipeline_id)["instances"][0]):
+            foo = self.read_object(pipeline_id)["instances"][0]
+            for ast in self.read_object(foo)["def"]:
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
-                            executions.append(self.create_execution())
+                            y = self.create_execution()
+                            executions.append(y)
+                            self.modify_object(foo, lambda pipeline:
+                                pipeline["executions"].append(y)
+                            )
         return executions
 
     def create_execution(self):
-        self.create_object({
+        return self.create_object({
         })
 
     def trigger_matches(self, trigger, values):
@@ -68,6 +76,11 @@ if __name__ == "__main__":
                 response = {
                     "status": "ok",
                     "executions": db.trigger(request["payload"])
+                }
+            elif request["message"] == "get_pipeline":
+                response = {
+                    "status": "ok",
+                    "pipeline": db.get_pipeline(request["pipeline_id"])
                 }
             else:
                 raise ValueError(f"Unknown message {request['message']}")

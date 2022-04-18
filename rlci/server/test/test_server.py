@@ -18,6 +18,8 @@ class AnyCapture:
 
 class TestServer(unittest.TestCase):
 
+    maxDiff = 10000
+
     def test_server(self):
         any_capture = AnyCapture()
         with self.server() as send:
@@ -45,6 +47,15 @@ class TestServer(unittest.TestCase):
                 {"status": "ok", "executions": [any_capture]}
             )
             execution_id = any_capture.value
+            self.assertEqual(send({
+                "message": "get_pipeline",
+                "pipeline_id": pipeline_id
+            }),
+                {"status": "ok", "pipeline": {
+                    "def": any_capture,
+                    "executions": [execution_id]
+                }}
+            )
             # 4. message: get pipeline execution
 
     @contextlib.contextmanager
