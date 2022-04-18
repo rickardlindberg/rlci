@@ -35,6 +35,9 @@ class PipelineDB:
     def get_pipeline(self, pipeline_id):
         return self.db.read_object(pipeline_id)
 
+    def get_execution(self, execution_id):
+        return self.db.read_object(execution_id)
+
     def store_pipeline(self, name, pipeline):
         pipeline_id = self.db.create_object({"def": pipeline, "executions": []})
         self.db.modify_object("index", lambda index: index["pipelines"].__setitem__(
@@ -88,6 +91,11 @@ if __name__ == "__main__":
                 response = {
                     "status": "ok",
                     "pipeline": db.get_pipeline(request["pipeline_id"])
+                }
+            elif request["message"] == "get_execution":
+                response = {
+                    "status": "ok",
+                    "execution": db.get_execution(request["execution_id"])
                 }
             else:
                 raise ValueError(f"Unknown message {request['message']}")

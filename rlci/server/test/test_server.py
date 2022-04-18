@@ -56,7 +56,13 @@ class TestServer(unittest.TestCase):
                     "executions": [execution_id]
                 }}
             )
-            # 4. message: get pipeline execution
+            self.assertEqual(send({
+                "message": "get_execution",
+                "execution_id": execution_id
+            }),
+                {"status": "ok", "execution": {
+                }}
+            )
 
     @contextlib.contextmanager
     def server(self):
