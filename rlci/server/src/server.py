@@ -59,7 +59,14 @@ class PipelineDB:
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
-                            y = await self.create_execution()
+                            y = await self.store.create_object({
+                                "processes": [
+                                    {
+                                        "stage": ast[1],
+                                        "args": values
+                                    }
+                                ]
+                            })
                             executions.append(y)
                             await self.store.modify_object(foo, lambda pipeline:
                                 pipeline["executions"].append(y)
@@ -71,10 +78,6 @@ class PipelineDB:
             if key not in values or values[key] != value:
                 return False
         return True
-
-    async def create_execution(self):
-        return await self.store.create_object({
-        })
 
 class Server:
 

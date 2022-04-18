@@ -61,6 +61,7 @@ class TestServer(unittest.TestCase):
                 "execution_id": execution_id
             }),
                 {"status": "ok", "execution": {
+                    "processes": any_capture,
                 }}
             )
 
