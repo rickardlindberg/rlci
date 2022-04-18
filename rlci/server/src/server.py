@@ -34,6 +34,23 @@ class PipelineDB:
             for pipeline in pipelines
         ]
 
+    async def get_active_pipelines(self):
+        active_pipelines = []
+        index = await self.store.read_object("index")
+        for pipeline_id in index["pipelines"].values():
+            pipeline = await self.store.read_object(pipeline_id)
+            active_id = pipeline["instances"][0]
+            active_pipeline = await self.store.read_object(active_id)
+            active_pipelines.append((active_id, active_pipeline))
+        return active_pipelines
+
+    async def create_execution(self, pipeline_id, execution):
+        execution_id = await self.store.create_object(execution)
+        await self.store.modify_object(pipeline_id, lambda pipeline:
+            pipeline["executions"].append(execution_id)
+        )
+        return execution_id
+
     async def get_pipeline(self, pipeline_id):
         return await self.store.read_object(pipeline_id)
 
@@ -50,34 +67,6 @@ class PipelineDB:
             )
         )
         return pipeline_id
-
-    async def trigger(self, values):
-        executions = []
-        for pipeline_id in (await self.store.read_object("index"))["pipelines"].values():
-            foo = (await self.store.read_object(pipeline_id))["instances"][0]
-            for ast in (await self.store.read_object(foo))["def"]:
-                if ast[0] == "Node":
-                    for trigger in ast[2]["triggers"]:
-                        if self.trigger_matches(trigger, values):
-                            y = await self.store.create_object({
-                                "processes": [
-                                    {
-                                        "stage": ast[1],
-                                        "args": values
-                                    }
-                                ]
-                            })
-                            executions.append(y)
-                            await self.store.modify_object(foo, lambda pipeline:
-                                pipeline["executions"].append(y)
-                            )
-        return executions
-
-    def trigger_matches(self, trigger, values):
-        for key, value in trigger.items():
-            if key not in values or values[key] != value:
-                return False
-        return True
 
 class Server:
 
@@ -111,7 +100,7 @@ class Server:
             elif request["message"] == "trigger":
                 response = {
                     "status": "ok",
-                    "executions": await self.db.trigger(request["payload"])
+                    "executions": await self.trigger(request["payload"])
                 }
             elif request["message"] == "get_pipeline":
                 response = {
@@ -132,6 +121,29 @@ class Server:
         await writer.drain()
         writer.close()
         await writer.wait_closed()
+
+    async def trigger(self, values):
+        executions = []
+        for (pipeline_id, pipeline) in await self.db.get_active_pipelines():
+            for ast in pipeline["def"]:
+                if ast[0] == "Node":
+                    for trigger in ast[2]["triggers"]:
+                        if self.trigger_matches(trigger, values):
+                            executions.append(await self.db.create_execution(pipeline_id, {
+                                "processes": [
+                                    {
+                                        "stage": ast[1],
+                                        "args": values
+                                    }
+                                ]
+                            }))
+        return executions
+
+    def trigger_matches(self, trigger, values):
+        for key, value in trigger.items():
+            if key not in values or values[key] != value:
+                return False
+        return True
 
 if __name__ == "__main__":
     Server(PipelineDB(InMemoryObjectStore())).serve_forever()
