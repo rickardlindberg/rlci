@@ -6,8 +6,7 @@ import uuid
 class DB:
 
     def __init__(self):
-        self.pipelines = {}
-        self.objects = {}
+        self.objects = {"index": {"pipelines": {}}}
 
     def store_pipelines(self, pipelines):
         return [
@@ -17,17 +16,15 @@ class DB:
 
     def store_pipeline(self, name, pipeline):
         pipeline_id = self.create_object(pipeline)
-        if name not in self.pipelines:
-            self.pipelines[name] = self.create_object({
-                "instances": [pipeline_id]
-            })
-        else:
-            raise NotImplementedError("store existing pipeline")
+        self.modify_object("index", lambda index: index["pipelines"].__setitem__(
+            "name",
+            self.create_object({"instances": [pipeline_id]})
+        ))
         return pipeline_id
 
     def trigger(self, values):
         executions = []
-        for pipeline_id in self.pipelines.values():
+        for pipeline_id in self.read_object("index")["pipelines"].values():
             for ast in self.read_object(self.read_object(pipeline_id)["instances"][0]):
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
@@ -44,6 +41,9 @@ class DB:
             if key not in values or values[key] != value:
                 return False
         return True
+
+    def modify_object(self, name, fn):
+        fn(self.objects[name])
 
     def read_object(self, name):
         return self.objects[name]
