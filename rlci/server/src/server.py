@@ -3,10 +3,28 @@ import json
 import sys
 import uuid
 
-class DB:
+class InMemoryObjectStore:
 
     def __init__(self):
-        self.objects = {"index": {"pipelines": {}}}
+        self.objects = {}
+
+    def modify_object(self, name, fn):
+        fn(self.objects[name])
+
+    def read_object(self, name):
+        return self.objects[name]
+
+    def create_object(self, contents, name=None):
+        if name is None:
+            name = uuid.uuid4().hex
+        self.objects[name] = contents
+        return name
+
+class PipelineDB:
+
+    def __init__(self, db):
+        self.db = db
+        self.db.create_object({"pipelines": {}}, "index")
 
     def store_pipelines(self, pipelines):
         return [
@@ -15,33 +33,33 @@ class DB:
         ]
 
     def get_pipeline(self, pipeline_id):
-        return self.read_object(pipeline_id)
+        return self.db.read_object(pipeline_id)
 
     def store_pipeline(self, name, pipeline):
-        pipeline_id = self.create_object({"def": pipeline, "executions": []})
-        self.modify_object("index", lambda index: index["pipelines"].__setitem__(
+        pipeline_id = self.db.create_object({"def": pipeline, "executions": []})
+        self.db.modify_object("index", lambda index: index["pipelines"].__setitem__(
             "name",
-            self.create_object({"instances": [pipeline_id]})
+            self.db.create_object({"instances": [pipeline_id]})
         ))
         return pipeline_id
 
     def trigger(self, values):
         executions = []
-        for pipeline_id in self.read_object("index")["pipelines"].values():
-            foo = self.read_object(pipeline_id)["instances"][0]
-            for ast in self.read_object(foo)["def"]:
+        for pipeline_id in self.db.read_object("index")["pipelines"].values():
+            foo = self.db.read_object(pipeline_id)["instances"][0]
+            for ast in self.db.read_object(foo)["def"]:
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
                             y = self.create_execution()
                             executions.append(y)
-                            self.modify_object(foo, lambda pipeline:
+                            self.db.modify_object(foo, lambda pipeline:
                                 pipeline["executions"].append(y)
                             )
         return executions
 
     def create_execution(self):
-        return self.create_object({
+        return self.db.create_object({
         })
 
     def trigger_matches(self, trigger, values):
@@ -50,19 +68,8 @@ class DB:
                 return False
         return True
 
-    def modify_object(self, name, fn):
-        fn(self.objects[name])
-
-    def read_object(self, name):
-        return self.objects[name]
-
-    def create_object(self, contents):
-        new_id = uuid.uuid4().hex
-        self.objects[new_id] = contents
-        return new_id
-
 if __name__ == "__main__":
-    db = DB()
+    db = PipelineDB(InMemoryObjectStore())
     async def handle_request(reader, writer):
         request_data = await reader.readline()
         try:
