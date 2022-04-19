@@ -37,14 +37,14 @@ class TestServer(unittest.TestCase):
                     }
                 """)
             }),
-                {"status": "ok", "ids": [any_capture]}
+                {"status": "ok", "pipeline_ids": [any_capture]}
             )
             pipeline_id = any_capture.value
             self.assertEqual(send({
                 "message": "trigger",
                 "payload": {"type": "test", "arg": 99}
             }),
-                {"status": "ok", "executions": [any_capture]}
+                {"status": "ok", "execution_ids": [any_capture]}
             )
             execution_id = any_capture.value
             self.assertEqual(send({
@@ -52,8 +52,8 @@ class TestServer(unittest.TestCase):
                 "pipeline_id": pipeline_id
             }),
                 {"status": "ok", "pipeline": {
-                    "def": any_capture,
-                    "executions": [execution_id]
+                    "definition": any_capture,
+                    "execution_ids": [execution_id]
                 }}
             )
             self.assertEqual(send({

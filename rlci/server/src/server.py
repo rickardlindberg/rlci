@@ -47,7 +47,7 @@ class PipelineDB:
     async def create_execution(self, pipeline_id, execution):
         execution_id = await self.store.create_object(execution)
         await self.store.modify_object(pipeline_id, lambda pipeline:
-            pipeline["executions"].append(execution_id)
+            pipeline["execution_ids"].append(execution_id)
         )
         return execution_id
 
@@ -58,7 +58,10 @@ class PipelineDB:
         return await self.store.read_object(execution_id)
 
     async def store_pipeline(self, name, pipeline):
-        pipeline_id = await self.store.create_object({"def": pipeline, "executions": []})
+        pipeline_id = await self.store.create_object({
+            "definition": pipeline,
+            "execution_ids": []
+        })
         foo = await self.store.create_object({"versions": [pipeline_id]})
         await self.store.modify_object("index", lambda index:
             index["pipelines"].__setitem__(
@@ -95,12 +98,12 @@ class Server:
             if request["message"] == "store_pipelines":
                 response = {
                     "status": "ok",
-                    "ids": await self.db.store_pipelines(request["payload"])
+                    "pipeline_ids": await self.db.store_pipelines(request["payload"])
                 }
             elif request["message"] == "trigger":
                 response = {
                     "status": "ok",
-                    "executions": await self.trigger(request["payload"])
+                    "execution_ids": await self.trigger(request["payload"])
                 }
             elif request["message"] == "get_pipeline":
                 response = {
@@ -123,13 +126,13 @@ class Server:
         await writer.wait_closed()
 
     async def trigger(self, values):
-        executions = []
+        execution_ids = []
         for (pipeline_id, pipeline) in await self.db.get_active_pipelines():
-            for ast in pipeline["def"]:
+            for ast in pipeline["definition"]:
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
-                            executions.append(await self.db.create_execution(pipeline_id, {
+                            execution_ids.append(await self.db.create_execution(pipeline_id, {
                                 "processes": [
                                     {
                                         "stage": ast[1],
@@ -137,7 +140,7 @@ class Server:
                                     }
                                 ]
                             }))
-        return executions
+        return execution_ids
 
     def trigger_matches(self, trigger, values):
         for key, value in trigger.items():
