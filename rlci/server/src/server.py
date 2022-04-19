@@ -51,6 +51,9 @@ class PipelineDB:
         )
         return execution_id
 
+    async def store_logs(self, logs):
+        return await self.store.create_object(logs)
+
     async def get_pipeline(self, pipeline_id):
         return await self.store.read_object(pipeline_id)
 
@@ -134,22 +137,23 @@ class Server:
                         if self.trigger_matches(trigger, values):
                             execution_ids.append(await self.db.store_execution(
                                 pipeline_id,
-                                self.create_execution(pipeline, ast[1], values)
+                                await self.create_execution(pipeline, ast[1], values)
                             ))
         return execution_ids
 
-    def create_execution(self, pipeline, node_id, values):
+    async def create_execution(self, pipeline, node_id, values):
         stages = {
         }
         for ast in pipeline["definition"]:
             if ast[0] == "Node":
                 stages[str(ast[1])] = {
-                    "status": "running" if node_id == ast[1] else "waiting",
-                    "input": values if node_id == ast[1] else None,
-                    "output": None,
+                    "status": "done",
+                    "input": values if node_id == ast[1] else {},
+                    "output": {},
+                    "logs": await self.db.store_logs({"lines": []}),
                 }
         return {
-            "status": "running",
+            "status": "done",
             "stages": stages,
         }
 

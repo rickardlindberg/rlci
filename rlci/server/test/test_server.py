@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import unittest
 
 TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "tool")
@@ -56,26 +57,37 @@ class TestServer(unittest.TestCase):
                     "execution_ids": [execution_id]
                 }}
             )
-            self.assertEqual(send({
-                "message": "get_execution",
-                "execution_id": execution_id
-            }),
-                {"status": "ok", "execution": {
-                    "status": any_capture,
-                    "stages": {
-                        "0": {
-                            "status": any_capture,
-                            "input": {"type": "test", "arg": 99},
-                            "output": any_capture,
+            for i in range(5):
+                self.assertEqual(send({
+                    "message": "get_execution",
+                    "execution_id": execution_id
+                }),
+                    {"status": "ok", "execution": any_capture}
+                )
+                execution = any_capture.value
+                if execution["status"] == "done":
+                    self.assertEqual(execution, {
+                        "status": "done",
+                        "stages": {
+                            "0": {
+                                "status": "done",
+                                "input": {"type": "test", "arg": 99},
+                                "output": {},
+                                "logs": any_capture,
+                            },
+                            "1": {
+                                "status": "done",
+                                "input": {},
+                                "output": {},
+                                "logs": any_capture,
+                            },
                         },
-                        "1": {
-                            "status": any_capture,
-                            "input": any_capture,
-                            "output": any_capture,
-                        },
-                    },
-                }}
-            )
+                    })
+                    break
+                time.sleep(0.1*i)
+            else:
+                self.fail("Timed out waiting for execution to finish")
+
 
     @contextlib.contextmanager
     def server(self):
