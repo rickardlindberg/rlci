@@ -61,7 +61,19 @@ class TestServer(unittest.TestCase):
                 "execution_id": execution_id
             }),
                 {"status": "ok", "execution": {
-                    "processes": any_capture,
+                    "status": any_capture,
+                    "stages": {
+                        "0": {
+                            "status": any_capture,
+                            "input": {"type": "test", "arg": 99},
+                            "output": any_capture,
+                        },
+                        "1": {
+                            "status": any_capture,
+                            "input": any_capture,
+                            "output": any_capture,
+                        },
+                    },
                 }}
             )
 

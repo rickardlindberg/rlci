@@ -44,7 +44,7 @@ class PipelineDB:
             active_pipelines.append((active_id, active_pipeline))
         return active_pipelines
 
-    async def create_execution(self, pipeline_id, execution):
+    async def store_execution(self, pipeline_id, execution):
         execution_id = await self.store.create_object(execution)
         await self.store.modify_object(pipeline_id, lambda pipeline:
             pipeline["execution_ids"].append(execution_id)
@@ -132,15 +132,26 @@ class Server:
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
-                            execution_ids.append(await self.db.create_execution(pipeline_id, {
-                                "processes": [
-                                    {
-                                        "stage": ast[1],
-                                        "args": values
-                                    }
-                                ]
-                            }))
+                            execution_ids.append(await self.db.store_execution(
+                                pipeline_id,
+                                self.create_execution(pipeline, ast[1], values)
+                            ))
         return execution_ids
+
+    def create_execution(self, pipeline, node_id, values):
+        stages = {
+        }
+        for ast in pipeline["definition"]:
+            if ast[0] == "Node":
+                stages[str(ast[1])] = {
+                    "status": "running" if node_id == ast[1] else "waiting",
+                    "input": values if node_id == ast[1] else None,
+                    "output": None,
+                }
+        return {
+            "status": "running",
+            "stages": stages,
+        }
 
     def trigger_matches(self, trigger, values):
         for key, value in trigger.items():
