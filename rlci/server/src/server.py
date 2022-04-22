@@ -16,6 +16,7 @@ class InMemoryObjectStore:
 
     async def modify_object(self, name, fn):
         fn(self.objects[name])
+        return self.objects[name]
 
     async def read_object(self, name):
         return self.objects[name]
@@ -51,8 +52,27 @@ class PipelineDB:
         )
         return execution_id
 
+    async def modify_execution_done(self, execution_id):
+        def modify(execution):
+            execution["status"] = "done"
+        return await self.store.modify_object(execution_id, modify)
+
+    async def modify_execution_start(self, execution_id, stage_id, args):
+        def modify(execution):
+            execution["stages"][stage_id]["status"] = "running"
+            execution["stages"][stage_id]["input"] = args
+        return await self.store.modify_object(execution_id, modify)
+
+    async def add_log(self, logs_id, line):
+        def modify(logs):
+            logs["lines"].append(line)
+        return await self.store.modify_object(logs_id, modify)
+
     async def store_logs(self, logs):
         return await self.store.create_object(logs)
+
+    async def get_logs(self, logs_id):
+        return await self.store.read_object(logs_id)
 
     async def get_pipeline(self, pipeline_id):
         return await self.store.read_object(pipeline_id)
@@ -78,6 +98,7 @@ class Server:
 
     def __init__(self, db):
         self.db = db
+        self.tasks = []
 
     def serve_forever(self):
         asyncio.run(self.server())
@@ -118,6 +139,11 @@ class Server:
                     "status": "ok",
                     "execution": await self.db.get_execution(request["execution_id"])
                 }
+            elif request["message"] == "get_logs":
+                response = {
+                    "status": "ok",
+                    "logs": await self.db.get_logs(request["logs_id"])
+                }
             else:
                 raise ValueError(f"Unknown message {request['message']}")
         except Exception as e:
@@ -135,27 +161,59 @@ class Server:
                 if ast[0] == "Node":
                     for trigger in ast[2]["triggers"]:
                         if self.trigger_matches(trigger, values):
-                            execution_ids.append(await self.db.store_execution(
+                            execution_id = await self.db.store_execution(
                                 pipeline_id,
-                                await self.create_execution(pipeline, ast[1], values)
-                            ))
+                                await self.create_execution(pipeline)
+                            )
+                            execution_ids.append(execution_id)
+                            task = asyncio.create_task(self.execute_stage(execution_id, str(ast[1]), values))
+                            self.tasks.append(task)
+                            task.add_done_callback(lambda x: self.tasks.remove(x))
         return execution_ids
 
-    async def create_execution(self, pipeline, node_id, values):
-        stages = {
-        }
+    async def create_execution(self, pipeline):
+        stages = {}
         for ast in pipeline["definition"]:
             if ast[0] == "Node":
                 stages[str(ast[1])] = {
-                    "status": "done",
-                    "input": values if node_id == ast[1] else {},
+                    "ast": ast[3],
+                    "status": "waiting",
+                    "input": {},
                     "output": {},
                     "logs": await self.db.store_logs({"lines": []}),
+                    "children": [],
+                    "parents": [],
                 }
+            elif ast[0] == "Link":
+                stages[str(ast[1])]["children"].append(str(ast[2]))
+                stages[str(ast[2])]["parents"].append(str(ast[1]))
         return {
-            "status": "done",
+            "status": "running",
             "stages": stages,
         }
+
+    async def execute_stage(self, execution_id, stage_id, args):
+        execution = await self.db.modify_execution_start(execution_id, stage_id, args)
+        await self.start_process(
+            execution["stages"][stage_id]["ast"],
+            args,
+            execution["stages"][stage_id]["logs"]
+        )
+        await self.db.modify_execution_done(execution_id)
+
+    async def start_process(self, ast, args, logs_id):
+        cmd_args = []
+        for key, value in args.items():
+            cmd_args.append(f"{key}={value}")
+        process = await asyncio.create_subprocess_exec(
+            sys.executable, "../../tool/tool.py", "run", *cmd_args,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate(json.dumps(ast).encode("utf-8"))
+        for line in stdout.splitlines():
+            await self.db.add_log(logs_id, json.loads(line))
+        await process.wait()
 
     def trigger_matches(self, trigger, values):
         for key, value in trigger.items():

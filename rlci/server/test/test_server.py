@@ -66,22 +66,52 @@ class TestServer(unittest.TestCase):
                 )
                 execution = any_capture.value
                 if execution["status"] == "done":
+                    logs_0_capture = AnyCapture()
+                    logs_1_capture = AnyCapture()
                     self.assertEqual(execution, {
                         "status": "done",
                         "stages": {
                             "0": {
-                                "status": "done",
+                                "ast": any_capture,
+                                "status": "running",
                                 "input": {"type": "test", "arg": 99},
                                 "output": {},
-                                "logs": any_capture,
+                                "logs": logs_0_capture,
+                                "children": ["1"],
+                                "parents": [],
                             },
                             "1": {
-                                "status": "done",
+                                "ast": any_capture,
+                                "status": "waiting",
                                 "input": {},
                                 "output": {},
-                                "logs": any_capture,
+                                "logs": logs_1_capture,
+                                "children": [],
+                                "parents": ["0"],
                             },
                         },
+                    })
+                    self.assertEqual(send({
+                        "message": "get_logs",
+                        "logs_id": logs_0_capture.value,
+                    }), {
+                        "status": "ok",
+                        "logs": {
+                            "lines": [
+                                ["Log", "stdout", "99"],
+                                ["Result", "success", {}],
+                            ]
+                        }
+                    })
+                    self.assertEqual(send({
+                        "message": "get_logs",
+                        "logs_id": logs_1_capture.value,
+                    }), {
+                        "status": "ok",
+                        "logs": {
+                            "lines": [
+                            ]
+                        }
                     })
                     break
                 time.sleep(0.1*i)
@@ -102,7 +132,7 @@ class TestServer(unittest.TestCase):
             return json.loads(response)
         with subprocess.Popen(
             [sys.executable, "../src/server.py"],
-            stdout=subprocess.PIPE
+            stdout=subprocess.PIPE,
         ) as process:
             process.stdout.readline()
             try:
