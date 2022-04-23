@@ -16,10 +16,5 @@ An experimental CI/CD system designed to solve problems I've had with Jenkins.
       (Pipeline file the same, but the AST looks different (optimized,
       different structure))
     * ToDag -> ToGraph? ToPipelineASTS?
-* Implement run_pipeline
-    * python tool.py run_pipeline < echo "pipeline def"
-* Implement pipeline server which manages
-    * Pipeline executions
-    * Locks
-    * DB?
-* Can we wait for port open instead of sleeping in server test?
+* Server
+    * Don't hide stdout from server in test
