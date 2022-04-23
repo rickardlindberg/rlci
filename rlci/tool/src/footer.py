@@ -40,7 +40,7 @@ def cmd_get_stage_definition(pipeline, stage_id):
             (ToDag, "asts"),
         ], f.read(), debug=True)[0][2+stage_id][3]))
 
-def cmd_run(args):
+def cmd_run(args, debug=False):
     try:
         print(json.dumps(["Result", "success", compile_chain(
             [
@@ -51,7 +51,7 @@ def cmd_run(args):
                 "args": args,
                 "sh": sh,
             },
-            debug=True
+            debug=debug
         )]))
     except Exception as e:
         print(json.dumps(["Result", "failure", str(e)]))
