@@ -118,7 +118,6 @@ class TestServer(unittest.TestCase):
             else:
                 self.fail("Timed out waiting for execution to finish")
 
-
     @contextlib.contextmanager
     def server(self):
         async def communicate(request):
