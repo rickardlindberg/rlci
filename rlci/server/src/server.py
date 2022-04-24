@@ -3,7 +3,7 @@ import json
 import sys
 import db
 
-class StageExecutioner:
+class JobController:
 
     def __init__(self, db):
         self.db = db
@@ -80,7 +80,7 @@ class Server:
 
     def __init__(self, db):
         self.db = db
-        self.stage_executioner = StageExecutioner(db)
+        self.job_controller = JobController(db)
 
     def serve_forever(self):
         asyncio.run(self.server())
@@ -109,7 +109,7 @@ class Server:
             elif request["message"] == "trigger":
                 response = {
                     "status": "ok",
-                    "execution_ids": await self.stage_executioner.trigger(request["payload"])
+                    "execution_ids": await self.job_controller.trigger(request["payload"])
                 }
             elif request["message"] == "get_pipeline":
                 response = {
