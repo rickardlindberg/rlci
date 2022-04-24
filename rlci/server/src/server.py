@@ -3,11 +3,31 @@ import json
 import sys
 import db
 
-class JobController:
+class StageExecutioner:
 
     def __init__(self, db):
         self.db = db
+
+    async def start_process(self, ast, args, logs_id):
+        cmd_args = []
+        for key, value in args.items():
+            cmd_args.append(f"{key}={value}")
+        process = await asyncio.create_subprocess_exec(
+            sys.executable, "../../tool/tool.py", "run", *cmd_args,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate(json.dumps(ast).encode("utf-8"))
+        for line in stdout.splitlines():
+            await self.db.add_log(logs_id, json.loads(line))
+        await process.wait()
+
+class JobController:
+
+    def __init__(self, db, stage_executioner):
+        self.db = db
         self.tasks = []
+        self.stage_executioner = stage_executioner
 
     async def trigger(self, values):
         execution_ids = []
@@ -55,32 +75,18 @@ class JobController:
 
     async def execute_stage(self, execution_id, stage_id, args):
         execution = await self.db.modify_execution_start(execution_id, stage_id, args)
-        await self.start_process(
+        await self.stage_executioner.start_process(
             execution["stages"][stage_id]["ast"],
             args,
             execution["stages"][stage_id]["logs"]
         )
         await self.db.modify_execution_done(execution_id)
 
-    async def start_process(self, ast, args, logs_id):
-        cmd_args = []
-        for key, value in args.items():
-            cmd_args.append(f"{key}={value}")
-        process = await asyncio.create_subprocess_exec(
-            sys.executable, "../../tool/tool.py", "run", *cmd_args,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await process.communicate(json.dumps(ast).encode("utf-8"))
-        for line in stdout.splitlines():
-            await self.db.add_log(logs_id, json.loads(line))
-        await process.wait()
-
 class Server:
 
     def __init__(self, db):
         self.db = db
-        self.job_controller = JobController(db)
+        self.job_controller = JobController(db, StageExecutioner(db))
 
     def serve_forever(self):
         asyncio.run(self.server())
