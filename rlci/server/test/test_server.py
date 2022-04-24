@@ -32,9 +32,6 @@ class TestServer(unittest.TestCase):
                             trigger type="test"
                             sh "echo ${arg}"
                         }
-                        stage {
-                            sh "echo child"
-                        }
                     }
                 """)
             }),
@@ -67,7 +64,6 @@ class TestServer(unittest.TestCase):
                 execution = any_capture.value
                 if execution["status"] == "done":
                     logs_0_capture = AnyCapture()
-                    logs_1_capture = AnyCapture()
                     self.assertEqual(execution, {
                         "status": "done",
                         "stages": {
@@ -77,17 +73,8 @@ class TestServer(unittest.TestCase):
                                 "input": {"type": "test", "arg": 99},
                                 "output": {},
                                 "logs": logs_0_capture,
-                                "children": ["1"],
-                                "parents": [],
-                            },
-                            "1": {
-                                "ast": any_capture,
-                                "status": "waiting",
-                                "input": {},
-                                "output": {},
-                                "logs": logs_1_capture,
                                 "children": [],
-                                "parents": ["0"],
+                                "parents": [],
                             },
                         },
                     })
@@ -100,16 +87,6 @@ class TestServer(unittest.TestCase):
                             "lines": [
                                 ["Log", "stdout", "99"],
                                 ["Result", "success", {}],
-                            ]
-                        }
-                    })
-                    self.assertEqual(send({
-                        "message": "get_logs",
-                        "logs_id": logs_1_capture.value,
-                    }), {
-                        "status": "ok",
-                        "logs": {
-                            "lines": [
                             ]
                         }
                     })
