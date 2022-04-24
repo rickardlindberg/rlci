@@ -7,6 +7,11 @@ import sys
 import time
 import unittest
 
+SERVER_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SERVER_DIR)
+from server import JobController
+from db import create as create_in_memory_db
+
 TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "tool")
 sys.path.insert(0, TOOL_DIR)
 import tool
@@ -115,6 +120,31 @@ class TestServer(unittest.TestCase):
                 yield lambda x: asyncio.run(communicate(x))
             finally:
                 process.kill()
+
+class TestJobController(unittest.TestCase):
+
+    maxDiff = 10000
+
+    class MockStageExecutioner:
+
+        async def start_process(self, ast, args, logs_id):
+            pass
+
+    def test_trigger_pipeline(self):
+        async def run():
+            db = create_in_memory_db()
+            await db.init()
+            await db.store_pipelines(tool.compile_pipeline_file("""
+                pipeline {
+                    stage {
+                        trigger type="test"
+                        sh "echo ${arg}"
+                    }
+                }
+            """))
+            job_controller = JobController(db, self.MockStageExecutioner())
+            await job_controller.trigger({"type": "test", "arg": 99})
+        asyncio.run(run())
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
