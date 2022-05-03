@@ -7,9 +7,10 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 @app.route("/")
-def hello_world():
-    return render_template("main.html", status=talk_to_server({"message":
-    "status"}))
+def main():
+    return render_template("main.html", status=talk_to_server({
+        "message": "get_pipelines"
+    }))
 
 def talk_to_server(request):
     async def communicate():

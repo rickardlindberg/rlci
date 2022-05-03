@@ -1,3 +1,9 @@
-Hello World!
+<h1>RLCI</h1>
 
-{{ status }}
+<h2>Pipelines</h2>
+
+<ul>
+{% for pipeline in pipelines %}
+<li><a href="/pipeline/{{ pipeline.id }}">{{ pipeline.display_name }}</a></li>
+{% endfor %}
+</ul>

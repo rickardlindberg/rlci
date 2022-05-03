@@ -117,6 +117,11 @@ class Server:
                     "status": "ok",
                     "execution_ids": await self.job_controller.trigger(request["payload"])
                 }
+            elif request["message"] == "get_pipelines":
+                response = {
+                    "status": "ok",
+                    "pipelines": await self.db.get_pipelines()
+                }
             elif request["message"] == "get_pipeline":
                 response = {
                     "status": "ok",
