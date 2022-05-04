@@ -80,11 +80,9 @@ class PipelineDB:
     async def get_pipelines(self):
         return [
             {
-                "id": key,
-                "display_name": key,
+                "id": "abc123",
+                "display_name": "The ABC 123 Pipeline",
             }
-            for key, value
-            in (await self.store.read_object("index"))["pipelines"].items()
         ]
 
     async def get_execution(self, execution_id):

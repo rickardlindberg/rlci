@@ -8,9 +8,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def main():
-    return render_template("main.html", status=talk_to_server({
+    response = talk_to_server({
         "message": "get_pipelines"
-    }))
+    })
+    assert response["status"] == "ok"
+    return render_template("main.html", pipelines=response["pipelines"])
 
 def talk_to_server(request):
     async def communicate():
