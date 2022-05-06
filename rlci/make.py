@@ -98,6 +98,9 @@ def web_devserver():
                     sys.executable, os.path.join(ROOT, "server", "src", "server.py")
                 ],
                 "kwargs": {
+                    "env": {
+                        "PYTHONPATH": os.path.join(ROOT, "ipc", "src"),
+                    }
                 },
             },
         ])
