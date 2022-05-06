@@ -1,7 +1,9 @@
 import asyncio
 import json
 import sys
+
 import db
+import ipc
 
 class StageExecutioner:
 
@@ -82,70 +84,45 @@ class JobController:
         )
         await self.db.modify_execution_done(execution_id)
 
-class Server:
+class Server(ipc.Server):
 
     def __init__(self, db):
+        ipc.Server.__init__(self, "localhost", 9000)
         self.db = db
         self.job_controller = JobController(db, StageExecutioner(db))
 
-    def serve_forever(self):
-        asyncio.run(self.server())
-
-    async def server(self):
+    async def before_start(self):
         await self.db.init()
-        server = await asyncio.start_server(
-            self.handle_request,
-            host="localhost",
-            port=9000
-        )
-        print("listening on port 9000")
-        sys.stdout.flush()
-        async with server:
-            await server.serve_forever()
 
-    async def handle_request(self, reader, writer):
-        request_data = await reader.readline()
-        try:
-            request = json.loads(request_data)
-            if request["message"] == "store_pipelines":
-                response = {
-                    "status": "ok",
-                    "pipeline_ids": await self.db.store_pipelines(request["payload"])
-                }
-            elif request["message"] == "trigger":
-                response = {
-                    "status": "ok",
-                    "execution_ids": await self.job_controller.trigger(request["payload"])
-                }
-            elif request["message"] == "get_pipelines":
-                response = {
-                    "status": "ok",
-                    "pipelines": await self.db.get_pipelines()
-                }
-            elif request["message"] == "get_pipeline":
-                response = {
-                    "status": "ok",
-                    "pipeline": await self.db.get_pipeline(request["pipeline_id"])
-                }
-            elif request["message"] == "get_execution":
-                response = {
-                    "status": "ok",
-                    "execution": await self.db.get_execution(request["execution_id"])
-                }
-            elif request["message"] == "get_logs":
-                response = {
-                    "status": "ok",
-                    "logs": await self.db.get_logs(request["logs_id"])
-                }
-            else:
-                raise ValueError(f"Unknown message {request['message']}")
-        except Exception as e:
-            response = {"status": "error", "message": str(e)}
-        writer.write(json.dumps(response).encode("utf-8"))
-        writer.write(b"\n")
-        await writer.drain()
-        writer.close()
-        await writer.wait_closed()
+    async def store_pipelines(self, request):
+        return {
+            "pipeline_ids": await self.db.store_pipelines(request["payload"])
+        }
+
+    async def trigger(self, request):
+        return {
+            "execution_ids": await self.job_controller.trigger(request["payload"])
+        }
+
+    async def get_pipelines(self, request):
+        return {
+            "pipelines": await self.db.get_pipelines()
+        }
+
+    async def get_pipeline(self, request):
+        return {
+            "pipeline": await self.db.get_pipeline(request["pipeline_id"])
+        }
+
+    async def get_execution(self, request):
+        return {
+            "execution": await self.db.get_execution(request["execution_id"])
+        }
+
+    async def get_logs(self, request):
+        return {
+            "logs": await self.db.get_logs(request["logs_id"])
+        }
 
 if __name__ == "__main__":
-    Server(db.create()).serve_forever()
+    Server(db.create()).start()

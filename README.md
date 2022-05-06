@@ -18,3 +18,4 @@ An experimental CI/CD system designed to solve problems I've had with Jenkins.
     * ToDag -> ToGraph? ToPipelineASTS?
 * Server
     * Don't hide stdout from server in test
+* IPC protocol: byte to indicate version?
