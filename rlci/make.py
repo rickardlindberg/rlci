@@ -80,6 +80,7 @@ def web_devserver():
                         "FLASK_ENV": "development",
                         "RLCI_SERVER_ADDRESS": "localhost",
                         "RLCI_SERVER_PORT": "9000",
+                        "PYTHONPATH": os.path.join(ROOT, "ipc", "src"),
                     }
                 },
             },
@@ -87,7 +88,7 @@ def web_devserver():
                 "name": "server",
                 "color": "33",
                 "args": [
-                    sys.executable, os.path.join("..", "server", "src", "server.py")
+                    sys.executable, os.path.join(ROOT, "server", "src", "server.py")
                 ],
                 "kwargs": {
                 },
@@ -141,6 +142,7 @@ if __name__ == "__main__":
     try:
         cwd = os.getcwd()
         with cd(os.path.dirname(__file__)):
+            ROOT = os.getcwd()
             for arg in sys.argv[1:] or [""]:
                 path = os.path.relpath(os.path.join(cwd, arg))
                 if path.startswith("."):

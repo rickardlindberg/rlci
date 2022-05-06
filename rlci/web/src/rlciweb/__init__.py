@@ -4,27 +4,19 @@ import os
 
 from flask import Flask, render_template
 
+import ipc
+
 app = Flask(__name__)
+
+server = ipc.Client(
+    os.environ["RLCI_SERVER_ADDRESS"],
+    int(os.environ["RLCI_SERVER_PORT"])
+)
 
 @app.route("/")
 def main():
-    response = talk_to_server({
+    response = server.send({
         "message": "get_pipelines"
     })
     assert response["status"] == "ok"
     return render_template("main.html", pipelines=response["pipelines"])
-
-def talk_to_server(request):
-    async def communicate():
-        reader, writer = await asyncio.open_connection(
-            os.environ["RLCI_SERVER_ADDRESS"],
-            int(os.environ["RLCI_SERVER_PORT"])
-        )
-        writer.write(json.dumps(request).encode("utf-8"))
-        writer.write(b"\n")
-        await writer.drain()
-        response = await reader.readline()
-        writer.close()
-        await writer.wait_closed()
-        return json.loads(response)
-    return asyncio.run(communicate())
