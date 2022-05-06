@@ -7,13 +7,9 @@ import sys
 import time
 import unittest
 
-SERVER_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
-sys.path.insert(0, SERVER_DIR)
-from server import JobController
 from db import create as create_in_memory_db
-
-TOOL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "tool")
-sys.path.insert(0, TOOL_DIR)
+from server import JobController
+import ipc
 import tool
 
 class AnyCapture:
@@ -102,22 +98,14 @@ class TestServer(unittest.TestCase):
 
     @contextlib.contextmanager
     def server(self):
-        async def communicate(request):
-            reader, writer = await asyncio.open_connection("localhost", 9000)
-            writer.write(json.dumps(request).encode("utf-8"))
-            writer.write(b"\n")
-            await writer.drain()
-            response = await reader.readline()
-            writer.close()
-            await writer.wait_closed()
-            return json.loads(response)
+        server = ipc.Client("localhost", 9000)
         with subprocess.Popen(
             [sys.executable, "../src/server.py"],
             stdout=subprocess.PIPE,
         ) as process:
             process.stdout.readline()
             try:
-                yield lambda x: asyncio.run(communicate(x))
+                yield server.send
             finally:
                 process.kill()
 

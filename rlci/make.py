@@ -52,7 +52,14 @@ def server_test():
     subprocess.run(
         [sys.executable, "test/test_server.py"],
         check=True,
-        cwd="server"
+        cwd="server",
+        env={
+            "PYTHONPATH": ":".join([
+                os.path.join(ROOT, "ipc", "src"),
+                os.path.join(ROOT, "tool"),
+                os.path.join(ROOT, "server", "src"),
+            ])
+        }
     )
 
 @target(dependencies=["server/test"], alias=True)
