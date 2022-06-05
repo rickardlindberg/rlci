@@ -12,11 +12,15 @@ class ZeroApp:
     """
     I am a tool for zero friction development.
 
+    ## Usage
+
     I print usage when run with no arguments:
 
     >>> ZeroApp.run_in_test_mode(args=[])
     STDOUT => 'I am a tool for zero friction development'
     EXIT => 1
+
+    ## Building
 
     I run tests when run with the 'build' argument:
 
@@ -24,6 +28,22 @@ class ZeroApp:
     DOCTEST_MODULE => 'zero'
     DOCTEST_MODULE => 'rlci'
     TEST_RUN => None
+
+    I exit with error code if tests fail:
+
+    >>> ZeroApp.run_in_test_mode(
+    ...   args=['build'],
+    ...   tests_succeed=False
+    ... ).filter("EXIT")
+    EXIT => 1
+
+    I exit with error code if no tests were run:
+
+    >>> ZeroApp.run_in_test_mode(
+    ...   args=['build'],
+    ...   tests_run=0
+    ... ).filter("EXIT")
+    EXIT => 1
     """
 
     def __init__(self, args=None, terminal=None, tests=None):
@@ -35,18 +55,20 @@ class ZeroApp:
         if self.args.get() == ["build"]:
             self.tests.add_doctest("zero")
             self.tests.add_doctest("rlci")
-            self.tests.run()
+            successful, count = self.tests.run()
+            if not successful or count <= 0:
+                sys.exit(1)
         else:
             self.terminal.print_line("I am a tool for zero friction development")
             sys.exit(1)
 
     @staticmethod
-    def run_in_test_mode(args=[]):
+    def run_in_test_mode(args=[], tests_succeed=True, tests_run=1):
         events = Events()
         args = Args.create_null(args)
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        tests = Tests.create_null()
+        tests = Tests.create_null(was_successful=tests_succeed, tests_run=tests_run)
         tests.register_event_listener(events)
         app = ZeroApp(args=args, terminal=terminal, tests=tests)
         try:
@@ -67,12 +89,13 @@ class Tests(Observable):
     >>> tests.run()
     (True, 1)
 
-    The null version of me runs no tests for real:
+    The null version of me runs no tests for real but instead returns simulated
+    responses:
 
-    >>> tests = Tests.create_null()
+    >>> tests = Tests.create_null(was_successful=False, tests_run=5)
     >>> tests.add_doctest("doctest_testmodule")
     >>> tests.run()
-    (True, 0)
+    (False, 5)
 
     I log my actions (tested using null version):
 
@@ -102,7 +125,7 @@ class Tests(Observable):
         return (result.wasSuccessful(), result.testsRun)
 
     @staticmethod
-    def create_null():
+    def create_null(was_successful=True, tests_run=0):
         class NullUnittest:
             def TestSuite(self):
                 return NullTestSuite()
@@ -112,9 +135,9 @@ class Tests(Observable):
             def run(self, suite):
                 return NullResult()
         class NullResult:
-            testsRun = 0
+            testsRun = tests_run
             def wasSuccessful(self):
-                return True
+                return was_successful
         class NullTestSuite:
             def addTest(self, test):
                 pass
