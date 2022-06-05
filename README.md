@@ -41,15 +41,39 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* **Runs a hard-coded, pre-defined pipeline** Running pipelines is the core
-  function of the CI/CD server. If we can get it to run a hard-coded,
-  pre-defined pipeline, we have for sure demonstrated some progress.
+* **Extend hard coded pipeline to integrate a branch** The hard coded pipeline
+  currently does nothing. We could start fleshing out this pipeline to be the
+  pipeline that RLCI could use. The first step in that pipeline should be to
+  integrate a branch (merge with `main` and run tests and promote if passed).
 
-* "My CI-server is a Linode. My pipeline is a Bash-script."
-    * Linode provides same environment / integration point
-    * Script provides process
+* **More realistic output** The pipeline currently writes its "report" to
+  stdout. I imagine the CI-server having a web-front end to display its status.
+  Therefor convert the stdout report to a HTLM-file that can be served by a web
+  server.
+
+* **More realistic environment** One purpose of a CI server is to provide the
+  same environment for integration builds. That requires the CI server to not
+  run on my laptop. Create a dedicated server to which RLCI can be deployed and
+  run. (My CI-server is a Linode. My pipeline is the RLCI program. Linode
+  provides same environment / integration point.  RLCI provides process.)
 
 ### History
 
-This is where I document the development. Links to completed stories and
-videos.
+This is where I document the development.
+
+#### Runs a hard-coded, pre-defined pipeline
+
+*Running pipelines is the core function of the CI/CD server. If we can get it
+to run a hard-coded, pre-defined pipeline, we have for sure demonstrated some
+progress.*
+
+I completed this story in a video. Watch me get all the infrastructure in
+place to write a test for the very first version of RLCI:
+
+    TODO: link video
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/w23-rlci-reboot-end) as it
+looked at the end of the video and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/d3bda99f9d427865f9f1c2e394a5c7c392bcdc12...453ae3d26e70a2af1577ee4a06ae2001c8038606)
+of changes.
