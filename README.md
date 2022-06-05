@@ -57,6 +57,10 @@ interesting to work on next.
   run. (My CI-server is a Linode. My pipeline is the RLCI program. Linode
   provides same environment / integration point.  RLCI provides process.)
 
+* **Smells/Refactorings**
+
+    * TextTestRunner outputs stuff for tests test when it really shouldn't.
+
 ### History
 
 This is where I document the completed stories development.
