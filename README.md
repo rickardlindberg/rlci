@@ -46,7 +46,7 @@ interesting to work on next.
   pre-defined pipeline, we have for sure demonstrated some progress.
 
 * "My CI-server is a Linode. My pipeline is a Bash-script."
-    * Linode provides same environment
+    * Linode provides same environment / integration point
     * Script provides process
 
 ### History
