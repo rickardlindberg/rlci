@@ -43,9 +43,9 @@ class ZeroApp:
         events = EventCollector()
         args = Args.create_null(args)
         terminal = Terminal.create_null()
-        terminal.listen(events)
+        terminal.register_event_listener(events)
         tests = Tests.create_null()
-        tests.listen(events)
+        tests.register_event_listener(events)
         app = ZeroApp(args=args, terminal=terminal, tests=tests)
         app.run()
         return events
@@ -73,7 +73,7 @@ class Tests(Observable):
 
     >>> events = EventCollector()
     >>> tests = Tests.create_null()
-    >>> tests.listen(events)
+    >>> tests.register_event_listener(events)
     >>> tests.add_doctest("doctest_testmodule")
     >>> _ = tests.run()
     >>> events

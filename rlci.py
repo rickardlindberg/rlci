@@ -22,30 +22,30 @@ class RLCIApp:
     def run_in_test_mode():
         events = EventCollector()
         terminal = Terminal.create_null()
-        terminal.listen(events)
+        terminal.register_event_listener(events)
         app = RLCIApp(terminal=terminal)
         app.run()
         return events
 
 class EventCollector(list):
 
-    def notify(self, event, text):
-        self.append((event, text))
+    def notify(self, event, data):
+        self.append((event, data))
 
     def __repr__(self):
-        return "\n".join(f"{event} => {repr(text)}" for event, text in self)
+        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
 
 class Observable:
 
     def __init__(self):
         self.event_listeners = []
 
-    def listen(self, event_listener):
+    def register_event_listener(self, event_listener):
         self.event_listeners.append(event_listener)
 
-    def notify(self, event, text):
+    def notify(self, event, data):
         for event_listener in self.event_listeners:
-            event_listener.notify(event, text)
+            event_listener.notify(event, data)
 
 class Terminal(Observable):
 
@@ -72,7 +72,7 @@ class Terminal(Observable):
 
     >>> events = EventCollector()
     >>> terminal = Terminal.create_null()
-    >>> terminal.listen(events)
+    >>> terminal.register_event_listener(events)
     >>> terminal.print_line("hello")
     >>> events
     STDOUT => 'hello'
