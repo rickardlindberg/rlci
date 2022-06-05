@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import doctest
-import sys
 import subprocess
+import sys
 import unittest
 
 from rlci import EventCollector, Terminal, Observable
