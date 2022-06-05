@@ -59,21 +59,24 @@ interesting to work on next.
 
 ### History
 
-This is where I document the development.
+This is where I document the completed stories development.
 
-#### Runs a hard-coded, pre-defined pipeline
+#### #1 Runs a hard-coded, pre-defined pipeline
 
 *Running pipelines is the core function of the CI/CD server. If we can get it
 to run a hard-coded, pre-defined pipeline, we have for sure demonstrated some
 progress.*
 
-I completed this story in a video. Watch me get all the infrastructure in
-place to write a test for the very first version of RLCI:
+I completed the main part of this story in a video. Watch me get all the
+infrastructure in place to write a test for the very first version of RLCI:
 
-    TODO: link video
+    TODO: link video once it is edited
 
 Browse the
 [code](https://github.com/rickardlindberg/rlci/tree/w23-rlci-reboot-end) as it
-looked at the end of the video and look at the complete
+looked like at the end of the video and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/d3bda99f9d427865f9f1c2e394a5c7c392bcdc12...453ae3d26e70a2af1577ee4a06ae2001c8038606)
 of changes.
+
+After the video I did some refactorings and made some more improvements to the
+build system.
