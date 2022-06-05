@@ -20,14 +20,14 @@ class RLCIApp:
 
     @staticmethod
     def run_in_test_mode():
-        events = EventCollector()
+        events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
         app = RLCIApp(terminal=terminal)
         app.run()
         return events
 
-class EventCollector(list):
+class Events(list):
 
     def notify(self, event, data):
         self.append((event, data))
@@ -70,7 +70,7 @@ class Terminal(Observable):
 
     I log the lines that I print:
 
-    >>> events = EventCollector()
+    >>> events = Events()
     >>> terminal = Terminal.create_null()
     >>> terminal.register_event_listener(events)
     >>> terminal.print_line("hello")

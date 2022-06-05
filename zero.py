@@ -5,7 +5,7 @@ import subprocess
 import sys
 import unittest
 
-from rlci import EventCollector, Terminal, Observable
+from rlci import Events, Terminal, Observable
 
 class ZeroApp:
 
@@ -40,7 +40,7 @@ class ZeroApp:
 
     @staticmethod
     def run_in_test_mode(args=[]):
-        events = EventCollector()
+        events = Events()
         args = Args.create_null(args)
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
@@ -71,7 +71,7 @@ class Tests(Observable):
 
     I log my actions (tested using null version):
 
-    >>> events = EventCollector()
+    >>> events = Events()
     >>> tests = Tests.create_null()
     >>> tests.register_event_listener(events)
     >>> tests.add_doctest("doctest_testmodule")
