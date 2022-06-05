@@ -17,7 +17,11 @@ class ZeroApp:
     I print usage when run with no arguments:
 
     >>> ZeroApp.run_in_test_mode(args=[])
-    STDOUT => 'I am a tool for zero friction development'
+    STDOUT => 'I am a tool for zero friction development of RLCI.'
+    STDOUT => ''
+    STDOUT => 'Run all tests with'
+    STDOUT => ''
+    STDOUT => '    ./zero.py build'
     EXIT => 1
 
     ## Building
@@ -59,7 +63,11 @@ class ZeroApp:
             if not successful or count <= 0:
                 sys.exit(1)
         else:
-            self.terminal.print_line("I am a tool for zero friction development")
+            self.terminal.print_line("I am a tool for zero friction development of RLCI.")
+            self.terminal.print_line("")
+            self.terminal.print_line("Run all tests with")
+            self.terminal.print_line("")
+            self.terminal.print_line("    ./zero.py build")
             sys.exit(1)
 
     @staticmethod
