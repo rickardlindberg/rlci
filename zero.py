@@ -10,12 +10,14 @@ from rlci import EventCollector, Terminal, Observable
 class ZeroApp:
 
     """
-    Prints usage:
+    I am a tool for zero friction development.
+
+    I print usage when run with no arguments:
 
     >>> ZeroApp.run_in_test_mode(args=[])
     STDOUT => 'I am a tool for zero friction development'
 
-    Runs tests:
+    I run tests when run with the 'build' argument:
 
     >>> ZeroApp.run_in_test_mode(args=['build'])
     DOCTEST_MODULE => 'zero'
@@ -51,14 +53,16 @@ class ZeroApp:
 class Tests(Observable):
 
     """
-    Wrapper for Python's unittest/doctest.
+    I am a infrastructure wrapper for Python's test modules.
+
+    I run doctests and return success/number of tests run:
 
     >>> tests = Tests()
     >>> tests.add_doctest("doctest_testmodule")
     >>> tests.run()
     (True, 1)
 
-    Logs its actions:
+    I log my actions:
 
     >>> events = EventCollector()
     >>> tests = Tests.create_null()
@@ -111,12 +115,18 @@ class Tests(Observable):
 class Args:
 
     """
+    I am an infrastructure wrapper for reading program arguments.
+
+    I return the arguments passed to the program:
+
     >>> subprocess.run([
     ...     "python", "-c"
     ...     "import zero; print(zero.Args().get())",
     ...     "arg1", "arg2"
     ... ], stdout=subprocess.PIPE).stdout
     b"['arg1', 'arg2']\\n"
+
+    The null version of me returns configured arguments:
 
     >>> Args.create_null(["one", "two"]).get()
     ['one', 'two']

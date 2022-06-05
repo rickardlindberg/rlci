@@ -4,6 +4,10 @@ import sys
 class RLCIApp:
 
     """
+    I am a tool to facilitate CI/CD.
+
+    I run a predefined pipeline:
+
     >>> RLCIApp.run_in_test_mode()
     STDOUT => 'pipeline run OK'
     """
@@ -46,7 +50,9 @@ class Observable:
 class Terminal(Observable):
 
     """
-    Writes to stdout:
+    I represent a terminal emulator to which text can be printed.
+
+    I print text to stdout:
 
     >>> subprocess.run([
     ...     "python", "-c"
@@ -54,7 +60,7 @@ class Terminal(Observable):
     ... ], stdout=subprocess.PIPE).stdout
     b'hello\\n'
 
-    Logs printed lines:
+    I log the lines that I print:
 
     >>> events = EventCollector()
     >>> terminal = Terminal.create_null()
