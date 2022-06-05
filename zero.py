@@ -5,6 +5,8 @@ import sys
 import subprocess
 import unittest
 
+from rlci import EventCollector, Terminal, Observable
+
 class ZeroApp:
 
     """
@@ -17,6 +19,7 @@ class ZeroApp:
 
     >>> ZeroApp.run_in_test_mode(args=['build'])
     DOCTEST_MODULE => 'zero'
+    DOCTEST_MODULE => 'rlci'
     TEST_RUN => None
     """
 
@@ -28,6 +31,7 @@ class ZeroApp:
     def run(self):
         if self.args.get() == ["build"]:
             self.tests.add_doctest("zero")
+            self.tests.add_doctest("rlci")
             self.tests.run()
         else:
             self.terminal.print_line("I am a tool for zero friction development")
@@ -43,18 +47,6 @@ class ZeroApp:
         app = ZeroApp(args=args, terminal=terminal, tests=tests)
         app.run()
         return events
-
-class Observable:
-
-    def __init__(self):
-        self.event_listeners = []
-
-    def listen(self, event_listener):
-        self.event_listeners.append(event_listener)
-
-    def notify(self, event, text):
-        for event_listener in self.event_listeners:
-            event_listener.notify(event, text)
 
 class Tests(Observable):
 
@@ -141,54 +133,6 @@ class Args:
         class NullSys:
             argv = [None]+args
         return Args(NullSys())
-
-class Terminal(Observable):
-
-    """
-    Writes to stdout:
-
-    >>> subprocess.run([
-    ...     "python", "-c"
-    ...     "import zero; zero.Terminal().print_line('hello')"
-    ... ], stdout=subprocess.PIPE).stdout
-    b'hello\\n'
-
-    Logs printed lines:
-
-    >>> events = EventCollector()
-    >>> terminal = Terminal.create_null()
-    >>> terminal.listen(events)
-    >>> terminal.print_line("hello")
-    >>> events
-    STDOUT => 'hello'
-    """
-
-    def __init__(self, stdout=sys.stdout):
-        Observable.__init__(self)
-        self.stdout = stdout
-
-    def print_line(self, text):
-        self.notify("STDOUT", text)
-        self.stdout.write(text)
-        self.stdout.write("\n")
-        self.stdout.flush()
-
-    @staticmethod
-    def create_null():
-        class NullStream:
-            def write(self, text):
-                pass
-            def flush(self):
-                pass
-        return Terminal(NullStream())
-
-class EventCollector(list):
-
-    def notify(self, event, text):
-        self.append((event, text))
-
-    def __repr__(self):
-        return "\n".join(f"{event} => {repr(text)}" for event, text in self)
 
 if __name__ == "__main__":
     ZeroApp().run()
