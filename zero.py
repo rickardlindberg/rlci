@@ -16,6 +16,7 @@ class ZeroApp:
 
     >>> ZeroApp.run_in_test_mode(args=[])
     STDOUT => 'I am a tool for zero friction development'
+    EXIT => 1
 
     I run tests when run with the 'build' argument:
 
@@ -37,6 +38,7 @@ class ZeroApp:
             self.tests.run()
         else:
             self.terminal.print_line("I am a tool for zero friction development")
+            sys.exit(1)
 
     @staticmethod
     def run_in_test_mode(args=[]):
@@ -47,7 +49,10 @@ class ZeroApp:
         tests = Tests.create_null()
         tests.register_event_listener(events)
         app = ZeroApp(args=args, terminal=terminal, tests=tests)
-        app.run()
+        try:
+            app.run()
+        except SystemExit as e:
+            events.notify("EXIT", e.code)
         return events
 
 class Tests(Observable):
