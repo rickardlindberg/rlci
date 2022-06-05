@@ -82,6 +82,6 @@ After the video I did some
 [refactorings](https://github.com/rickardlindberg/rlci/compare/e1c4c5c34b75856ca8e62ad172045778a3af8f63...d5bd857e66682ebdc5ad136d7b8270d7e3915961)
 and made some more improvements to the build system:
 
-[Usage should exit with code 1.](https://github.com/rickardlindberg/rlci/commit/48a6c55fc2356718c49a080500ba81bf1c78ba88)
-[Exit with code 0 if tests fail.](https://github.com/rickardlindberg/rlci/commit/03a8a53e218f3c0de81be3e47d79b93f46428a57)
-[Update usage and inluce the build command.](https://github.com/rickardlindberg/rlci/commit/b39d5a5cffd359365223d591558d38fafc81ac30)
+* [Usage should exit with code 1.](https://github.com/rickardlindberg/rlci/commit/48a6c55fc2356718c49a080500ba81bf1c78ba88)
+* [Exit with code 0 if tests fail.](https://github.com/rickardlindberg/rlci/commit/03a8a53e218f3c0de81be3e47d79b93f46428a57) (Should have been "code 1" in message.)
+* [Update usage and inluce the build command.](https://github.com/rickardlindberg/rlci/commit/b39d5a5cffd359365223d591558d38fafc81ac30)
