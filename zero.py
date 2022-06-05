@@ -62,14 +62,20 @@ class Tests(Observable):
     >>> tests.run()
     (True, 1)
 
-    I log my actions:
+    The null version of me runs no tests for real:
+
+    >>> tests = Tests.create_null()
+    >>> tests.add_doctest("doctest_testmodule")
+    >>> tests.run()
+    (True, 0)
+
+    I log my actions (tested using null version):
 
     >>> events = EventCollector()
     >>> tests = Tests.create_null()
     >>> tests.listen(events)
     >>> tests.add_doctest("doctest_testmodule")
-    >>> tests.run()
-    (True, 0)
+    >>> _ = tests.run()
     >>> events
     DOCTEST_MODULE => 'doctest_testmodule'
     TEST_RUN => None
