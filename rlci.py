@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 class RLCIApp:
+
     """
     >>> RLCIApp.run_in_test_mode()
     STDOUT => 'pipeline run OK'
