@@ -75,7 +75,10 @@ progress.*
 I completed the main part of this story in a video. Watch me get all the
 infrastructure in place to write a test for the very first version of RLCI:
 
-    TODO: link video once it is edited
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/Re7litDdulU" title="YouTube video player"
+frameborder="0" allow="accelerometer; autoplay; clipboard-write;
+encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Browse the
 [code](https://github.com/rickardlindberg/rlci/tree/w23-rlci-reboot-end) as it
