@@ -73,12 +73,10 @@ to run a hard-coded, pre-defined pipeline, we have for sure demonstrated some
 progress.*
 
 I completed the main part of this story in a video. Watch me get all the
-infrastructure in place to write a test for the very first version of RLCI:
+infrastructure in place to write a test for the very first version of RLCI.
 
-<iframe width="560" height="315"
-src="https://www.youtube.com/embed/Re7litDdulU" title="YouTube video player"
-frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+**VIDEO:** [Rebooting RLCI with an agile approach using TDD and zero friction
+development.](https://youtu.be/Re7litDdulU)
 
 Browse the
 [code](https://github.com/rickardlindberg/rlci/tree/w23-rlci-reboot-end) as it
