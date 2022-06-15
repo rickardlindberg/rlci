@@ -6,37 +6,53 @@ class RLCIApp:
     """
     I am a tool to facilitate CI/CD.
 
-    I run a predefined pipeline:
+    I can trigger a predefined pipeline:
 
-    >>> RLCIApp.run_in_test_mode()
-    STDOUT => 'pipeline run OK'
+    >>> RLCIApp.run_in_test_mode(args=["trigger"])
+    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
+    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
+    SH => './zero.py build'
+    SH => 'git push'
+
+    I fail when given other args:
+
+    >>> RLCIApp.run_in_test_mode(args=[])
+    STDOUT => 'Usage: python3 rlci.py trigger'
+    EXIT => 1
     """
 
-    def __init__(self, terminal=None):
+    def __init__(self, terminal=None, args=None, pipeline=None):
         self.terminal = Terminal() if terminal is None else terminal
+        self.args = Args() if args is None else args
+        self.pipeline = Pipeline() if pipeline is None else pipeline
 
     def run(self):
-        self.terminal.print_line("pipeline run OK")
+        if self.args.get() == ["trigger"]:
+            self.pipeline.sh("git clone git@github.com:rickardlindberg/rlci.git .")
+            self.pipeline.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
+            self.pipeline.sh("./zero.py build")
+            self.pipeline.sh("git push")
+        else:
+            self.terminal.print_line("Usage: python3 rlci.py trigger")
+            sys.exit(1)
 
     @staticmethod
-    def run_in_test_mode():
+    def run_in_test_mode(args=[]):
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        app = RLCIApp(terminal=terminal)
-        app.run()
+        pipeline = Pipeline.create_null()
+        pipeline.register_event_listener(events)
+        app = RLCIApp(
+            terminal=terminal,
+            args=Args.create_null(args),
+            pipeline=pipeline
+        )
+        try:
+            app.run()
+        except SystemExit as e:
+            events.append(("EXIT", e.code))
         return events
-
-class Events(list):
-
-    def notify(self, event, data):
-        self.append((event, data))
-
-    def filter(self, event):
-        return Events(x for x in self if x[0] == event)
-
-    def __repr__(self):
-        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
 
 class Observable:
 
@@ -49,6 +65,66 @@ class Observable:
     def notify(self, event, data):
         for event_listener in self.event_listeners:
             event_listener.notify(event, data)
+
+class Pipeline(Observable):
+
+    """
+    I can run shell commands:
+
+    >>> Pipeline().sh('echo hello')
+    b'hello\\n'
+
+    I fail if command fails:
+
+    >>> Pipeline().sh('exit 1')
+    Traceback (most recent call last):
+        ...
+    subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
+
+    The null version of me, runs no shell commands:
+
+    >>> Pipeline.create_null().sh('echo hello')
+    b''
+
+    I log commands:
+
+    >>> events = Events()
+    >>> pipeline = Pipeline.create_null()
+    >>> pipeline.register_event_listener(events)
+    >>> _ = pipeline.sh("echo hello")
+    >>> events
+    SH => 'echo hello'
+    """
+
+    def __init__(self, subprocess=subprocess):
+        Observable.__init__(self)
+        self.subprocess = subprocess
+
+    def sh(self, command):
+        self.notify("SH", command)
+        return self.subprocess.run(command, shell=True,
+        stdout=self.subprocess.PIPE, check=True).stdout
+
+    @staticmethod
+    def create_null():
+        class NullSubprocess:
+            PIPE = None
+            def run(self, *args, **kwargs):
+                return NullResponse()
+        class NullResponse:
+            stdout = b''
+        return Pipeline(NullSubprocess())
+
+class Events(list):
+
+    def notify(self, event, data):
+        self.append((event, data))
+
+    def filter(self, event):
+        return Events(x for x in self if x[0] == event)
+
+    def __repr__(self):
+        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
 
 class Terminal(Observable):
 
@@ -99,6 +175,44 @@ class Terminal(Observable):
             def flush(self):
                 pass
         return Terminal(NullStream())
+
+class Args:
+
+    """
+    I am an infrastructure wrapper for reading program arguments (via the sys
+    module).
+
+    I return the arguments passed to the program:
+
+    >>> subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero; print(zero.Args().get())",
+    ...     "arg1", "arg2"
+    ... ], stdout=subprocess.PIPE, check=True).stdout
+    b"['arg1', 'arg2']\\n"
+
+    The null version of me does not read arguments passed to the program, but
+    instead return configured arguments:
+
+    >>> subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero; print(zero.Args.create_null(['configured1']).get())",
+    ...     "arg1", "arg2"
+    ... ], stdout=subprocess.PIPE, check=True).stdout
+    b"['configured1']\\n"
+    """
+
+    def __init__(self, sys=sys):
+        self.sys = sys
+
+    def get(self):
+        return self.sys.argv[1:]
+
+    @staticmethod
+    def create_null(args):
+        class NullSys:
+            argv = [None]+args
+        return Args(NullSys())
 
 if __name__ == "__main__":
     RLCIApp().run()

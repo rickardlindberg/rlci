@@ -4,8 +4,9 @@ import doctest
 import subprocess
 import sys
 import unittest
+import importlib
 
-from rlci import Events, Terminal, Observable
+from rlci import Events, Terminal, Observable, Args
 
 class ZeroApp:
 
@@ -90,18 +91,25 @@ class Tests(Observable):
     """
     I am a infrastructure wrapper for Python's test modules.
 
-    I run doctests and return success/number of tests run:
+    I run doctests, print report to stderr, and return success/number of tests
+    run:
 
-    >>> tests = Tests()
-    >>> tests.add_doctest("doctest_testmodule")
-    >>> tests.run()
-    (True, 1)
+    >>> result = subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero;"
+    ...     "tests = zero.Tests();"
+    ...     "tests.add_doctest('doctest_testmodule');"
+    ...     "print(tests.run())",
+    ... ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    >>> b'Ran 1 test' in result.stderr
+    True
+    >>> result.stdout
+    b'(True, 1)\\n'
 
     The null version of me runs no tests for real but instead returns simulated
     responses:
 
     >>> tests = Tests.create_null(was_successful=False, tests_run=5)
-    >>> tests.add_doctest("doctest_testmodule")
     >>> tests.run()
     (False, 5)
 
@@ -110,22 +118,25 @@ class Tests(Observable):
     >>> events = Events()
     >>> tests = Tests.create_null()
     >>> tests.register_event_listener(events)
-    >>> tests.add_doctest("doctest_testmodule")
+    >>> tests.add_doctest("irrelevant_module_name")
     >>> _ = tests.run()
     >>> events
-    DOCTEST_MODULE => 'doctest_testmodule'
+    DOCTEST_MODULE => 'irrelevant_module_name'
     TEST_RUN => None
     """
 
-    def __init__(self, unittest=unittest, doctest=doctest):
+    def __init__(self, unittest=unittest, doctest=doctest, importlib=importlib):
         Observable.__init__(self)
         self.unittest = unittest
         self.doctest = doctest
+        self.importlib = importlib
         self.suite = unittest.TestSuite()
 
     def add_doctest(self, module_name):
         self.notify("DOCTEST_MODULE", module_name)
-        self.suite.addTest(self.doctest.DocTestSuite(__import__(module_name)))
+        self.suite.addTest(
+            self.doctest.DocTestSuite(
+                self.importlib.import_module(module_name)))
 
     def run(self):
         self.notify("TEST_RUN", None)
@@ -152,45 +163,14 @@ class Tests(Observable):
         class NullDoctest:
             def DocTestSuite(self, module):
                 pass
-        return Tests(unittest=NullUnittest(), doctest=NullDoctest())
-
-class Args:
-
-    """
-    I am an infrastructure wrapper for reading program arguments (via the sys
-    module).
-
-    I return the arguments passed to the program:
-
-    >>> subprocess.run([
-    ...     "python", "-c",
-    ...     "import zero; print(zero.Args().get())",
-    ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['arg1', 'arg2']\\n"
-
-    The null version of me does not read arguments passed to the program, but
-    instead return configured arguments:
-
-    >>> subprocess.run([
-    ...     "python", "-c",
-    ...     "import zero; print(zero.Args.create_null(['configured1']).get())",
-    ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['configured1']\\n"
-    """
-
-    def __init__(self, sys=sys):
-        self.sys = sys
-
-    def get(self):
-        return self.sys.argv[1:]
-
-    @staticmethod
-    def create_null(args):
-        class NullSys:
-            argv = [None]+args
-        return Args(NullSys())
+        class NullImportLib:
+            def import_module(self, name):
+                pass
+        return Tests(
+            unittest=NullUnittest(),
+            doctest=NullDoctest(),
+            importlib=NullImportLib()
+        )
 
 if __name__ == "__main__":
     ZeroApp().run()
