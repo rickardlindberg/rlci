@@ -82,10 +82,6 @@ interesting to work on next.
   run. (My CI-server is a Linode. My pipeline is the RLCI program. Linode
   provides same environment / integration point.  RLCI provides process.)
 
-* **Smells/Refactorings**
-
-    * `__import__` should be hidden in wrapper.
-
 ### History
 
 This is where I document the completed stories development.

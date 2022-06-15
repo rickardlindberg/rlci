@@ -4,6 +4,7 @@ import doctest
 import subprocess
 import sys
 import unittest
+import importlib
 
 from rlci import Events, Terminal, Observable
 
@@ -109,7 +110,6 @@ class Tests(Observable):
     responses:
 
     >>> tests = Tests.create_null(was_successful=False, tests_run=5)
-    >>> tests.add_doctest("doctest_testmodule")
     >>> tests.run()
     (False, 5)
 
@@ -118,22 +118,25 @@ class Tests(Observable):
     >>> events = Events()
     >>> tests = Tests.create_null()
     >>> tests.register_event_listener(events)
-    >>> tests.add_doctest("doctest_testmodule")
+    >>> tests.add_doctest("irrelevant_module_name")
     >>> _ = tests.run()
     >>> events
-    DOCTEST_MODULE => 'doctest_testmodule'
+    DOCTEST_MODULE => 'irrelevant_module_name'
     TEST_RUN => None
     """
 
-    def __init__(self, unittest=unittest, doctest=doctest):
+    def __init__(self, unittest=unittest, doctest=doctest, importlib=importlib):
         Observable.__init__(self)
         self.unittest = unittest
         self.doctest = doctest
+        self.importlib = importlib
         self.suite = unittest.TestSuite()
 
     def add_doctest(self, module_name):
         self.notify("DOCTEST_MODULE", module_name)
-        self.suite.addTest(self.doctest.DocTestSuite(__import__(module_name)))
+        self.suite.addTest(
+            self.doctest.DocTestSuite(
+                self.importlib.import_module(module_name)))
 
     def run(self):
         self.notify("TEST_RUN", None)
@@ -160,7 +163,14 @@ class Tests(Observable):
         class NullDoctest:
             def DocTestSuite(self, module):
                 pass
-        return Tests(unittest=NullUnittest(), doctest=NullDoctest())
+        class NullImportLib:
+            def import_module(self, name):
+                pass
+        return Tests(
+            unittest=NullUnittest(),
+            doctest=NullDoctest(),
+            importlib=NullImportLib()
+        )
 
 class Args:
 
