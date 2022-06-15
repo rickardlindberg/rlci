@@ -6,25 +6,39 @@ class RLCIApp:
     """
     I am a tool to facilitate CI/CD.
 
-    I run a predefined pipeline:
+    I can trigger a predefined pipeline:
 
-    >>> RLCIApp.run_in_test_mode()
+    >>> RLCIApp.run_in_test_mode(args=["trigger"])
     STDOUT => 'pipeline run OK'
+
+    I fail when given other args:
+
+    >>> RLCIApp.run_in_test_mode(args=[])
+    STDOUT => 'Usage: python3 rlci.py trigger'
+    EXIT => 1
     """
 
-    def __init__(self, terminal=None):
+    def __init__(self, terminal=None, args=None):
         self.terminal = Terminal() if terminal is None else terminal
+        self.args = Args() if args is None else args
 
     def run(self):
-        self.terminal.print_line("pipeline run OK")
+        if self.args.get() == ["trigger"]:
+            self.terminal.print_line("pipeline run OK")
+        else:
+            self.terminal.print_line("Usage: python3 rlci.py trigger")
+            sys.exit(1)
 
     @staticmethod
-    def run_in_test_mode():
+    def run_in_test_mode(args=[]):
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        app = RLCIApp(terminal=terminal)
-        app.run()
+        app = RLCIApp(terminal=terminal, args=Args.create_null(args))
+        try:
+            app.run()
+        except SystemExit as e:
+            events.append(("EXIT", e.code))
         return events
 
 class Events(list):
@@ -99,6 +113,44 @@ class Terminal(Observable):
             def flush(self):
                 pass
         return Terminal(NullStream())
+
+class Args:
+
+    """
+    I am an infrastructure wrapper for reading program arguments (via the sys
+    module).
+
+    I return the arguments passed to the program:
+
+    >>> subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero; print(zero.Args().get())",
+    ...     "arg1", "arg2"
+    ... ], stdout=subprocess.PIPE, check=True).stdout
+    b"['arg1', 'arg2']\\n"
+
+    The null version of me does not read arguments passed to the program, but
+    instead return configured arguments:
+
+    >>> subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero; print(zero.Args.create_null(['configured1']).get())",
+    ...     "arg1", "arg2"
+    ... ], stdout=subprocess.PIPE, check=True).stdout
+    b"['configured1']\\n"
+    """
+
+    def __init__(self, sys=sys):
+        self.sys = sys
+
+    def get(self):
+        return self.sys.argv[1:]
+
+    @staticmethod
+    def create_null(args):
+        class NullSys:
+            argv = [None]+args
+        return Args(NullSys())
 
 if __name__ == "__main__":
     RLCIApp().run()

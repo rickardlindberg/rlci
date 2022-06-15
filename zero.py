@@ -6,7 +6,7 @@ import sys
 import unittest
 import importlib
 
-from rlci import Events, Terminal, Observable
+from rlci import Events, Terminal, Observable, Args
 
 class ZeroApp:
 
@@ -171,44 +171,6 @@ class Tests(Observable):
             doctest=NullDoctest(),
             importlib=NullImportLib()
         )
-
-class Args:
-
-    """
-    I am an infrastructure wrapper for reading program arguments (via the sys
-    module).
-
-    I return the arguments passed to the program:
-
-    >>> subprocess.run([
-    ...     "python", "-c",
-    ...     "import zero; print(zero.Args().get())",
-    ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['arg1', 'arg2']\\n"
-
-    The null version of me does not read arguments passed to the program, but
-    instead return configured arguments:
-
-    >>> subprocess.run([
-    ...     "python", "-c",
-    ...     "import zero; print(zero.Args.create_null(['configured1']).get())",
-    ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['configured1']\\n"
-    """
-
-    def __init__(self, sys=sys):
-        self.sys = sys
-
-    def get(self):
-        return self.sys.argv[1:]
-
-    @staticmethod
-    def create_null(args):
-        class NullSys:
-            argv = [None]+args
-        return Args(NullSys())
 
 if __name__ == "__main__":
     ZeroApp().run()
