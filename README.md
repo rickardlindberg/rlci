@@ -26,6 +26,31 @@ This is what I initially came up with:
   but a pain in the long run.)
 * Ability to re-rerun parts of a failed pipeline.
 
+## Notes
+
+### Where should a pipeline be defined?
+
+Jenkins and other CI/CD systems make us define the pipeline in the repo itself.
+Does that make sense?
+
+On the one hand, it ensures that the pipeline is always in sync with the repo.
+If a build command changes, we can update the pipeline build step accordingly.
+
+On the other hand, it doesn't feel right that the repo has knowledge of where
+it is deployed for example.
+
+A pipeline encodes a process for software delivery. The process and the code
+can change independently.
+
+**If things change together, they should be together. If not, they should
+not.**
+
+My current thinking is that the repo should expose an interface to the pipeline
+for doing certain tasks. For example `./zero.py build` to build and test, and
+`./zero.py deploy` to deploy the application somewhere. If the build
+process changes, only a change to `zero.py` is needed, and the pipeline can
+stay the same.
+
 ## Development
 
 I will practice agile software development in this project. Some guiding
