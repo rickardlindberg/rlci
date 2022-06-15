@@ -66,15 +66,14 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* **Extend hard coded pipeline to integrate a branch** The hard coded pipeline
-  currently does nothing. We could start fleshing out this pipeline to be the
-  pipeline that RLCI could use. The first step in that pipeline should be to
-  integrate a branch (merge with `main` and run tests and promote if passed).
+* **Extend pipeline functionality**
+    * Make it setup a clean environment with an empty directory
+    * Make it output what it is doing
 
 * **More realistic output** The pipeline currently writes its "report" to
   stdout. I imagine the CI-server having a web-front end to display its status.
-  Therefor convert the stdout report to a HTLM-file that can be served by a web
-  server.
+  Therefore convert the stdout report to a HTLM-file that can be served by a
+  web server.
 
 * **More realistic environment** One purpose of a CI server is to provide the
   same environment for integration builds. That requires the CI server to not
@@ -84,7 +83,7 @@ interesting to work on next.
 
 ### History
 
-This is where I document the completed stories development.
+This is where I document the completed stories.
 
 #### #1 Runs a hard-coded, pre-defined pipeline
 
@@ -105,9 +104,26 @@ looked like at the end of the video and look at the complete
 of changes.
 
 After the video I did some
-[refactorings](https://github.com/rickardlindberg/rlci/compare/e1c4c5c34b75856ca8e62ad172045778a3af8f63...d5bd857e66682ebdc5ad136d7b8270d7e3915961)
+[refactoring](https://github.com/rickardlindberg/rlci/compare/e1c4c5c34b75856ca8e62ad172045778a3af8f63...d5bd857e66682ebdc5ad136d7b8270d7e3915961)
 and made some more improvements to the build system:
 
 * [Usage should exit with code 1.](https://github.com/rickardlindberg/rlci/commit/48a6c55fc2356718c49a080500ba81bf1c78ba88)
 * [Exit with code 0 if tests fail.](https://github.com/rickardlindberg/rlci/commit/03a8a53e218f3c0de81be3e47d79b93f46428a57) (Should have been "code 1" in message.)
 * [Update usage and inluce the build command.](https://github.com/rickardlindberg/rlci/commit/b39d5a5cffd359365223d591558d38fafc81ac30)
+
+#### #2 Extend hard coded pipeline to integrate a branch
+
+*The hard coded pipeline currently does nothing. We could start fleshing out
+this pipeline to be the pipeline that RLCI could use. The first step in that
+pipeline should be to integrate a branch (merge with `main` and run tests and
+promote if passed).*
+
+I completed this story along with some clean up in a video.
+
+**VIDEO:** TODO: Link when edit is done.
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/w24-extend-hard-coded-pipeline)
+as it looked like at the end of the video and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/745a36ef6e3ede7cf8b6b6643058a0baeb570d2d...w24-extend-hard-coded-pipeline)
+of changes.
