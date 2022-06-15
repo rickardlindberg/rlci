@@ -9,7 +9,10 @@ class RLCIApp:
     I can trigger a predefined pipeline:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"])
-    STDOUT => 'pipeline run OK'
+    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
+    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
+    SH => './zero.py build'
+    SH => 'git push'
 
     I fail when given other args:
 
@@ -18,13 +21,17 @@ class RLCIApp:
     EXIT => 1
     """
 
-    def __init__(self, terminal=None, args=None):
+    def __init__(self, terminal=None, args=None, pipeline=None):
         self.terminal = Terminal() if terminal is None else terminal
         self.args = Args() if args is None else args
+        self.pipeline = Pipeline() if pipeline is None else pipeline
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            self.terminal.print_line("pipeline run OK")
+            self.pipeline.sh("git clone git@github.com:rickardlindberg/rlci.git .")
+            self.pipeline.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
+            self.pipeline.sh("./zero.py build")
+            self.pipeline.sh("git push")
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
@@ -34,23 +41,18 @@ class RLCIApp:
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        app = RLCIApp(terminal=terminal, args=Args.create_null(args))
+        pipeline = Pipeline.create_null()
+        pipeline.register_event_listener(events)
+        app = RLCIApp(
+            terminal=terminal,
+            args=Args.create_null(args),
+            pipeline=pipeline
+        )
         try:
             app.run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
         return events
-
-class Events(list):
-
-    def notify(self, event, data):
-        self.append((event, data))
-
-    def filter(self, event):
-        return Events(x for x in self if x[0] == event)
-
-    def __repr__(self):
-        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
 
 class Observable:
 
@@ -63,6 +65,66 @@ class Observable:
     def notify(self, event, data):
         for event_listener in self.event_listeners:
             event_listener.notify(event, data)
+
+class Pipeline(Observable):
+
+    """
+    I can run shell commands:
+
+    >>> Pipeline().sh('echo hello')
+    b'hello\\n'
+
+    I fail if command fails:
+
+    >>> Pipeline().sh('exit 1')
+    Traceback (most recent call last):
+        ...
+    subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
+
+    The null version of me, runs no shell commands:
+
+    >>> Pipeline.create_null().sh('echo hello')
+    b''
+
+    I log commands:
+
+    >>> events = Events()
+    >>> pipeline = Pipeline.create_null()
+    >>> pipeline.register_event_listener(events)
+    >>> _ = pipeline.sh("echo hello")
+    >>> events
+    SH => 'echo hello'
+    """
+
+    def __init__(self, subprocess=subprocess):
+        Observable.__init__(self)
+        self.subprocess = subprocess
+
+    def sh(self, command):
+        self.notify("SH", command)
+        return self.subprocess.run(command, shell=True,
+        stdout=self.subprocess.PIPE, check=True).stdout
+
+    @staticmethod
+    def create_null():
+        class NullSubprocess:
+            PIPE = None
+            def run(self, *args, **kwargs):
+                return NullResponse()
+        class NullResponse:
+            stdout = b''
+        return Pipeline(NullSubprocess())
+
+class Events(list):
+
+    def notify(self, event, data):
+        self.append((event, data))
+
+    def filter(self, event):
+        return Events(x for x in self if x[0] == event)
+
+    def __repr__(self):
+        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
 
 class Terminal(Observable):
 
