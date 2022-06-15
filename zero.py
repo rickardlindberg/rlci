@@ -90,12 +90,20 @@ class Tests(Observable):
     """
     I am a infrastructure wrapper for Python's test modules.
 
-    I run doctests and return success/number of tests run:
+    I run doctests, print report to stderr, and return success/number of tests
+    run:
 
-    >>> tests = Tests()
-    >>> tests.add_doctest("doctest_testmodule")
-    >>> tests.run()
-    (True, 1)
+    >>> result = subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero;"
+    ...     "tests = zero.Tests();"
+    ...     "tests.add_doctest('doctest_testmodule');"
+    ...     "print(tests.run())",
+    ... ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    >>> b'Ran 1 test' in result.stderr
+    True
+    >>> result.stdout
+    b'(True, 1)\\n'
 
     The null version of me runs no tests for real but instead returns simulated
     responses:

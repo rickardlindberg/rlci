@@ -84,7 +84,6 @@ interesting to work on next.
 
 * **Smells/Refactorings**
 
-    * TextTestRunner outputs stuff for tests test when it really shouldn't.
     * `__import__` should be hidden in wrapper.
 
 ### History
