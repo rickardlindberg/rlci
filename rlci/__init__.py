@@ -138,6 +138,3 @@ class Args:
         class NullSys:
             argv = [None]+args
         return Args(NullSys())
-
-if __name__ == "__main__":
-    RLCIApp().run()
