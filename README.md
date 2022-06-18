@@ -56,7 +56,7 @@ stay the same.
 I will practice agile software development in this project. Some guiding
 principles:
 
-* **What is the simplest thing that could possible work?**
+* **What is the simplest thing that could possibly work?**
 * **You ain't gonna need it! / Evolutionary design**
 * **TDD / Refactoring**
 * **Zero Friction Development**
