@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from rlci.events import Observable, Events
-from rlci.pipelines import PipelineRuntime, RLCIPipeline
+from rlci.pipelines import Engine, PipelineRuntime
 
 class RLCIApp:
 
@@ -12,10 +12,7 @@ class RLCIApp:
     I can trigger a predefined pipeline:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"])
-    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
-    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
-    SH => './zero.py build'
-    SH => 'git push'
+    TRIGGER => 'RLCIPipeline'
 
     I fail when given other args:
 
@@ -24,14 +21,14 @@ class RLCIApp:
     EXIT => 1
     """
 
-    def __init__(self, terminal=None, args=None, pipeline_runtime=None):
+    def __init__(self, terminal=None, args=None, pipeline_engine=None):
         self.terminal = Terminal() if terminal is None else terminal
         self.args = Args() if args is None else args
-        self.pipeline_runtime = PipelineRuntime() if pipeline_runtime is None else pipeline_runtime
+        self.pipeline_engine = Engine() if pipeline_engine is None else pipeline_engine
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            RLCIPipeline(self.pipeline_runtime).run()
+            self.pipeline_engine.trigger("RLCIPipeline")
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
@@ -41,12 +38,12 @@ class RLCIApp:
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        pipeline_runtime = PipelineRuntime.create_null()
-        pipeline_runtime.register_event_listener(events)
+        pipeline_engine = Engine(runtime=PipelineRuntime.create_null())
+        pipeline_engine.register_event_listener(events)
         app = RLCIApp(
             terminal=terminal,
             args=Args.create_null(args),
-            pipeline_runtime=pipeline_runtime
+            pipeline_engine=pipeline_engine
         )
         try:
             app.run()

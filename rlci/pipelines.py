@@ -80,3 +80,34 @@ class RLCIPipeline(Pipeline):
         self.runtime.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
         self.runtime.sh("./zero.py build")
         self.runtime.sh("git push")
+
+class Engine(Observable):
+
+    """
+    I am the engine that runs pipelines.
+
+    I can trigger a pipeline:
+
+    >>> engine_events = Events()
+    >>> runtime_events = Events()
+    >>> runtime = PipelineRuntime.create_null()
+    >>> runtime.register_event_listener(runtime_events)
+    >>> engine = Engine(runtime=runtime)
+    >>> engine.register_event_listener(engine_events)
+    >>> engine.trigger("RLCIPipeline")
+    >>> engine_events
+    TRIGGER => 'RLCIPipeline'
+    >>> runtime_events == RLCIPipeline.run_in_test_mode()
+    True
+    """
+
+    def __init__(self, runtime=None):
+        Observable.__init__(self)
+        self.pipelines = {
+            "RLCIPipeline": RLCIPipeline,
+        }
+        self.runtime = PipelineRuntime() if runtime is None else runtime
+
+    def trigger(self, name):
+        self.notify("TRIGGER", name)
+        self.pipelines[name](self.runtime).run()
