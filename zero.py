@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import doctest
+import importlib
 import subprocess
 import sys
 import unittest
-import importlib
 
 from rlci import Events, Terminal, Observable, Args
 
@@ -32,6 +32,7 @@ class ZeroApp:
     >>> ZeroApp.run_in_test_mode(args=['build'])
     DOCTEST_MODULE => 'zero'
     DOCTEST_MODULE => 'rlci'
+    DOCTEST_MODULE => 'rlci.pipelines'
     TEST_RUN => None
 
     I exit with error code if tests fail:
@@ -49,20 +50,44 @@ class ZeroApp:
     ...   tests_run=0
     ... ).filter("EXIT")
     EXIT => 1
+
+    ## Integrating
+
+    I integrate code by pushing changes to a branch and triggering the
+    pre-defined pipeline.
+
+    >>> ZeroApp.run_in_test_mode(args=['integrate'])
+    RUN => 'git checkout -b BRANCH'
+    RUN => 'git push --set-upstream origin BRANCH'
+    RUN => 'python rlci.py trigger'
+    RUN => 'git checkout main'
+    RUN => 'git pull --ff-only'
+    RUN => 'git branch -d BRANCH'
+    RUN => 'git push origin BRANCH --delete'
     """
 
-    def __init__(self, args=None, terminal=None, tests=None):
+    def __init__(self, args=None, terminal=None, tests=None, shell=None):
         self.args = Args() if args is None else args
         self.terminal = Terminal() if terminal is None else terminal
         self.tests = Tests() if tests is None else tests
+        self.shell = Shell() if shell is None else shell
 
     def run(self):
         if self.args.get() == ["build"]:
             self.tests.add_doctest("zero")
             self.tests.add_doctest("rlci")
+            self.tests.add_doctest("rlci.pipelines")
             successful, count = self.tests.run()
             if not successful or count <= 0:
                 sys.exit(1)
+        elif self.args.get() == ["integrate"]:
+            self.shell.run("git checkout -b BRANCH")
+            self.shell.run("git push --set-upstream origin BRANCH")
+            self.shell.run("python rlci.py trigger")
+            self.shell.run("git checkout main")
+            self.shell.run("git pull --ff-only")
+            self.shell.run("git branch -d BRANCH")
+            self.shell.run("git push origin BRANCH --delete")
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
             self.terminal.print_line("")
@@ -79,7 +104,9 @@ class ZeroApp:
         terminal.register_event_listener(events)
         tests = Tests.create_null(was_successful=tests_succeed, tests_run=tests_run)
         tests.register_event_listener(events)
-        app = ZeroApp(args=args, terminal=terminal, tests=tests)
+        shell = Shell.create_null()
+        shell.register_event_listener(events)
+        app = ZeroApp(args=args, terminal=terminal, tests=tests, shell=shell)
         try:
             app.run()
         except SystemExit as e:
@@ -171,6 +198,59 @@ class Tests(Observable):
             doctest=NullDoctest(),
             importlib=NullImportLib()
         )
+
+class Shell(Observable):
+
+    """
+    I can run commands:
+
+    >>> subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero;"
+    ...     "zero.Shell().run('echo hello');"
+    ... ], stdout=subprocess.PIPE).stdout
+    b'hello\\n'
+
+    The null version of me does not run anything:
+
+    >>> subprocess.run([
+    ...     "python", "-c",
+    ...     "import zero;"
+    ...     "zero.Shell.create_null().run('echo hello');"
+    ... ], stdout=subprocess.PIPE).stdout
+    b''
+
+    I fail if command fails:
+
+    >>> Shell().run('exit 1')
+    Traceback (most recent call last):
+        ...
+    subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
+
+    I log my commands:
+
+    >>> events = Events()
+    >>> shell = Shell.create_null()
+    >>> shell.register_event_listener(events)
+    >>> shell.run("echo hello")
+    >>> events
+    RUN => 'echo hello'
+    """
+
+    def __init__(self, subprocess=subprocess):
+        Observable.__init__(self)
+        self.subprocess = subprocess
+
+    def run(self, command):
+        self.notify("RUN", command)
+        self.subprocess.run(command, shell=True, check=True)
+
+    @staticmethod
+    def create_null():
+        class NullSubprocess:
+            def run(self, command, shell, check):
+                pass
+        return Shell(NullSubprocess())
 
 if __name__ == "__main__":
     ZeroApp().run()
