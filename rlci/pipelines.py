@@ -1,10 +1,15 @@
+import contextlib
+import os
 import subprocess
+import tempfile
 
 from rlci.events import Observable, Events
 
 class Runtime(Observable):
 
     """
+    ## Shell commands
+
     I can run shell commands:
 
     >>> Runtime().sh('echo hello')
@@ -30,6 +35,25 @@ class Runtime(Observable):
     >>> _ = pipeline.sh("echo hello")
     >>> events
     SH => 'echo hello'
+
+    ## Workspace commands
+
+    I can create empty workspaces:
+
+    >>> events = Events()
+    >>> runtime = Runtime()
+    >>> runtime.register_event_listener(events)
+    >>> outside_before = os.listdir()
+    >>> with runtime.workspace():
+    ...     inside = os.listdir()
+    >>> outside_after = os.listdir()
+    >>> outside_before == outside_after
+    True
+    >>> inside
+    []
+    >>> events
+    EMPTY_WORKSPACE => 'create'
+    EMPTY_WORKSPACE => 'delete'
     """
 
     def __init__(self, subprocess=subprocess):
@@ -40,6 +64,20 @@ class Runtime(Observable):
         self.notify("SH", command)
         return self.subprocess.run(command, shell=True,
         stdout=self.subprocess.PIPE, check=True).stdout
+
+    @contextlib.contextmanager
+    def workspace(self):
+        self.notify("EMPTY_WORKSPACE", "create")
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                current_dir = os.getcwd()
+                try:
+                    os.chdir(d)
+                    yield
+                finally:
+                    os.chdir(current_dir)
+        finally:
+            self.notify("EMPTY_WORKSPACE", "delete")
 
     @staticmethod
     def create_null():
@@ -69,17 +107,20 @@ class RLCIPipeline(Pipeline):
 
     """
     >>> RLCIPipeline.run_in_test_mode()
+    EMPTY_WORKSPACE => 'create'
     SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
     SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
     SH => './zero.py build'
     SH => 'git push'
+    EMPTY_WORKSPACE => 'delete'
     """
 
     def run(self):
-        self.runtime.sh("git clone git@github.com:rickardlindberg/rlci.git .")
-        self.runtime.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
-        self.runtime.sh("./zero.py build")
-        self.runtime.sh("git push")
+        with self.runtime.workspace():
+            self.runtime.sh("git clone git@github.com:rickardlindberg/rlci.git .")
+            self.runtime.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
+            self.runtime.sh("./zero.py build")
+            self.runtime.sh("git push")
 
 class Engine(Observable):
 
