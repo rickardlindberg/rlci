@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import doctest
+import importlib
 import subprocess
 import sys
 import unittest
-import importlib
 
 from rlci import Events, Terminal, Observable, Args
 
