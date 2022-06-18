@@ -1,6 +1,6 @@
 import subprocess
 
-from rlci.events import Observable
+from rlci.events import Observable, Events
 
 class PipelineRuntime(Observable):
 
@@ -56,7 +56,24 @@ class Pipeline:
     def __init__(self, runtime):
         self.runtime = runtime
 
+    @staticmethod
+    def run_in_test_mode():
+        events = Events()
+        runtime = PipelineRuntime.create_null()
+        runtime.register_event_listener(events)
+        pipeline = RLCIPipeline(runtime)
+        pipeline.run()
+        return events
+
 class RLCIPipeline(Pipeline):
+
+    """
+    >>> RLCIPipeline.run_in_test_mode()
+    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
+    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
+    SH => './zero.py build'
+    SH => 'git push'
+    """
 
     def run(self):
         self.runtime.sh("git clone git@github.com:rickardlindberg/rlci.git .")

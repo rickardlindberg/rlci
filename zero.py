@@ -32,6 +32,7 @@ class ZeroApp:
     >>> ZeroApp.run_in_test_mode(args=['build'])
     DOCTEST_MODULE => 'zero'
     DOCTEST_MODULE => 'rlci'
+    DOCTEST_MODULE => 'rlci.pipelines'
     TEST_RUN => None
 
     I exit with error code if tests fail:
@@ -60,6 +61,7 @@ class ZeroApp:
         if self.args.get() == ["build"]:
             self.tests.add_doctest("zero")
             self.tests.add_doctest("rlci")
+            self.tests.add_doctest("rlci.pipelines")
             successful, count = self.tests.run()
             if not successful or count <= 0:
                 sys.exit(1)

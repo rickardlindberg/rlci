@@ -9,3 +9,14 @@ class Observable:
     def notify(self, event, data):
         for event_listener in self.event_listeners:
             event_listener.notify(event, data)
+
+class Events(list):
+
+    def notify(self, event, data):
+        self.append((event, data))
+
+    def filter(self, event):
+        return Events(x for x in self if x[0] == event)
+
+    def __repr__(self):
+        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
