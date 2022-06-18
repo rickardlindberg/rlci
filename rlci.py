@@ -186,7 +186,7 @@ class Args:
 
     >>> subprocess.run([
     ...     "python", "-c",
-    ...     "import zero; print(zero.Args().get())",
+    ...     "import rlci; print(rlci.Args().get())",
     ...     "arg1", "arg2"
     ... ], stdout=subprocess.PIPE, check=True).stdout
     b"['arg1', 'arg2']\\n"
@@ -196,7 +196,7 @@ class Args:
 
     >>> subprocess.run([
     ...     "python", "-c",
-    ...     "import zero; print(zero.Args.create_null(['configured1']).get())",
+    ...     "import rlci; print(rlci.Args.create_null(['configured1']).get())",
     ...     "arg1", "arg2"
     ... ], stdout=subprocess.PIPE, check=True).stdout
     b"['configured1']\\n"
