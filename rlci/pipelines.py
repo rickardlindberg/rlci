@@ -2,30 +2,30 @@ import subprocess
 
 from rlci.events import Observable
 
-class Pipeline(Observable):
+class PipelineRuntime(Observable):
 
     """
     I can run shell commands:
 
-    >>> Pipeline().sh('echo hello')
+    >>> PipelineRuntime().sh('echo hello')
     b'hello\\n'
 
     I fail if command fails:
 
-    >>> Pipeline().sh('exit 1')
+    >>> PipelineRuntime().sh('exit 1')
     Traceback (most recent call last):
         ...
     subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
 
     The null version of me, runs no shell commands:
 
-    >>> Pipeline.create_null().sh('echo hello')
+    >>> PipelineRuntime.create_null().sh('echo hello')
     b''
 
     I log commands:
 
     >>> events = Events()
-    >>> pipeline = Pipeline.create_null()
+    >>> pipeline = PipelineRuntime.create_null()
     >>> pipeline.register_event_listener(events)
     >>> _ = pipeline.sh("echo hello")
     >>> events
@@ -49,15 +49,17 @@ class Pipeline(Observable):
                 return NullResponse()
         class NullResponse:
             stdout = b''
-        return Pipeline(NullSubprocess())
+        return PipelineRuntime(NullSubprocess())
 
-class RLCIPipeline:
+class Pipeline:
 
-    def __init__(self, pipeline):
-        self.pipeline = pipeline
+    def __init__(self, runtime):
+        self.runtime = runtime
+
+class RLCIPipeline(Pipeline):
 
     def run(self):
-        self.pipeline.sh("git clone git@github.com:rickardlindberg/rlci.git .")
-        self.pipeline.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
-        self.pipeline.sh("./zero.py build")
-        self.pipeline.sh("git push")
+        self.runtime.sh("git clone git@github.com:rickardlindberg/rlci.git .")
+        self.runtime.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
+        self.runtime.sh("./zero.py build")
+        self.runtime.sh("git push")

@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from rlci.events import Observable
-from rlci.pipelines import Pipeline, RLCIPipeline
+from rlci.pipelines import PipelineRuntime, RLCIPipeline
 
 class RLCIApp:
 
@@ -24,14 +24,14 @@ class RLCIApp:
     EXIT => 1
     """
 
-    def __init__(self, terminal=None, args=None, pipeline=None):
+    def __init__(self, terminal=None, args=None, pipeline_runtime=None):
         self.terminal = Terminal() if terminal is None else terminal
         self.args = Args() if args is None else args
-        self.pipeline = Pipeline() if pipeline is None else pipeline
+        self.pipeline_runtime = PipelineRuntime() if pipeline_runtime is None else pipeline_runtime
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            RLCIPipeline(self.pipeline).run()
+            RLCIPipeline(self.pipeline_runtime).run()
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
@@ -41,12 +41,12 @@ class RLCIApp:
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        pipeline = Pipeline.create_null()
-        pipeline.register_event_listener(events)
+        pipeline_runtime = PipelineRuntime.create_null()
+        pipeline_runtime.register_event_listener(events)
         app = RLCIApp(
             terminal=terminal,
             args=Args.create_null(args),
-            pipeline=pipeline
+            pipeline_runtime=pipeline_runtime
         )
         try:
             app.run()
