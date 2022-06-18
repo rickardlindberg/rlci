@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from rlci.events import Observable
-from rlci.pipelines import Pipeline
+from rlci.pipelines import Pipeline, RLCIPipeline
 
 class RLCIApp:
 
@@ -31,10 +31,7 @@ class RLCIApp:
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            self.pipeline.sh("git clone git@github.com:rickardlindberg/rlci.git .")
-            self.pipeline.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
-            self.pipeline.sh("./zero.py build")
-            self.pipeline.sh("git push")
+            RLCIPipeline(self.pipeline).run()
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)

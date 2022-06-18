@@ -50,3 +50,14 @@ class Pipeline(Observable):
         class NullResponse:
             stdout = b''
         return Pipeline(NullSubprocess())
+
+class RLCIPipeline:
+
+    def __init__(self, pipeline):
+        self.pipeline = pipeline
+
+    def run(self):
+        self.pipeline.sh("git clone git@github.com:rickardlindberg/rlci.git .")
+        self.pipeline.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
+        self.pipeline.sh("./zero.py build")
+        self.pipeline.sh("git push")
