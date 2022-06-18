@@ -2,30 +2,30 @@ import subprocess
 
 from rlci.events import Observable, Events
 
-class PipelineRuntime(Observable):
+class Runtime(Observable):
 
     """
     I can run shell commands:
 
-    >>> PipelineRuntime().sh('echo hello')
+    >>> Runtime().sh('echo hello')
     b'hello\\n'
 
     I fail if command fails:
 
-    >>> PipelineRuntime().sh('exit 1')
+    >>> Runtime().sh('exit 1')
     Traceback (most recent call last):
         ...
     subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
 
     The null version of me, runs no shell commands:
 
-    >>> PipelineRuntime.create_null().sh('echo hello')
+    >>> Runtime.create_null().sh('echo hello')
     b''
 
     I log commands:
 
     >>> events = Events()
-    >>> pipeline = PipelineRuntime.create_null()
+    >>> pipeline = Runtime.create_null()
     >>> pipeline.register_event_listener(events)
     >>> _ = pipeline.sh("echo hello")
     >>> events
@@ -49,7 +49,7 @@ class PipelineRuntime(Observable):
                 return NullResponse()
         class NullResponse:
             stdout = b''
-        return PipelineRuntime(NullSubprocess())
+        return Runtime(NullSubprocess())
 
 class Pipeline:
 
@@ -59,7 +59,7 @@ class Pipeline:
     @staticmethod
     def run_in_test_mode():
         events = Events()
-        runtime = PipelineRuntime.create_null()
+        runtime = Runtime.create_null()
         runtime.register_event_listener(events)
         pipeline = RLCIPipeline(runtime)
         pipeline.run()
@@ -86,19 +86,24 @@ class Engine(Observable):
     """
     I am the engine that runs pipelines.
 
-    I can trigger a pipeline:
+    I can trigger a pre-defined pipeline:
 
-    >>> engine_events = Events()
     >>> runtime_events = Events()
-    >>> runtime = PipelineRuntime.create_null()
+    >>> runtime = Runtime.create_null()
     >>> runtime.register_event_listener(runtime_events)
     >>> engine = Engine(runtime=runtime)
+    >>> engine.trigger("RLCIPipeline")
+    >>> runtime_events == RLCIPipeline.run_in_test_mode()
+    True
+
+    I notify which pipeline I triggered:
+
+    >>> engine_events = Events()
+    >>> engine = Engine(runtime=Runtime.create_null())
     >>> engine.register_event_listener(engine_events)
     >>> engine.trigger("RLCIPipeline")
     >>> engine_events
     TRIGGER => 'RLCIPipeline'
-    >>> runtime_events == RLCIPipeline.run_in_test_mode()
-    True
     """
 
     def __init__(self, runtime=None):
@@ -106,7 +111,7 @@ class Engine(Observable):
         self.pipelines = {
             "RLCIPipeline": RLCIPipeline,
         }
-        self.runtime = PipelineRuntime() if runtime is None else runtime
+        self.runtime = Runtime() if runtime is None else runtime
 
     def trigger(self, name):
         self.notify("TRIGGER", name)

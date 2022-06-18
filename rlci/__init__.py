@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from rlci.events import Observable, Events
-from rlci.pipelines import Engine, PipelineRuntime
+from rlci.pipelines import Engine, Runtime
 
 class RLCIApp:
 
@@ -38,7 +38,7 @@ class RLCIApp:
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        pipeline_engine = Engine(runtime=PipelineRuntime.create_null())
+        pipeline_engine = Engine(runtime=Runtime.create_null())
         pipeline_engine.register_event_listener(events)
         app = RLCIApp(
             terminal=terminal,
