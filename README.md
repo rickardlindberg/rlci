@@ -120,7 +120,8 @@ promote if passed).*
 
 I completed this story along with some clean up in a video.
 
-**VIDEO:** TODO: Link when edit is done.
+**VIDEO:** [Adding continuous integration functionality to
+RLCI.](https://youtu.be/sokSvnAkd5E)
 
 Browse the
 [code](https://github.com/rickardlindberg/rlci/tree/w24-extend-hard-coded-pipeline)
