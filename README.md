@@ -67,7 +67,6 @@ This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
 * **Extend pipeline functionality**
-    * Make it setup a clean environment with an empty directory
     * Make it output what it is doing
 
 * **More realistic output** The pipeline currently writes its "report" to
@@ -128,3 +127,37 @@ Browse the
 as it looked like at the end of the video and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/745a36ef6e3ede7cf8b6b6643058a0baeb570d2d...w24-extend-hard-coded-pipeline)
 of changes.
+
+#### #3 Extend hard coded pipeline to run in isolation
+
+*This prevents multiple pipeline runs to interfere with each other via
+contaminated workspaces.*
+
+I completed this story in a video. Watch me do refactoring, internal
+improvements, and finally adding functionality to execute pipelines in
+isolation.
+
+**VIDEO:** [Making RLCI pipelines run in
+isolation.](https://youtu.be/0jJEPgomRCc)
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/w25-pipeline-run-in-isolation)
+as it looked like at the end of the video and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/86e4bf72c35c4fb035fcc5caa58218684ccc06b4...w25-pipeline-run-in-isolation)
+of changes.
+
+##### Retro
+
+I am not happy with how the design turned out. I'm not sure it will allow me to
+move forward smoothly. I think I will spend some time researching
+testing/design strategies applicable for me in this situation.
+
+But can I do that without also working on a story?
+
+I think adding more realistic output will require that I have a better design.
+So perhaps I should try to refactor towards a design that will make reporting
+easy to implement. And then implement that.
+
+Overall, I think that much time needs to be spend on refactoring/design.
+Perhaps this ratio is higher in the beginning of a project. I feel like 90/10
+design/refactoring vs. implementing stories.
