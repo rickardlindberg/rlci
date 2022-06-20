@@ -33,6 +33,7 @@ class ZeroApp:
     DOCTEST_MODULE => 'zero'
     DOCTEST_MODULE => 'rlci'
     DOCTEST_MODULE => 'rlci.pipelines'
+    DOCTEST_MODULE => 'rlci.infrastructure'
     TEST_RUN => None
 
     I exit with error code if tests fail:
@@ -77,6 +78,7 @@ class ZeroApp:
             self.tests.add_doctest("zero")
             self.tests.add_doctest("rlci")
             self.tests.add_doctest("rlci.pipelines")
+            self.tests.add_doctest("rlci.infrastructure")
             successful, count = self.tests.run()
             if not successful or count <= 0:
                 sys.exit(1)
