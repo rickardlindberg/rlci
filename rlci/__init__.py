@@ -1,9 +1,8 @@
-import subprocess
 import sys
 
 from rlci.events import Observable, Events
 from rlci.pipelines import Engine, Runtime
-from rlci.infrastructure import Terminal
+from rlci.infrastructure import Args, Terminal
 
 class RLCIApp:
 
@@ -51,41 +50,3 @@ class RLCIApp:
         except SystemExit as e:
             events.append(("EXIT", e.code))
         return events
-
-class Args:
-
-    """
-    I am an infrastructure wrapper for reading program arguments (via the sys
-    module).
-
-    I return the arguments passed to the program:
-
-    >>> subprocess.run([
-    ...     "python", "-c",
-    ...     "import rlci; print(rlci.Args().get())",
-    ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['arg1', 'arg2']\\n"
-
-    The null version of me does not read arguments passed to the program, but
-    instead return configured arguments:
-
-    >>> subprocess.run([
-    ...     "python", "-c",
-    ...     "import rlci; print(rlci.Args.create_null(['configured1']).get())",
-    ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['configured1']\\n"
-    """
-
-    def __init__(self, sys=sys):
-        self.sys = sys
-
-    def get(self):
-        return self.sys.argv[1:]
-
-    @staticmethod
-    def create_null(args):
-        class NullSys:
-            argv = [None]+args
-        return Args(NullSys())
