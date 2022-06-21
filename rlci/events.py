@@ -12,6 +12,10 @@ class Observable:
 
 class Events(list):
 
+    def listen(self, observable):
+        observable.register_event_listener(self)
+        return observable
+
     def notify(self, event, data):
         self.append((event, data))
 

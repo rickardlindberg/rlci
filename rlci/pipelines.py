@@ -31,8 +31,7 @@ class Runtime(Observable):
     I log commands:
 
     >>> events = Events()
-    >>> pipeline = Runtime.create_null()
-    >>> pipeline.register_event_listener(events)
+    >>> pipeline = events.listen(Runtime.create_null())
     >>> _ = pipeline.sh("echo hello")
     >>> events
     SH => 'echo hello'
@@ -42,8 +41,7 @@ class Runtime(Observable):
     I can create empty workspaces:
 
     >>> events = Events()
-    >>> runtime = Runtime()
-    >>> runtime.register_event_listener(events)
+    >>> runtime = events.listen(Runtime())
     >>> outside_before = os.listdir()
     >>> with runtime.workspace():
     ...     inside = os.listdir()
@@ -98,10 +96,7 @@ class Pipeline:
     @staticmethod
     def run_in_test_mode():
         events = Events()
-        runtime = Runtime.create_null()
-        runtime.register_event_listener(events)
-        pipeline = RLCIPipeline(runtime)
-        pipeline.run()
+        RLCIPipeline(events.listen(Runtime.create_null())).run()
         return events
 
 class RLCIPipeline(Pipeline):
@@ -131,8 +126,7 @@ class Engine:
     I can trigger a pre-defined pipeline:
 
     >>> runtime_events = Events()
-    >>> runtime = Runtime.create_null()
-    >>> runtime.register_event_listener(runtime_events)
+    >>> runtime = runtime_events.listen(Runtime.create_null())
     >>> engine = Engine(runtime=runtime, terminal=Terminal.create_null())
     >>> engine.trigger("RLCIPipeline")
     >>> runtime_events == RLCIPipeline.run_in_test_mode()
@@ -141,8 +135,7 @@ class Engine:
     I notify which pipeline I triggered:
 
     >>> events = Events()
-    >>> terminal = Terminal.create_null()
-    >>> terminal.register_event_listener(events)
+    >>> terminal = events.listen(Terminal.create_null())
     >>> engine = Engine(runtime=Runtime.create_null(), terminal=terminal)
     >>> engine.trigger("RLCIPipeline")
     >>> events

@@ -27,8 +27,7 @@ class Terminal(Observable):
     I log the lines that I print:
 
     >>> events = Events()
-    >>> terminal = Terminal.create_null()
-    >>> terminal.register_event_listener(events)
+    >>> terminal = events.listen(Terminal.create_null())
     >>> terminal.print_line("hello")
     >>> events
     STDOUT => 'hello'

@@ -46,17 +46,12 @@ class RLCIApp:
     @staticmethod
     def run_in_test_mode(args=[]):
         events = Events()
-        terminal = Terminal.create_null()
-        terminal.register_event_listener(events)
-        runtime = Runtime.create_null()
-        runtime.register_event_listener(events)
-        app = RLCIApp(
-            terminal=terminal,
-            args=Args.create_null(args),
-            runtime=runtime
-        )
         try:
-            app.run()
+            RLCIApp(
+                terminal=events.listen(Terminal.create_null()),
+                args=Args.create_null(args),
+                runtime=events.listen(Runtime.create_null())
+            ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
         return events
