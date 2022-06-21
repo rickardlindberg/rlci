@@ -101,16 +101,6 @@ class Pipeline:
 
 class RLCIPipeline(Pipeline):
 
-    """
-    >>> RLCIPipeline.run_in_test_mode()
-    EMPTY_WORKSPACE => 'create'
-    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
-    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
-    SH => './zero.py build'
-    SH => 'git push'
-    EMPTY_WORKSPACE => 'delete'
-    """
-
     def run(self):
         with self.runtime.workspace():
             self.runtime.sh("git clone git@github.com:rickardlindberg/rlci.git .")
@@ -125,20 +115,17 @@ class Engine:
 
     I can trigger a pre-defined pipeline:
 
-    >>> runtime_events = Events()
-    >>> runtime = runtime_events.listen(Runtime.create_null())
-    >>> engine = Engine(runtime=runtime, terminal=Terminal.create_null())
-    >>> engine.trigger()
-    >>> runtime_events == RLCIPipeline.run_in_test_mode()
-    True
-
-    I notify which pipeline I triggered:
-
     >>> events = Events()
+    >>> runtime = events.listen(Runtime.create_null())
     >>> terminal = events.listen(Terminal.create_null())
-    >>> engine = Engine(runtime=Runtime.create_null(), terminal=terminal)
-    >>> engine.trigger()
+    >>> Engine(runtime=runtime, terminal=terminal).trigger()
     >>> events
+    EMPTY_WORKSPACE => 'create'
+    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
+    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
+    SH => './zero.py build'
+    SH => 'git push'
+    EMPTY_WORKSPACE => 'delete'
     STDOUT => 'Triggered RLCIPipeline'
     """
 
