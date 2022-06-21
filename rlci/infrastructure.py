@@ -60,22 +60,24 @@ class Args:
 
     I return the arguments passed to the program:
 
-    >>> subprocess.run([
+    >>> print(subprocess.run([
     ...     "python", "-c",
-    ...     "import rlci; print(rlci.Args().get())",
+    ...     "from rlci.infrastructure import Args;"
+    ...         "print(Args().get())",
     ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['arg1', 'arg2']\\n"
+    ... ], stdout=subprocess.PIPE, text=True).stdout.strip())
+    ['arg1', 'arg2']
 
     The null version of me does not read arguments passed to the program, but
-    instead return configured arguments:
+    instead returns configured arguments:
 
-    >>> subprocess.run([
+    >>> print(subprocess.run([
     ...     "python", "-c",
-    ...     "import rlci; print(rlci.Args.create_null(['configured1']).get())",
+    ...     "from rlci.infrastructure import Args;"
+    ...         "print(Args.create_null(['configured']).get())",
     ...     "arg1", "arg2"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
-    b"['configured1']\\n"
+    ... ], stdout=subprocess.PIPE, text=True).stdout.strip())
+    ['configured']
     """
 
     def __init__(self, sys=sys):
