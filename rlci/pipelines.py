@@ -142,9 +142,9 @@ class Engine:
     STDOUT => 'Triggered RLCIPipeline'
     """
 
-    def __init__(self, runtime=None, terminal=None):
-        self.runtime = Runtime() if runtime is None else runtime
-        self.terminal = Terminal() if terminal is None else terminal
+    def __init__(self, runtime, terminal):
+        self.runtime = runtime
+        self.terminal = terminal
 
     def trigger(self):
         RLCIPipeline(self.runtime).run()
