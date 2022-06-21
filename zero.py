@@ -6,7 +6,8 @@ import subprocess
 import sys
 import unittest
 
-from rlci import Events, Terminal, Observable, Args
+from rlci import Events, Observable
+from rlci.infrastructure import Args, Terminal
 
 class ZeroApp:
 
@@ -33,6 +34,7 @@ class ZeroApp:
     DOCTEST_MODULE => 'zero'
     DOCTEST_MODULE => 'rlci'
     DOCTEST_MODULE => 'rlci.pipelines'
+    DOCTEST_MODULE => 'rlci.infrastructure'
     TEST_RUN => None
 
     I exit with error code if tests fail:
@@ -66,17 +68,18 @@ class ZeroApp:
     RUN => 'git push origin BRANCH --delete'
     """
 
-    def __init__(self, args=None, terminal=None, tests=None, shell=None):
-        self.args = Args() if args is None else args
-        self.terminal = Terminal() if terminal is None else terminal
-        self.tests = Tests() if tests is None else tests
-        self.shell = Shell() if shell is None else shell
+    def __init__(self, args, terminal, tests, shell):
+        self.args = args
+        self.terminal = terminal
+        self.tests = tests
+        self.shell = shell
 
     def run(self):
         if self.args.get() == ["build"]:
             self.tests.add_doctest("zero")
             self.tests.add_doctest("rlci")
             self.tests.add_doctest("rlci.pipelines")
+            self.tests.add_doctest("rlci.infrastructure")
             successful, count = self.tests.run()
             if not successful or count <= 0:
                 sys.exit(1)
@@ -95,6 +98,15 @@ class ZeroApp:
             self.terminal.print_line("")
             self.terminal.print_line("    ./zero.py build")
             sys.exit(1)
+
+    @staticmethod
+    def create():
+        return ZeroApp(
+            args=Args.create(),
+            terminal=Terminal.create(),
+            tests=Tests.create(),
+            shell=Shell.create()
+        )
 
     @staticmethod
     def run_in_test_mode(args=[], tests_succeed=True, tests_run=1):
@@ -124,7 +136,7 @@ class Tests(Observable):
     >>> result = subprocess.run([
     ...     "python", "-c",
     ...     "import zero;"
-    ...     "tests = zero.Tests();"
+    ...     "tests = zero.Tests.create();"
     ...     "tests.add_doctest('doctest_testmodule');"
     ...     "print(tests.run())",
     ... ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -152,7 +164,7 @@ class Tests(Observable):
     TEST_RUN => None
     """
 
-    def __init__(self, unittest=unittest, doctest=doctest, importlib=importlib):
+    def __init__(self, unittest, doctest, importlib):
         Observable.__init__(self)
         self.unittest = unittest
         self.doctest = doctest
@@ -169,6 +181,14 @@ class Tests(Observable):
         self.notify("TEST_RUN", None)
         result = self.unittest.TextTestRunner().run(self.suite)
         return (result.wasSuccessful(), result.testsRun)
+
+    @staticmethod
+    def create():
+        return Tests(
+            unittest=unittest,
+            doctest=doctest,
+            importlib=importlib
+        )
 
     @staticmethod
     def create_null(was_successful=True, tests_run=0):
@@ -207,7 +227,7 @@ class Shell(Observable):
     >>> subprocess.run([
     ...     "python", "-c",
     ...     "import zero;"
-    ...     "zero.Shell().run('echo hello');"
+    ...     "zero.Shell.create().run('echo hello');"
     ... ], stdout=subprocess.PIPE).stdout
     b'hello\\n'
 
@@ -222,7 +242,7 @@ class Shell(Observable):
 
     I fail if command fails:
 
-    >>> Shell().run('exit 1')
+    >>> Shell.create().run('exit 1')
     Traceback (most recent call last):
         ...
     subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
@@ -237,13 +257,17 @@ class Shell(Observable):
     RUN => 'echo hello'
     """
 
-    def __init__(self, subprocess=subprocess):
+    def __init__(self, subprocess):
         Observable.__init__(self)
         self.subprocess = subprocess
 
     def run(self, command):
         self.notify("RUN", command)
         self.subprocess.run(command, shell=True, check=True)
+
+    @staticmethod
+    def create():
+        return Shell(subprocess=subprocess)
 
     @staticmethod
     def create_null():
@@ -253,4 +277,4 @@ class Shell(Observable):
         return Shell(NullSubprocess())
 
 if __name__ == "__main__":
-    ZeroApp().run()
+    ZeroApp.create().run()
