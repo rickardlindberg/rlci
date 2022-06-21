@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 
 from rlci.events import Observable, Events
+from rlci.infrastructure import Terminal
 
 class Runtime(Observable):
 
@@ -122,7 +123,7 @@ class RLCIPipeline(Pipeline):
             self.runtime.sh("./zero.py build")
             self.runtime.sh("git push")
 
-class Engine(Observable):
+class Engine:
 
     """
     I am the engine that runs pipelines.
@@ -132,28 +133,29 @@ class Engine(Observable):
     >>> runtime_events = Events()
     >>> runtime = Runtime.create_null()
     >>> runtime.register_event_listener(runtime_events)
-    >>> engine = Engine(runtime=runtime)
+    >>> engine = Engine(runtime=runtime, terminal=Terminal.create_null())
     >>> engine.trigger("RLCIPipeline")
     >>> runtime_events == RLCIPipeline.run_in_test_mode()
     True
 
     I notify which pipeline I triggered:
 
-    >>> engine_events = Events()
-    >>> engine = Engine(runtime=Runtime.create_null())
-    >>> engine.register_event_listener(engine_events)
+    >>> events = Events()
+    >>> terminal = Terminal.create_null()
+    >>> terminal.register_event_listener(events)
+    >>> engine = Engine(runtime=Runtime.create_null(), terminal=terminal)
     >>> engine.trigger("RLCIPipeline")
-    >>> engine_events
-    TRIGGER => 'RLCIPipeline'
+    >>> events
+    STDOUT => 'Triggered RLCIPipeline'
     """
 
-    def __init__(self, runtime=None):
-        Observable.__init__(self)
+    def __init__(self, runtime=None, terminal=None):
         self.pipelines = {
             "RLCIPipeline": RLCIPipeline,
         }
         self.runtime = Runtime() if runtime is None else runtime
+        self.terminal = Terminal() if terminal is None else terminal
 
     def trigger(self, name):
-        self.notify("TRIGGER", name)
         self.pipelines[name](self.runtime).run()
+        self.terminal.print_line(f"Triggered {name}")

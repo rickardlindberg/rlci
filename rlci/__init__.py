@@ -11,8 +11,15 @@ class RLCIApp:
 
     I can trigger a predefined pipeline:
 
-    >>> RLCIApp.run_in_test_mode(args=["trigger"])
-    TRIGGER => 'RLCIPipeline'
+    >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("STDOUT")
+    STDOUT => 'Triggered RLCIPipeline'
+
+    In the above test test, we just want to assert that a pipeline was
+    triggered. We don't care about the details of how it was run. (For
+    that, see Engine.) How can we "externally" observe that a pipeline
+    was run? We choose to only look at what was printed to stdout. In
+    the future this might change. We might replace the stdout print
+    with a write to a database instead.
 
     I fail when given other args:
 
@@ -21,14 +28,17 @@ class RLCIApp:
     EXIT => 1
     """
 
-    def __init__(self, terminal=None, args=None, pipeline_engine=None):
+    def __init__(self, terminal=None, args=None, runtime=None):
         self.terminal = Terminal() if terminal is None else terminal
         self.args = Args() if args is None else args
-        self.pipeline_engine = Engine() if pipeline_engine is None else pipeline_engine
+        self.runtime = Runtime() if runtime is None else runtime
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            self.pipeline_engine.trigger("RLCIPipeline")
+            Engine(
+                runtime=self.runtime,
+                terminal=self.terminal
+            ).trigger("RLCIPipeline")
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
@@ -38,12 +48,12 @@ class RLCIApp:
         events = Events()
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
-        pipeline_engine = Engine(runtime=Runtime.create_null())
-        pipeline_engine.register_event_listener(events)
+        runtime = Runtime.create_null()
+        runtime.register_event_listener(events)
         app = RLCIApp(
             terminal=terminal,
             args=Args.create_null(args),
-            pipeline_engine=pipeline_engine
+            runtime=runtime
         )
         try:
             app.run()
