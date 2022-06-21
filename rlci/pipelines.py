@@ -128,7 +128,7 @@ class Engine:
     >>> runtime_events = Events()
     >>> runtime = runtime_events.listen(Runtime.create_null())
     >>> engine = Engine(runtime=runtime, terminal=Terminal.create_null())
-    >>> engine.trigger("RLCIPipeline")
+    >>> engine.trigger()
     >>> runtime_events == RLCIPipeline.run_in_test_mode()
     True
 
@@ -137,18 +137,15 @@ class Engine:
     >>> events = Events()
     >>> terminal = events.listen(Terminal.create_null())
     >>> engine = Engine(runtime=Runtime.create_null(), terminal=terminal)
-    >>> engine.trigger("RLCIPipeline")
+    >>> engine.trigger()
     >>> events
     STDOUT => 'Triggered RLCIPipeline'
     """
 
     def __init__(self, runtime=None, terminal=None):
-        self.pipelines = {
-            "RLCIPipeline": RLCIPipeline,
-        }
         self.runtime = Runtime() if runtime is None else runtime
         self.terminal = Terminal() if terminal is None else terminal
 
-    def trigger(self, name):
-        self.pipelines[name](self.runtime).run()
-        self.terminal.print_line(f"Triggered {name}")
+    def trigger(self):
+        RLCIPipeline(self.runtime).run()
+        self.terminal.print_line(f"Triggered RLCIPipeline")

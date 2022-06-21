@@ -43,7 +43,7 @@ class RLCIApp:
             Engine(
                 runtime=self.runtime,
                 terminal=self.terminal
-            ).trigger("RLCIPipeline")
+            ).trigger()
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
