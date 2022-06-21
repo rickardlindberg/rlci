@@ -26,12 +26,17 @@ class RLCIApp:
     >>> RLCIApp.run_in_test_mode(args=[])
     STDOUT => 'Usage: python3 rlci.py trigger'
     EXIT => 1
+
+    The real app can be instantiated:
+
+    >>> isinstance(RLCIApp.create(), RLCIApp)
+    True
     """
 
-    def __init__(self, terminal=None, args=None, runtime=None):
-        self.terminal = Terminal() if terminal is None else terminal
-        self.args = Args() if args is None else args
-        self.runtime = Runtime() if runtime is None else runtime
+    def __init__(self, terminal, args, runtime):
+        self.terminal = terminal
+        self.args = args
+        self.runtime = runtime
 
     def run(self):
         if self.args.get() == ["trigger"]:
@@ -42,6 +47,14 @@ class RLCIApp:
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
+
+    @staticmethod
+    def create():
+        return RLCIApp(
+            terminal=Terminal.create(),
+            args=Args.create(),
+            runtime=Runtime()
+        )
 
     @staticmethod
     def run_in_test_mode(args=[]):

@@ -13,7 +13,7 @@ class Terminal(Observable):
     >>> subprocess.run([
     ...     "python", "-c",
     ...     "from rlci.infrastructure import Terminal;"
-    ...         "Terminal().print_line('hello')"
+    ...         "Terminal.create().print_line('hello')"
     ... ], stdout=subprocess.PIPE).stdout
     b'hello\\n'
 
@@ -35,7 +35,7 @@ class Terminal(Observable):
     STDOUT => 'hello'
     """
 
-    def __init__(self, stdout=sys.stdout):
+    def __init__(self, stdout):
         Observable.__init__(self)
         self.stdout = stdout
 
@@ -44,6 +44,10 @@ class Terminal(Observable):
         self.stdout.write(text)
         self.stdout.write("\n")
         self.stdout.flush()
+
+    @staticmethod
+    def create():
+        return Terminal(stdout=sys.stdout)
 
     @staticmethod
     def create_null():
@@ -65,7 +69,7 @@ class Args:
     >>> print(subprocess.run([
     ...     "python", "-c",
     ...     "from rlci.infrastructure import Args;"
-    ...         "print(Args().get())",
+    ...         "print(Args.create().get())",
     ...     "arg1", "arg2"
     ... ], stdout=subprocess.PIPE, text=True).stdout.strip())
     ['arg1', 'arg2']
@@ -82,11 +86,15 @@ class Args:
     ['configured']
     """
 
-    def __init__(self, sys=sys):
+    def __init__(self, sys):
         self.sys = sys
 
     def get(self):
         return self.sys.argv[1:]
+
+    @staticmethod
+    def create():
+        return Args(sys=sys)
 
     @staticmethod
     def create_null(args):
