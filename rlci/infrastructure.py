@@ -6,22 +6,24 @@ from rlci.events import Observable, Events
 class Terminal(Observable):
 
     """
-    I represent a terminal emulator to which text can be printed.
+    I am an infrastructure wrapper for printing text to a terminal.
 
     I write text to stdout:
 
     >>> subprocess.run([
     ...     "python", "-c",
-    ...     "import rlci; rlci.Terminal().print_line('hello')"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
+    ...     "from rlci.infrastructure import Terminal;"
+    ...         "Terminal().print_line('hello')"
+    ... ], stdout=subprocess.PIPE).stdout
     b'hello\\n'
 
     The null version of me doesn't write anything to stdout:
 
     >>> subprocess.run([
     ...     "python", "-c",
-    ...     "import rlci; rlci.Terminal.create_null().print_line('hello')"
-    ... ], stdout=subprocess.PIPE, check=True).stdout
+    ...     "from rlci.infrastructure import Terminal;"
+    ...         "Terminal.create_null().print_line('hello')"
+    ... ], stdout=subprocess.PIPE).stdout
     b''
 
     I log the lines that I print:

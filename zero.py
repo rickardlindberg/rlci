@@ -6,8 +6,8 @@ import subprocess
 import sys
 import unittest
 
-from rlci import Events, Terminal, Observable
-from rlci.infrastructure import Args
+from rlci import Events, Observable
+from rlci.infrastructure import Args, Terminal
 
 class ZeroApp:
 
