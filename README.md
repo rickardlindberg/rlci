@@ -161,3 +161,34 @@ easy to implement. And then implement that.
 Overall, I think that much time needs to be spend on refactoring/design.
 Perhaps this ratio is higher in the beginning of a project. I feel like 90/10
 design/refactoring vs. implementing stories.
+
+#### #4 ...
+
+* Test structure resolution
+
+    73f3240eaf26cbe5ea3ab97169f767dd081f3c2d: Refactor: RLCIApp tests should
+    not be aware of Engine. That is an internal implementation detail.
+
+    https://stackoverflow.blog/2022/01/03/favor-real-dependencies-for-unit-testing/
+
+    TODO: Engine is an internal dependency. It should not act as an
+    infrastructure wrapper. What should we assert here instead? That
+    something was printed to the terminal? That a report was created?
+
+    TODO: RLCIApp -> Engine -> RLCIPipeline. What is infrastructure? What is
+    logic? What is application?
+
+    TODO: Climb the ladder with Engine.
+
+    > At this point, your original method will have nothing left but a
+    > small Logic Sandwich: a call or two to the infrastructure class
+    > and a call to the new logic method. Now eliminate the original
+    > method by inlining it to its callers. This will cause the logic
+    > sandwich to climb one step up your dependency chain.
+
+* Design
+
+    185f184f0f1f477f5818bfa44e8803bc71dc727e: Refactor: Remove prematurely
+    added name parameter to trigger method.
+
+* RLCI feels free of logic. What to extract to pure functions?
