@@ -56,27 +56,6 @@ class Runtime(Observable):
             stdout = b''
         return Runtime(NullSubprocess())
 
-class Pipeline:
-
-    def __init__(self, runtime, process):
-        self.runtime = runtime
-        self.process = process
-
-    @staticmethod
-    def run_in_test_mode():
-        events = Events()
-        RLCIPipeline(events.listen(Runtime.create_null())).run()
-        return events
-
-class RLCIPipeline(Pipeline):
-
-    def run(self):
-        with self.runtime.workspace():
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
-            self.process.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
-            self.process.run(["./zero.py", "build"])
-            self.process.run(["git", "push"])
-
 class Engine:
 
     """
@@ -105,5 +84,9 @@ class Engine:
         self.process = process
 
     def trigger(self):
-        RLCIPipeline(self.runtime, self.process).run()
+        with self.runtime.workspace():
+            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
+            self.process.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
+            self.process.run(["./zero.py", "build"])
+            self.process.run(["git", "push"])
         self.terminal.print_line(f"Triggered RLCIPipeline")
