@@ -108,9 +108,12 @@ class Engine:
                 self._run(["./zero.py", "build"])
                 self._run(["git", "push"])
             self.terminal.print_line(f"Triggered RLCIPipeline")
-        except ValueError:
+        except StepFailure:
             self.terminal.print_line(f"FAIL")
 
     def _run(self, command):
         if self.process.run(command) != 0:
-            raise ValueError("foo")
+            raise StepFailure()
+
+class StepFailure(Exception):
+    pass
