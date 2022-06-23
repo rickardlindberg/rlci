@@ -76,6 +76,23 @@ class Engine:
     PROCESS => ['git', 'push']
     EMPTY_WORKSPACE => 'delete'
     STDOUT => 'Triggered RLCIPipeline'
+
+    Pipeline is aborted if process fails:
+
+    >>> events = Events()
+    >>> runtime = events.listen(Runtime.create_null())
+    >>> terminal = events.listen(Terminal.create_null())
+    >>> process = events.listen(Process.create_null({
+    ...    ('git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.'): [
+    ...        {"returncode": 1}
+    ...    ]
+    ... }))
+    >>> Engine(runtime=runtime, terminal=terminal, process=process).trigger()
+    >>> events
+    EMPTY_WORKSPACE => 'create'
+    PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
+    EMPTY_WORKSPACE => 'delete'
+    STDOUT => 'FAIL'
     """
 
     def __init__(self, runtime, terminal, process):
@@ -84,9 +101,16 @@ class Engine:
         self.process = process
 
     def trigger(self):
-        with self.runtime.workspace():
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
-            self.process.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
-            self.process.run(["./zero.py", "build"])
-            self.process.run(["git", "push"])
-        self.terminal.print_line(f"Triggered RLCIPipeline")
+        try:
+            with self.runtime.workspace():
+                self._run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
+                self._run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
+                self._run(["./zero.py", "build"])
+                self._run(["git", "push"])
+            self.terminal.print_line(f"Triggered RLCIPipeline")
+        except ValueError:
+            self.terminal.print_line(f"FAIL")
+
+    def _run(self, command):
+        if self.process.run(command) != 0:
+            raise ValueError("foo")

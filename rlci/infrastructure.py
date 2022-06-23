@@ -39,6 +39,19 @@ class Process(Observable):
 
     >>> Process.create_null().run(["bash", "-c", "exit 99"])
     0
+
+    The null version of me can configure responses:
+
+    >>> stdout = []
+    >>> stderr = []
+    >>> Process.create_null({
+    ...     ("./a_program",): [{"stdout": ["one"], "stderr": ["two"], "returncode": 1}]
+    ... }).run(["./a_program"], stdout=stdout.append, stderr=stderr.append)
+    1
+    >>> stdout
+    ['one']
+    >>> stderr
+    ['two']
     """
 
     def __init__(self, subprocess, threading):
@@ -74,15 +87,23 @@ class Process(Observable):
         self.threading.Thread(target=target, args=args).start()
 
     @staticmethod
-    def create_null():
+    def create_null(responses={}):
         PIPE = None
         class NullSubprocess:
             def Popen(self, command, stdout, stderr, text):
-                return NullProcess()
+                response = {"returncode": 0, "stdout": [], "stderr": []}
+                if tuple(command) in responses:
+                    response = dict(response, **responses[tuple(command)].pop(0))
+                return NullProcess(
+                    returncode=response["returncode"],
+                    stdout=response["stdout"],
+                    stderr=response["stderr"]
+                )
         class NullProcess:
-            returncode = 0
-            stdout = []
-            stderr = []
+            def __init__(self, returncode, stdout, stderr):
+                self.returncode = returncode
+                self.stdout = stdout
+                self.stderr = stderr
             def wait(self):
                 pass
         class NullThreading:
