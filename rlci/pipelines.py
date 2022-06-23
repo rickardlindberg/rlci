@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 
 from rlci.events import Observable, Events
-from rlci.infrastructure import Terminal
+from rlci.infrastructure import Terminal, Process
 
 class Runtime(Observable):
 
@@ -90,8 +90,9 @@ class Runtime(Observable):
 
 class Pipeline:
 
-    def __init__(self, runtime):
+    def __init__(self, runtime, process):
         self.runtime = runtime
+        self.process = process
 
     @staticmethod
     def run_in_test_mode():
@@ -103,10 +104,10 @@ class RLCIPipeline(Pipeline):
 
     def run(self):
         with self.runtime.workspace():
-            self.runtime.sh("git clone git@github.com:rickardlindberg/rlci.git .")
-            self.runtime.sh("git merge --no-ff -m \"Integrate.\" origin/BRANCH")
-            self.runtime.sh("./zero.py build")
-            self.runtime.sh("git push")
+            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
+            self.process.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
+            self.process.run(["./zero.py", "build"])
+            self.process.run(["git", "push"])
 
 class Engine:
 
@@ -118,21 +119,23 @@ class Engine:
     >>> events = Events()
     >>> runtime = events.listen(Runtime.create_null())
     >>> terminal = events.listen(Terminal.create_null())
-    >>> Engine(runtime=runtime, terminal=terminal).trigger()
+    >>> process = events.listen(Process.create_null())
+    >>> Engine(runtime=runtime, terminal=terminal, process=process).trigger()
     >>> events
     EMPTY_WORKSPACE => 'create'
-    SH => 'git clone git@github.com:rickardlindberg/rlci.git .'
-    SH => 'git merge --no-ff -m "Integrate." origin/BRANCH'
-    SH => './zero.py build'
-    SH => 'git push'
+    PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
+    PROCESS => ['git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
+    PROCESS => ['./zero.py', 'build']
+    PROCESS => ['git', 'push']
     EMPTY_WORKSPACE => 'delete'
     STDOUT => 'Triggered RLCIPipeline'
     """
 
-    def __init__(self, runtime, terminal):
+    def __init__(self, runtime, terminal, process):
         self.runtime = runtime
         self.terminal = terminal
+        self.process = process
 
     def trigger(self):
-        RLCIPipeline(self.runtime).run()
+        RLCIPipeline(self.runtime, self.process).run()
         self.terminal.print_line(f"Triggered RLCIPipeline")
