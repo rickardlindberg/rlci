@@ -9,33 +9,6 @@ from rlci.infrastructure import Terminal, Process
 class Runtime(Observable):
 
     """
-    ## Shell commands
-
-    I can run shell commands:
-
-    >>> Runtime().sh('echo hello')
-    b'hello\\n'
-
-    I fail if command fails:
-
-    >>> Runtime().sh('exit 1')
-    Traceback (most recent call last):
-        ...
-    subprocess.CalledProcessError: Command 'exit 1' returned non-zero exit status 1.
-
-    The null version of me, runs no shell commands:
-
-    >>> Runtime.create_null().sh('echo hello')
-    b''
-
-    I log commands:
-
-    >>> events = Events()
-    >>> pipeline = events.listen(Runtime.create_null())
-    >>> _ = pipeline.sh("echo hello")
-    >>> events
-    SH => 'echo hello'
-
     ## Workspace commands
 
     I can create empty workspaces:
@@ -58,11 +31,6 @@ class Runtime(Observable):
     def __init__(self, subprocess=subprocess):
         Observable.__init__(self)
         self.subprocess = subprocess
-
-    def sh(self, command):
-        self.notify("SH", command)
-        return self.subprocess.run(command, shell=True,
-        stdout=self.subprocess.PIPE, check=True).stdout
 
     @contextlib.contextmanager
     def workspace(self):
@@ -88,27 +56,6 @@ class Runtime(Observable):
             stdout = b''
         return Runtime(NullSubprocess())
 
-class Pipeline:
-
-    def __init__(self, runtime, process):
-        self.runtime = runtime
-        self.process = process
-
-    @staticmethod
-    def run_in_test_mode():
-        events = Events()
-        RLCIPipeline(events.listen(Runtime.create_null())).run()
-        return events
-
-class RLCIPipeline(Pipeline):
-
-    def run(self):
-        with self.runtime.workspace():
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
-            self.process.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
-            self.process.run(["./zero.py", "build"])
-            self.process.run(["git", "push"])
-
 class Engine:
 
     """
@@ -129,6 +76,23 @@ class Engine:
     PROCESS => ['git', 'push']
     EMPTY_WORKSPACE => 'delete'
     STDOUT => 'Triggered RLCIPipeline'
+
+    Pipeline is aborted if process fails:
+
+    >>> events = Events()
+    >>> runtime = events.listen(Runtime.create_null())
+    >>> terminal = events.listen(Terminal.create_null())
+    >>> process = events.listen(Process.create_null({
+    ...    ('git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.'): [
+    ...        {"returncode": 1}
+    ...    ]
+    ... }))
+    >>> Engine(runtime=runtime, terminal=terminal, process=process).trigger()
+    >>> events
+    EMPTY_WORKSPACE => 'create'
+    PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
+    EMPTY_WORKSPACE => 'delete'
+    STDOUT => 'FAIL'
     """
 
     def __init__(self, runtime, terminal, process):
@@ -137,5 +101,19 @@ class Engine:
         self.process = process
 
     def trigger(self):
-        RLCIPipeline(self.runtime, self.process).run()
-        self.terminal.print_line(f"Triggered RLCIPipeline")
+        try:
+            with self.runtime.workspace():
+                self._run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
+                self._run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
+                self._run(["./zero.py", "build"])
+                self._run(["git", "push"])
+            self.terminal.print_line(f"Triggered RLCIPipeline")
+        except StepFailure:
+            self.terminal.print_line(f"FAIL")
+
+    def _run(self, command):
+        if self.process.run(command) != 0:
+            raise StepFailure()
+
+class StepFailure(Exception):
+    pass
