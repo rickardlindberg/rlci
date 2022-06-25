@@ -1,60 +1,5 @@
-import contextlib
-import os
-import subprocess
-import tempfile
-
-from rlci.events import Observable, Events
+from rlci.events import Events
 from rlci.infrastructure import Terminal, Process
-
-class Runtime(Observable):
-
-    """
-    ## Workspace commands
-
-    I can create empty workspaces:
-
-    >>> events = Events()
-    >>> runtime = events.listen(Runtime())
-    >>> outside_before = os.listdir()
-    >>> with runtime.workspace():
-    ...     inside = os.listdir()
-    >>> outside_after = os.listdir()
-    >>> outside_before == outside_after
-    True
-    >>> inside
-    []
-    >>> events
-    EMPTY_WORKSPACE => 'create'
-    EMPTY_WORKSPACE => 'delete'
-    """
-
-    def __init__(self, subprocess=subprocess):
-        Observable.__init__(self)
-        self.subprocess = subprocess
-
-    @contextlib.contextmanager
-    def workspace(self):
-        self.notify("EMPTY_WORKSPACE", "create")
-        try:
-            with tempfile.TemporaryDirectory() as d:
-                current_dir = os.getcwd()
-                try:
-                    os.chdir(d)
-                    yield
-                finally:
-                    os.chdir(current_dir)
-        finally:
-            self.notify("EMPTY_WORKSPACE", "delete")
-
-    @staticmethod
-    def create_null():
-        class NullSubprocess:
-            PIPE = None
-            def run(self, *args, **kwargs):
-                return NullResponse()
-        class NullResponse:
-            stdout = b''
-        return Runtime(NullSubprocess())
 
 class Engine:
 
@@ -64,14 +9,13 @@ class Engine:
     I can trigger a pre-defined pipeline:
 
     >>> events = Events()
-    >>> runtime = events.listen(Runtime.create_null())
     >>> terminal = events.listen(Terminal.create_null())
     >>> process = events.listen(Process.create_null({
     ...    ('mktemp', '-d'): [
     ...        {"stdout": ["/tmp/workspace"]}
     ...    ]
     ... }))
-    >>> Engine(runtime=runtime, terminal=terminal, process=process).trigger()
+    >>> Engine(terminal=terminal, process=process).trigger()
     >>> events
     PROCESS => ['mktemp', '-d']
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
@@ -84,7 +28,6 @@ class Engine:
     Pipeline is aborted if process fails:
 
     >>> events = Events()
-    >>> runtime = events.listen(Runtime.create_null())
     >>> terminal = events.listen(Terminal.create_null())
     >>> process = events.listen(Process.create_null({
     ...    ('python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.'): [
@@ -94,7 +37,7 @@ class Engine:
     ...        {"stdout": ["/tmp/workspace"]}
     ...    ],
     ... }))
-    >>> Engine(runtime=runtime, terminal=terminal, process=process).trigger()
+    >>> Engine(terminal=terminal, process=process).trigger()
     >>> events
     PROCESS => ['mktemp', '-d']
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
@@ -102,8 +45,7 @@ class Engine:
     STDOUT => 'FAIL'
     """
 
-    def __init__(self, runtime, terminal, process):
-        self.runtime = runtime
+    def __init__(self, terminal, process):
         self.terminal = terminal
         self.process = process
 

@@ -1,7 +1,7 @@
 import sys
 
 from rlci.events import Observable, Events
-from rlci.pipelines import Engine, Runtime
+from rlci.pipelines import Engine
 from rlci.infrastructure import Args, Terminal, Process
 
 class RLCIApp:
@@ -33,16 +33,14 @@ class RLCIApp:
     True
     """
 
-    def __init__(self, terminal, args, runtime, process):
+    def __init__(self, terminal, args, process):
         self.terminal = terminal
         self.args = args
-        self.runtime = runtime
         self.process = process
 
     def run(self):
         if self.args.get() == ["trigger"]:
             Engine(
-                runtime=self.runtime,
                 terminal=self.terminal,
                 process=self.process
             ).trigger()
@@ -55,7 +53,6 @@ class RLCIApp:
         return RLCIApp(
             terminal=Terminal.create(),
             args=Args.create(),
-            runtime=Runtime(),
             process=Process.create()
         )
 
@@ -66,7 +63,6 @@ class RLCIApp:
             RLCIApp(
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
-                runtime=events.listen(Runtime.create_null()),
                 process=events.listen(Process.create_null())
             ).run()
         except SystemExit as e:

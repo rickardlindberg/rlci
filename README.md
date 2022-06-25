@@ -192,3 +192,8 @@ design/refactoring vs. implementing stories.
     added name parameter to trigger method.
 
 * RLCI feels free of logic. What to extract to pure functions?
+
+* Get rid of Runtime
+
+    175f74250fbac033470686cd427380d1de1d536b: Rewrite clean workspace with only
+    Process.run.
