@@ -1,9 +1,4 @@
-import contextlib
-import os
-import subprocess
-import tempfile
-
-from rlci.events import Observable, Events
+from rlci.events import Events
 from rlci.infrastructure import Terminal, Process
 
 class Engine:
