@@ -12,7 +12,7 @@ class Engine:
     >>> terminal = events.listen(Terminal.create_null())
     >>> process = events.listen(Process.create_null({
     ...    ('mktemp', '-d'): [
-    ...        {"stdout": ["/tmp/workspace"]}
+    ...        {"output": ["/tmp/workspace"]}
     ...    ]
     ... }))
     >>> Engine(terminal=terminal, process=process).trigger()
@@ -34,7 +34,7 @@ class Engine:
     ...        {"returncode": 1}
     ...    ],
     ...    ('mktemp', '-d'): [
-    ...        {"stdout": ["/tmp/workspace"]}
+    ...        {"output": ["/tmp/workspace"]}
     ...    ],
     ... }))
     >>> Engine(terminal=terminal, process=process).trigger()
@@ -65,9 +65,9 @@ class Engine:
             self.terminal.print_line(f"FAIL")
 
     def _slurp(self, command):
-        stdout = []
-        self._run(command, stdout=stdout.append)
-        return " ".join(stdout)
+        output = []
+        self._run(command, output=output.append)
+        return " ".join(output)
 
     def _run(self, command, **kwargs):
         if self.process.run(command, **kwargs) != 0:

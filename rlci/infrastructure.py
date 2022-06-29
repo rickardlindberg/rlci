@@ -1,7 +1,5 @@
-import queue
 import subprocess
 import sys
-import threading
 
 from rlci.events import Observable, Events
 
@@ -12,21 +10,18 @@ class Process(Observable):
 
     I run a process and return its exit code:
 
-    >>> Process.create().run(["bash", "-c", "exit 99"])
+    >>> Process.create().run(["python3", "-c", "import sys; sys.exit(99)"])
     99
 
-    I stream stdout/stderr:
+    I stream output:
 
-    >>> stdout = []
-    >>> stderr = []
+    >>> output = []
     >>> _ = Process.create().run(
-    ...     ["bash", "-c", "echo one; echo two 1>&2"],
-    ...     stdout=stdout.append, stderr=stderr.append
+    ...     ["python", "-c", "import sys; sys.stdout.write('one\\\\n'); sys.stdout.flush(); sys.stderr.write('two\\\\n')"],
+    ...     output=output.append
     ... )
-    >>> stdout
-    ['one']
-    >>> stderr
-    ['two']
+    >>> output
+    ['one', 'two']
 
     I log the process I run:
 
@@ -37,89 +32,60 @@ class Process(Observable):
 
     The null version of me does not run any process:
 
-    >>> Process.create_null().run(["bash", "-c", "exit 99"])
+    >>> Process.create_null().run(["python3", "-c", "import sys; sys.exit(99)"])
     0
 
     The null version of me can configure responses:
 
-    >>> stdout = []
-    >>> stderr = []
+    >>> output = []
     >>> Process.create_null({
-    ...     ("./a_program",): [{"stdout": ["one"], "stderr": ["two"], "returncode": 1}]
-    ... }).run(["./a_program"], stdout=stdout.append, stderr=stderr.append)
+    ...     ("./a_program",): [{"output": ["fake_one", "fake_two"], "returncode": 1}]
+    ... }).run(["./a_program"], output=output.append)
     1
-    >>> stdout
-    ['one']
-    >>> stderr
-    ['two']
+    >>> output
+    ['fake_one', 'fake_two']
     """
 
-    def __init__(self, subprocess, threading):
+    def __init__(self, subprocess):
         Observable.__init__(self)
         self.subprocess = subprocess
-        self.threading = threading
 
-    def run(self, command, stdout=lambda x: None, stderr=lambda x: None):
-        def stream_reader_thread(stream, listener):
-            try:
-                for line in stream:
-                    command_queue.put((listener, line.rstrip("\r\n")))
-            finally:
-                command_queue.put((ends.remove, listener))
+    def run(self, command, output=lambda x: None):
         self.notify("PROCESS", command)
         process = self.subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True
         )
-        command_queue = queue.Queue()
-        ends = [stdout, stderr]
-        self._start_thread(stream_reader_thread, (process.stdout, stdout))
-        self._start_thread(stream_reader_thread, (process.stderr, stderr))
-        while ends:
-            fn, arg = command_queue.get()
-            fn(arg)
+        for line in process.stdout:
+            output(line.rstrip("\r\n"))
         process.wait()
         return process.returncode
-
-    def _start_thread(self, target, args):
-        self.threading.Thread(target=target, args=args).start()
 
     @staticmethod
     def create_null(responses={}):
         PIPE = None
         class NullSubprocess:
             def Popen(self, command, stdout, stderr, text):
-                response = {"returncode": 0, "stdout": [], "stderr": []}
+                response = {"returncode": 0, "output": []}
                 if tuple(command) in responses:
                     response = dict(response, **responses[tuple(command)].pop(0))
                 return NullProcess(
                     returncode=response["returncode"],
-                    stdout=response["stdout"],
-                    stderr=response["stderr"]
+                    output=response["output"],
                 )
         class NullProcess:
-            def __init__(self, returncode, stdout, stderr):
+            def __init__(self, returncode, output):
                 self.returncode = returncode
-                self.stdout = stdout
-                self.stderr = stderr
+                self.stdout = output
             def wait(self):
                 pass
-        class NullThreading:
-            def Thread(self, target, args):
-                return NullThread(target, args)
-        class NullThread:
-            def __init__(self, target, args):
-                self.target = target
-                self.args = args
-            def start(self):
-                self.target(*self.args)
-        return Process(subprocess=NullSubprocess(), threading=NullThreading())
+        return Process(subprocess=NullSubprocess())
 
     @staticmethod
     def create():
-        return Process(subprocess=subprocess, threading=threading)
+        return Process(subprocess=subprocess)
 
 class Terminal(Observable):
 
