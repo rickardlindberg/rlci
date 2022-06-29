@@ -164,12 +164,19 @@ design/refactoring vs. implementing stories.
 
 #### #4 ...
 
+The reason I've disliked mocks, and the remedy.
+
 * Test structure resolution
 
     73f3240eaf26cbe5ea3ab97169f767dd081f3c2d: Refactor: RLCIApp tests should
     not be aware of Engine. That is an internal implementation detail.
 
     https://stackoverflow.blog/2022/01/03/favor-real-dependencies-for-unit-testing/
+
+    Only create wrappers for real infrastructures. Don't mock internal
+    dependencies. That is an implementation detail.
+
+    Functional core. Imperative shell.
 
     TODO: Engine is an internal dependency. It should not act as an
     infrastructure wrapper. What should we assert here instead? That
@@ -197,3 +204,12 @@ design/refactoring vs. implementing stories.
 
     175f74250fbac033470686cd427380d1de1d536b: Rewrite clean workspace with only
     Process.run.
+
+* Get it working in ugly way. (New infrastructure Process.) Refactor towards
+  beauty.
+
+* Asserted `SH => ...` and assumed Bash `set -e` behavior. Why did my tests
+  dont' catch this "refactoring" mistake? (Move away from Runtime.)
+
+* Evolutionary design is hard. What if the first step was in the wrong
+  direction? At least a rewrite is not a rewrite of that much.
