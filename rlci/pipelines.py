@@ -18,13 +18,19 @@ class Engine:
     >>> Engine(terminal=terminal, process=process).trigger()
     True
     >>> events
-    PROCESS => ['mktemp', '-d']
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']
-    PROCESS => ['rm', '-rf', '/tmp/workspace']
     STDOUT => 'Triggered RLCIPipeline'
+    STDOUT => "['mktemp', '-d']"
+    PROCESS => ['mktemp', '-d']
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']
+    STDOUT => "['rm', '-rf', '/tmp/workspace']"
+    PROCESS => ['rm', '-rf', '/tmp/workspace']
 
     Pipeline is aborted if process fails:
 
@@ -38,6 +44,8 @@ class Engine:
     >>> Engine(terminal=terminal, process=process).trigger()
     False
     >>> events
+    STDOUT => 'Triggered RLCIPipeline'
+    STDOUT => "['mktemp', '-d']"
     PROCESS => ['mktemp', '-d']
     STDOUT => 'FAIL'
     """
@@ -47,6 +55,7 @@ class Engine:
         self.process = process
 
     def trigger(self):
+        self.terminal.print_line(f"Triggered RLCIPipeline")
         try:
             workspace = self._slurp(["mktemp", "-d"])
             try:
@@ -57,7 +66,6 @@ class Engine:
                 self._run(prefix+["git", "push"])
             finally:
                 self._run(["rm", "-rf", workspace])
-            self.terminal.print_line(f"Triggered RLCIPipeline")
             return True
         except StepFailure:
             self.terminal.print_line(f"FAIL")
@@ -68,8 +76,12 @@ class Engine:
         self._run(command, output=output.append)
         return " ".join(output)
 
-    def _run(self, command, **kwargs):
-        if self.process.run(command, **kwargs) != 0:
+    def _run(self, command, output=lambda x: None):
+        def log(line):
+            self.terminal.print_line(line)
+            output(line)
+        self.terminal.print_line(repr(command))
+        if self.process.run(command, output=output) != 0:
             raise StepFailure()
 
 class StepFailure(Exception):

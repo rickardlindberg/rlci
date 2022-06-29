@@ -13,8 +13,8 @@ class RLCIApp:
 
     I can trigger a predefined pipeline:
 
-    >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("STDOUT")
-    STDOUT => 'Triggered RLCIPipeline'
+    >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("STDOUT")[0][1]
+    'Triggered RLCIPipeline'
 
     In the above test test, we just want to assert that a pipeline was
     triggered. We don't care about the details of how it was run. (For
