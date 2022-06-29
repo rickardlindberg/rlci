@@ -10,12 +10,13 @@ class Engine:
 
     >>> events = Events()
     >>> terminal = events.listen(Terminal.create_null())
-    >>> process = events.listen(Process.create_null({
+    >>> process = events.listen(Process.create_null(responses={
     ...    ('mktemp', '-d'): [
     ...        {"output": ["/tmp/workspace"]}
     ...    ]
     ... }))
     >>> Engine(terminal=terminal, process=process).trigger()
+    True
     >>> events
     PROCESS => ['mktemp', '-d']
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
@@ -29,19 +30,15 @@ class Engine:
 
     >>> events = Events()
     >>> terminal = events.listen(Terminal.create_null())
-    >>> process = events.listen(Process.create_null({
-    ...    ('python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.'): [
-    ...        {"returncode": 1}
-    ...    ],
+    >>> process = events.listen(Process.create_null(responses={
     ...    ('mktemp', '-d'): [
-    ...        {"output": ["/tmp/workspace"]}
+    ...        {"returncode": 1}
     ...    ],
     ... }))
     >>> Engine(terminal=terminal, process=process).trigger()
+    False
     >>> events
     PROCESS => ['mktemp', '-d']
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    PROCESS => ['rm', '-rf', '/tmp/workspace']
     STDOUT => 'FAIL'
     """
 
@@ -61,8 +58,10 @@ class Engine:
             finally:
                 self._run(["rm", "-rf", workspace])
             self.terminal.print_line(f"Triggered RLCIPipeline")
+            return True
         except StepFailure:
             self.terminal.print_line(f"FAIL")
+            return False
 
     def _slurp(self, command):
         output = []
