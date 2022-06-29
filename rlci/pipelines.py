@@ -21,6 +21,7 @@ class Engine:
     STDOUT => 'Triggered RLCIPipeline'
     STDOUT => "['mktemp', '-d']"
     PROCESS => ['mktemp', '-d']
+    STDOUT => '/tmp/workspace'
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
@@ -81,7 +82,7 @@ class Engine:
             self.terminal.print_line(line)
             output(line)
         self.terminal.print_line(repr(command))
-        if self.process.run(command, output=output) != 0:
+        if self.process.run(command, output=log) != 0:
             raise StepFailure()
 
 class StepFailure(Exception):
