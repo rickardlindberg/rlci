@@ -9,6 +9,8 @@ class RLCIApp:
     """
     I am a tool to facilitate CI/CD.
 
+    ## Pipeline triggering
+
     I can trigger a predefined pipeline:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("STDOUT")
@@ -21,11 +23,25 @@ class RLCIApp:
     the future this might change. We might replace the stdout print
     with a write to a database instead.
 
+    I exit with status code from pipeline run:
+
+    >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("EXIT")
+    EXIT => 0
+
+    >>> RLCIApp.run_in_test_mode(args=["trigger"], process_responses={
+    ...    ('mktemp', '-d'): [{'returncode': 1}],
+    ... }).filter("EXIT")
+    EXIT => 1
+
+    ## Other
+
     I fail when given other args:
 
     >>> RLCIApp.run_in_test_mode(args=[])
     STDOUT => 'Usage: python3 rlci.py trigger'
     EXIT => 1
+
+    ## Internal health checks
 
     The real app can be instantiated:
 
@@ -40,10 +56,11 @@ class RLCIApp:
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            Engine(
+            successful = Engine(
                 terminal=self.terminal,
                 process=self.process
             ).trigger()
+            sys.exit(0 if successful else 1)
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
@@ -57,13 +74,13 @@ class RLCIApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[]):
+    def run_in_test_mode(args=[], process_responses={}):
         events = Events()
         try:
             RLCIApp(
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
-                process=events.listen(Process.create_null())
+                process=events.listen(Process.create_null(responses=process_responses))
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
