@@ -16,26 +16,32 @@ class RLCIApp:
     >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("STDOUT")[0][1]
     'Triggered RLCIPipeline'
 
-    In the above test test, we just want to assert that a pipeline was
-    triggered. We don't care about the details of how it was run. (For
-    that, see Engine.) How can we "externally" observe that a pipeline
-    was run? We choose to only look at what was printed to stdout. In
-    the future this might change. We might replace the stdout print
-    with a write to a database instead.
+    DESIGN NOTE: In the above test test, we just want to assert that the
+    predefined pipeline was triggered. We don't care about the details of how
+    it was run. How can we "externally" observe that it was run?  We choose to
+    only look at what was printed to stdout. In the future this might change.
+    We might replace the print to stdout with a write to a database for
+    example.
 
-    I exit with status code from pipeline run:
+    I exit with 0 if the pipeline ran successfully:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("EXIT")
     EXIT => 0
+
+    I exit with 1 if the pipeline failed:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"], process_responses={
     ...    ('mktemp', '-d'): [{'returncode': 1}],
     ... }).filter("EXIT")
     EXIT => 1
 
+    DESIGN NOTE: In the above test we need to configure a pipeline to fail. At
+    the moment, this requires information about commands run by the pipeline.
+    Can we move that detail out of this test?
+
     ## Other
 
-    I fail when given other args:
+    I fail when given unknown arguments:
 
     >>> RLCIApp.run_in_test_mode(args=[])
     STDOUT => 'Usage: python3 rlci.py trigger'
@@ -43,7 +49,7 @@ class RLCIApp:
 
     ## Internal health checks
 
-    The real app can be instantiated:
+    The real app can be created:
 
     >>> isinstance(RLCIApp.create(), RLCIApp)
     True
