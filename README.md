@@ -66,8 +66,8 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* **Extend pipeline functionality**
-    * Make it output what it is doing
+* **Custom pipelines** There is only one hard coded pipeline. Make it possible
+  to define more and trigger them from the CLI.
 
 * **More realistic output** The pipeline currently writes its "report" to
   stdout. I imagine the CI-server having a web-front end to display its status.
@@ -162,54 +162,35 @@ Overall, I think that much time needs to be spend on refactoring/design.
 Perhaps this ratio is higher in the beginning of a project. I feel like 90/10
 design/refactoring vs. implementing stories.
 
-#### #4 ...
+#### #4 Make pipeline print to the terminal what it is doing
 
-The reason I've disliked mocks, and the remedy.
+This story started out with a bunch of refactoring and design. I wasn't really
+sure what story to work on when I started. I just knew I needed to clean up
+some things before I could move on. Once I was happier with the design, it was
+quite natural to extend the pipeline to report what it was doing, so that's
+what I did.
 
-* Test structure resolution
+##### Retro
 
-    73f3240eaf26cbe5ea3ab97169f767dd081f3c2d: Refactor: RLCIApp tests should
-    not be aware of Engine. That is an internal implementation detail.
+* The article [Favor real dependencies for unit
+  testing](https://stackoverflow.blog/2022/01/03/favor-real-dependencies-for-unit-testing/)
+  presented a solution to a design problem I was having. (For more info, see
+  the upcoming video.
 
-    https://stackoverflow.blog/2022/01/03/favor-real-dependencies-for-unit-testing/
-
-    Only create wrappers for real infrastructures. Don't mock internal
-    dependencies. That is an implementation detail.
-
-    Functional core. Imperative shell.
-
-    TODO: Engine is an internal dependency. It should not act as an
-    infrastructure wrapper. What should we assert here instead? That
-    something was printed to the terminal? That a report was created?
-
-    TODO: RLCIApp -> Engine -> RLCIPipeline. What is infrastructure? What is
-    logic? What is application?
-
-    TODO: Climb the ladder with Engine.
-
-    > At this point, your original method will have nothing left but a
-    > small Logic Sandwich: a call or two to the infrastructure class
-    > and a call to the new logic method. Now eliminate the original
-    > method by inlining it to its callers. This will cause the logic
-    > sandwich to climb one step up your dependency chain.
-
-* Design
-
-    185f184f0f1f477f5818bfa44e8803bc71dc727e: Refactor: Remove prematurely
-    added name parameter to trigger method.
-
-* RLCI feels free of logic. What to extract to pure functions?
-
-* Get rid of Runtime
-
-    175f74250fbac033470686cd427380d1de1d536b: Rewrite clean workspace with only
-    Process.run.
-
-* Get it working in ugly way. (New infrastructure Process.) Refactor towards
-  beauty.
-
-* Asserted `SH => ...` and assumed Bash `set -e` behavior. Why did my tests
-  dont' catch this "refactoring" mistake? (Move away from Runtime.)
+* Functional core, imperative shell. Hexagonal architecture. A-frame
+  architecture. They are all similar. Thinking in terms of pure/IO Haskell
+  functions made it pretty clear to me. I feel like RLCI is quite free from
+  pure logic at this point. It is mostly stitching together infrastructure
+  code. But I will keep it in mind and look for opportunities to extract pure
+  functions.
 
 * Evolutionary design is hard. What if the first step was in the wrong
   direction? At least a rewrite is not a rewrite of that much.
+
+* I used the TDD principle of taking every shortcut possible to get a test
+  passing, and then improved the design with refactoring. (When writing the new
+  infrastructure wrapper `Process`.) It felt awkward to do ugly things, but I
+  got to a clean solution faster.
+
+* I caught myself having done some premature parametrization and [removed
+  it](https://github.com/rickardlindberg/rlci/commit/185f184f0f1f477f5818bfa44e8803bc71dc727e).
