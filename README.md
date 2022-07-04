@@ -25,6 +25,10 @@ This is what I initially came up with:
   many things can be configured in the GUI which is a convenient way to start,
   but a pain in the long run.)
 * Ability to re-rerun parts of a failed pipeline.
+* Pipeline visualization:
+    * Visualise as as a flow of commits passing through stages and gathering
+      confidence.
+    * Show statistics how long each stage takes and its failure rate.
 
 ## Notes
 
@@ -59,6 +63,7 @@ principles:
 * **What is the simplest thing that could possibly work?**
 * **You ain't gonna need it! / Evolutionary design**
 * **TDD / Refactoring**
+    * Get it working as fast as possible, then refactor/design
 * **Zero Friction Development**
 
 ### Stories
@@ -194,3 +199,7 @@ what I did.
 
 * I caught myself having done some premature parametrization and [removed
   it](https://github.com/rickardlindberg/rlci/commit/185f184f0f1f477f5818bfa44e8803bc71dc727e).
+
+* Tests have guided my design decision more than they have done in the past.
+  Mainly in the way that I try to think about why writing a test is complicated
+  and then changing the design to make testing simple.
