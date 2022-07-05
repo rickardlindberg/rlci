@@ -66,7 +66,7 @@ principles:
     * Get it working as fast as possible, then refactor/design
 * **Zero Friction Development**
 
-### Stories
+## Stories
 
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
@@ -85,11 +85,11 @@ interesting to work on next.
   run. (My CI-server is a Linode. My pipeline is the RLCI program. Linode
   provides same environment / integration point.  RLCI provides process.)
 
-### History
+## History
 
 This is where I document the completed stories.
 
-#### #1 Runs a hard-coded, pre-defined pipeline
+### #1 Runs a hard-coded, pre-defined pipeline
 
 *Running pipelines is the core function of the CI/CD server. If we can get it
 to run a hard-coded, pre-defined pipeline, we have for sure demonstrated some
@@ -115,7 +115,7 @@ and made some more improvements to the build system:
 * [Exit with code 0 if tests fail.](https://github.com/rickardlindberg/rlci/commit/03a8a53e218f3c0de81be3e47d79b93f46428a57) (Should have been "code 1" in message.)
 * [Update usage and inluce the build command.](https://github.com/rickardlindberg/rlci/commit/b39d5a5cffd359365223d591558d38fafc81ac30)
 
-#### #2 Extend hard coded pipeline to integrate a branch
+### #2 Extend hard coded pipeline to integrate a branch
 
 *The hard coded pipeline currently does nothing. We could start fleshing out
 this pipeline to be the pipeline that RLCI could use. The first step in that
@@ -133,7 +133,7 @@ as it looked like at the end of the video and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/745a36ef6e3ede7cf8b6b6643058a0baeb570d2d...w24-extend-hard-coded-pipeline)
 of changes.
 
-#### #3 Extend hard coded pipeline to run in isolation
+### #3 Extend hard coded pipeline to run in isolation
 
 *This prevents multiple pipeline runs to interfere with each other via
 contaminated workspaces.*
@@ -151,7 +151,7 @@ as it looked like at the end of the video and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/86e4bf72c35c4fb035fcc5caa58218684ccc06b4...w25-pipeline-run-in-isolation)
 of changes.
 
-##### Retro
+#### Retro
 
 I am not happy with how the design turned out. I'm not sure it will allow me to
 move forward smoothly. I think I will spend some time researching
@@ -167,20 +167,21 @@ Overall, I think that much time needs to be spend on refactoring/design.
 Perhaps this ratio is higher in the beginning of a project. I feel like 90/10
 design/refactoring vs. implementing stories.
 
-#### #4 Make pipeline print to the terminal what it is doing
+### #4 Make pipeline print to the terminal what it is doing
 
 This story started out with a bunch of refactoring and design. I wasn't really
 sure what story to work on when I started. I just knew I needed to clean up
-some things before I could move on. Once I was happier with the design, it was
-quite natural to extend the pipeline to report what it was doing, so that's
-what I did.
+some things before I could move on. Perhaps I should have done that in the
+previous story already. Once I was happier with the design, it was quite
+natural to extend the pipeline to report what it was doing, so that's what I
+did.
 
-##### Retro
+#### Retro
 
 * The article [Favor real dependencies for unit
   testing](https://stackoverflow.blog/2022/01/03/favor-real-dependencies-for-unit-testing/)
   presented a solution to a design problem I was having. (For more info, see
-  the upcoming video.
+  the [my video about it](https://youtu.be/d7fq8JyU9jg).
 
 * Functional core, imperative shell. Hexagonal architecture. A-frame
   architecture. They are all similar. Thinking in terms of pure/IO Haskell
