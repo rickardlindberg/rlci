@@ -176,6 +176,12 @@ previous story already. Once I was happier with the design, it was quite
 natural to extend the pipeline to report what it was doing, so that's what I
 did.
 
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/story-4-end)
+as it looked like at the end of the story and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/w25-pipeline-run-in-isolation...story-4-end)
+of changes.
+
 #### Retro
 
 * The article [Favor real dependencies for unit
