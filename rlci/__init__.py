@@ -23,21 +23,18 @@ class RLCIApp:
     We might replace the print to stdout with a write to a database for
     example.
 
-    I exit with 0 if the pipeline ran successfully:
+    I exit with 0 if a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("EXIT")
     EXIT => 0
 
-    I exit with 1 if the pipeline failed:
+    I exit with 1 if a triggered pipeline fails:
 
-    >>> RLCIApp.run_in_test_mode(args=["trigger"], process_responses={
-    ...    ('mktemp', '-d'): [{'returncode': 1}],
-    ... }).filter("EXIT")
+    >>> RLCIApp.run_in_test_mode(
+    ...     args=["trigger"],
+    ...     simulate_pipeline_failure=True
+    ... ).filter("EXIT")
     EXIT => 1
-
-    DESIGN NOTE: In the above test we need to configure a pipeline to fail. At
-    the moment, this requires information about commands run by the pipeline.
-    Can we move that detail out of this test?
 
     ## Other
 
@@ -80,8 +77,14 @@ class RLCIApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], process_responses={}):
+    def run_in_test_mode(args=[], process_responses={}, simulate_pipeline_failure=False):
         events = Events()
+        if simulate_pipeline_failure:
+            process_responses = {
+               ('mktemp', '-d'): [{'returncode': 1}],
+            }
+        else:
+            process_responses = {}
         try:
             RLCIApp(
                 terminal=events.listen(Terminal.create_null()),
