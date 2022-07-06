@@ -53,37 +53,70 @@ class Engine:
 
     def __init__(self, terminal, process):
         self.terminal = terminal
-        self.process = process
+        self.process = ProcessWithLogging(terminal, process)
 
     def trigger(self):
-        self.terminal.print_line(f"Triggered RLCIPipeline")
         try:
-            workspace = self._slurp(["mktemp", "-d"])
-            try:
-                prefix = ["python3", "-c", "import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])", workspace]
-                self._run(prefix+["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
-                self._run(prefix+["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
-                self._run(prefix+["./zero.py", "build"])
-                self._run(prefix+["git", "push"])
-            finally:
-                self._run(["rm", "-rf", workspace])
-            return True
-        except StepFailure:
+            self.terminal.print_line("Triggered RLCIPipeline")
+            with Workspace(self.process) as workspace:
+                workspace.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."])
+                workspace.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
+                workspace.run(["./zero.py", "build"])
+                workspace.run(["git", "push"])
+                return True
+        except CommandFailure:
             self.terminal.print_line(f"FAIL")
             return False
 
-    def _slurp(self, command):
+class Workspace:
+
+    def __init__(self, process):
+        self.process = process
+
+    def __enter__(self):
+        self.workspace = self.process.slurp(["mktemp", "-d"])
+        return ProcessInDirectory(self.process, self.workspace)
+
+    def __exit__(self, type, value, traceback):
+        self.process.run(["rm", "-rf", self.workspace])
+
+class ProcessInDirectory:
+
+    def __init__(self, process, directory):
+        self.process = process
+        self.directory = directory
+
+    def run(self, command):
+        self.process.run([
+            "python3",
+            "-c",
+            "; ".join([
+                "import sys",
+                "import os",
+                "os.chdir(sys.argv[1])",
+                "os.execvp(sys.argv[2], sys.argv[2:])",
+            ]),
+            self.directory
+        ]+command)
+
+class ProcessWithLogging:
+
+    def __init__(self, terminal, process):
+        self.terminal = terminal
+        self.process = process
+
+    def slurp(self, command):
         output = []
-        self._run(command, output=output.append)
+        self.run(command, output=output.append)
         return " ".join(output)
 
-    def _run(self, command, output=lambda x: None):
+    def run(self, command, output=lambda x: None):
         def log(line):
             self.terminal.print_line(line)
             output(line)
         self.terminal.print_line(repr(command))
         if self.process.run(command, output=log) != 0:
-            raise StepFailure()
+            raise CommandFailure()
 
-class StepFailure(Exception):
+class CommandFailure(Exception):
     pass
