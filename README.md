@@ -186,8 +186,8 @@ of changes.
 
 * The article [Favor real dependencies for unit
   testing](https://stackoverflow.blog/2022/01/03/favor-real-dependencies-for-unit-testing/)
-  presented a solution to a design problem I was having. (For more info, see
-  the [my video about it](https://youtu.be/d7fq8JyU9jg).
+  presented a solution to a design problem I was having. For more info, see
+  [my video about it](https://youtu.be/d7fq8JyU9jg).
 
 * Functional core, imperative shell. Hexagonal architecture. A-frame
   architecture. They are all similar. Thinking in terms of pure/IO Haskell
