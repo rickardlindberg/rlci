@@ -22,5 +22,8 @@ class Events(list):
     def filter(self, event):
         return Events(x for x in self if x[0] == event)
 
+    def has(self, event, data):
+        return (event, data) in self
+
     def __repr__(self):
         return "\n".join(f"{event} => {repr(data)}" for event, data in self)
