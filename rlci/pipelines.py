@@ -13,7 +13,10 @@ class Engine:
     >>> process = events.listen(Process.create_null(responses={
     ...    ('mktemp', '-d'): [
     ...        {"output": ["/tmp/workspace"]}
-    ...    ]
+    ...    ],
+    ...    ('python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse'): [
+    ...        {"output": ["<git-commit>"]}
+    ...    ],
     ... }))
     >>> Engine(terminal=terminal, process=process).trigger()
     True
@@ -30,6 +33,11 @@ class Engine:
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']"
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse']
+    STDOUT => '<git-commit>'
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'deploy', '<git-commit>']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'deploy', '<git-commit>']
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
     PROCESS => ['rm', '-rf', '/tmp/workspace']
 
@@ -63,6 +71,8 @@ class Engine:
                 workspace.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
                 workspace.run(["./zero.py", "build"])
                 workspace.run(["git", "push"])
+                version = workspace.slurp(["git", "rev-parse"])
+                workspace.run(["./zero.py", "deploy", version])
                 return True
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
@@ -86,8 +96,14 @@ class ProcessInDirectory:
         self.process = process
         self.directory = directory
 
+    def slurp(self, command):
+        return self.process.slurp(self.create_command(command))
+
     def run(self, command):
-        self.process.run([
+        self.process.run(self.create_command(command))
+
+    def create_command(self, command):
+        return [
             "python3",
             "-c",
             "; ".join([
@@ -97,7 +113,7 @@ class ProcessInDirectory:
                 "os.execvp(sys.argv[2], sys.argv[2:])",
             ]),
             self.directory
-        ]+command)
+        ] + command
 
 class ProcessWithLogging:
 
