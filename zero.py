@@ -61,7 +61,7 @@ class ZeroApp:
     >>> ZeroApp.run_in_test_mode(args=['integrate'])
     RUN => 'git checkout -b BRANCH'
     RUN => 'git push --set-upstream origin BRANCH'
-    RUN => 'python rlci.py trigger'
+    RUN => 'python /opt/rlci/rlci.py trigger'
     RUN => 'git checkout main'
     RUN => 'git pull --ff-only'
     RUN => 'git branch -d BRANCH'
@@ -95,7 +95,7 @@ class ZeroApp:
         elif self.args.get() == ["integrate"]:
             self.shell.run("git checkout -b BRANCH")
             self.shell.run("git push --set-upstream origin BRANCH")
-            self.shell.run("python rlci.py trigger")
+            self.shell.run("python /opt/rlci/rlci.py trigger")
             self.shell.run("git checkout main")
             self.shell.run("git pull --ff-only")
             self.shell.run("git branch -d BRANCH")
