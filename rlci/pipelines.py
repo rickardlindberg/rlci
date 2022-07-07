@@ -14,7 +14,7 @@ class Engine:
     ...    ('mktemp', '-d'): [
     ...        {"output": ["/tmp/workspace"]}
     ...    ],
-    ...    ('python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse'): [
+    ...    ('python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse', 'HEAD'): [
     ...        {"output": ["<git-commit>"]}
     ...    ],
     ... }))
@@ -33,8 +33,8 @@ class Engine:
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']"
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse']
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse', 'HEAD']"
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse', 'HEAD']
     STDOUT => '<git-commit>'
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'deploy', '<git-commit>']"
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'deploy', '<git-commit>']
@@ -71,7 +71,7 @@ class Engine:
                 workspace.run(["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"])
                 workspace.run(["./zero.py", "build"])
                 workspace.run(["git", "push"])
-                version = workspace.slurp(["git", "rev-parse"])
+                version = workspace.slurp(["git", "rev-parse", "HEAD"])
                 workspace.run(["./zero.py", "deploy", version])
                 return True
         except CommandFailure:
