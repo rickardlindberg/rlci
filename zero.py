@@ -66,6 +66,15 @@ class ZeroApp:
     RUN => 'git pull --ff-only'
     RUN => 'git branch -d BRANCH'
     RUN => 'git push origin BRANCH --delete'
+
+    ## Deploying
+
+    I deploy a version of RLCI to /opt/rlci:
+
+    >>> ZeroApp.run_in_test_mode(args=['deploy', '<git-hash>'])
+    RUN => 'find /opt/rlci -mindepth 1 -maxdepth 1 -exec rm -rf {} \\\\;'
+    RUN => 'git clone git@github.com:rickardlindberg/rlci.git /opt/rlci/'
+    RUN => 'git -C /opt/rlci checkout <git-hash>'
     """
 
     def __init__(self, args, terminal, tests, shell):
@@ -91,6 +100,12 @@ class ZeroApp:
             self.shell.run("git pull --ff-only")
             self.shell.run("git branch -d BRANCH")
             self.shell.run("git push origin BRANCH --delete")
+        elif self.args.get()[:1] == ["deploy"]:
+            # Assumes that /opt/rlci exists
+            version = self.args.get()[1]
+            self.shell.run("find /opt/rlci -mindepth 1 -maxdepth 1 -exec rm -rf {} \;")
+            self.shell.run("git clone git@github.com:rickardlindberg/rlci.git /opt/rlci/")
+            self.shell.run(f"git -C /opt/rlci checkout {version}")
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
             self.terminal.print_line("")
