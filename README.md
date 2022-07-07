@@ -210,3 +210,5 @@ of changes.
 * Tests have guided my design decision more than they have done in the past.
   Mainly in the way that I try to think about why writing a test is complicated
   and then changing the design to make testing simple.
+
+### #5 Run RLCI on server
