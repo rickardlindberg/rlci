@@ -101,7 +101,6 @@ class ZeroApp:
             self.shell.run("git branch -d BRANCH")
             self.shell.run("git push origin BRANCH --delete")
         elif self.args.get()[:1] == ["deploy"]:
-            # Assumes that /opt/rlci exists
             version = self.args.get()[1]
             self.shell.run("find /opt/rlci -mindepth 1 -maxdepth 1 -exec rm -rf {} \;")
             self.shell.run("git clone git@github.com:rickardlindberg/rlci.git /opt/rlci/")

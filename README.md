@@ -55,6 +55,21 @@ for doing certain tasks. For example `./zero.py build` to build and test, and
 process changes, only a change to `zero.py` is needed, and the pipeline can
 stay the same.
 
+### Server requirements
+
+This section documents requirements on the server that RLCI runs on. Currently
+these requirements are not automated, but RLCI assumes that they are in place:
+
+* SSH access (using keys) for user X
+* Directory `/opt/rlci` present with full permissions to user X
+* Git configured with email/username
+* Software installed:
+    * Python
+    * Git
+
+I'm currently not sure how/where to automate all of this, so that's why the
+documentation exists instead. But hopefully, we can get rid of it.
+
 ## Development
 
 I will practice agile software development in this project. Some guiding
