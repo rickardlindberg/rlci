@@ -94,12 +94,6 @@ interesting to work on next.
   Therefore convert the stdout report to a HTLM-file that can be served by a
   web server.
 
-* **More realistic environment** One purpose of a CI server is to provide the
-  same environment for integration builds. That requires the CI server to not
-  run on my laptop. Create a dedicated server to which RLCI can be deployed and
-  run. (My CI-server is a Linode. My pipeline is the RLCI program. Linode
-  provides same environment / integration point.  RLCI provides process.)
-
 ## History
 
 This is where I document the completed stories.
@@ -226,5 +220,32 @@ of changes.
   Mainly in the way that I try to think about why writing a test is complicated
   and then changing the design to make testing simple.
 
-### #5 Run RLCI on server
+### #5 More realistic environment (run RLCI on server)
 
+*One purpose of a CI server is to provide the same environment for integration
+builds. That requires the CI server to not run on my laptop. Create a dedicated
+server to which RLCI can be deployed and run. (My CI-server is a Linode. My
+pipeline is the RLCI program. Linode provides same environment / integration
+point. RLCI provides process.)*
+
+I implemented the main part of the functionality in a video:
+
+**VIDEO:** [Deploying my continuous integration software to a server.](https://youtu.be/BmUz4my7eko)
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/video-w27-end)
+as it looked like at the end of the video and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/video-w27-start...video-w27-end)
+of changes.
+
+When reviewing the work, I came up with the following list of refactorings and
+improvements to work on before considering the story done:
+
+* Second test case for no second argument to deploy
+* Always delete temporary branch
+* Integrate without commits?
+* Diffs hard to read
+* Assumes /opt/rlci exists
+* Ugly tests. How to make them better?
+* Don't execute zero.py through Shell? Missed failure of git checkout ''
+* Clean up CI serer home folder
