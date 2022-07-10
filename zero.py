@@ -58,7 +58,7 @@ class ZeroApp:
     I integrate code by pushing changes to a branch and triggering the
     pre-defined pipeline.
 
-    >>> ZeroApp.run_in_test_mode(args=['integrate']).filter("PROCESS")
+    >>> ZeroApp.run_in_test_mode(args=['integrate']).filter("PROCESS", "EXIT")
     PROCESS => ['git', 'checkout', '-b', 'BRANCH']
     PROCESS => ['git', 'push', '--set-upstream', 'origin', 'BRANCH']
     PROCESS => ['ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger']
@@ -66,6 +66,22 @@ class ZeroApp:
     PROCESS => ['git', 'pull', '--ff-only']
     PROCESS => ['git', 'branch', '-d', 'BRANCH']
     PROCESS => ['git', 'push', 'origin', 'BRANCH', '--delete']
+
+    When integration fails, I still delete the temporary branch:
+
+    >>> ZeroApp.run_in_test_mode(args=['integrate'], process_responses={
+    ...     ('ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger'): [
+    ...         {"returncode": 99}
+    ...     ]
+    ... }).filter("PROCESS", "EXIT")
+    PROCESS => ['git', 'checkout', '-b', 'BRANCH']
+    PROCESS => ['git', 'push', '--set-upstream', 'origin', 'BRANCH']
+    PROCESS => ['ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger']
+    PROCESS => ['git', 'checkout', 'main']
+    PROCESS => ['git', 'pull', '--ff-only']
+    PROCESS => ['git', 'branch', '-d', 'BRANCH']
+    PROCESS => ['git', 'push', 'origin', 'BRANCH', '--delete']
+    EXIT => 1
 
     ## Deploying
 
@@ -101,11 +117,13 @@ class ZeroApp:
         elif self.args.get() == ["integrate"]:
             self.process.run(["git", "checkout", "-b", "BRANCH"])
             self.process.run(["git", "push", "--set-upstream", "origin", "BRANCH"])
-            self.process.run(["ssh", "rlci@ci.rickardlindberg.me", "python", "/opt/rlci/rlci.py", "trigger"])
-            self.process.run(["git", "checkout", "main"])
-            self.process.run(["git", "pull", "--ff-only"])
-            self.process.run(["git", "branch", "-d", "BRANCH"])
-            self.process.run(["git", "push", "origin", "BRANCH", "--delete"])
+            try:
+                self.process.run(["ssh", "rlci@ci.rickardlindberg.me", "python", "/opt/rlci/rlci.py", "trigger"])
+            finally:
+                self.process.run(["git", "checkout", "main"])
+                self.process.run(["git", "pull", "--ff-only"])
+                self.process.run(["git", "branch", "-d", "BRANCH"])
+                self.process.run(["git", "push", "origin", "BRANCH", "--delete"])
         elif self.args.get()[:1] == ["deploy"]:
             if len(self.args.get()) < 2:
                 self.terminal.print_line("No version given to deploy.")
@@ -132,14 +150,14 @@ class ZeroApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], tests_succeed=True, tests_run=1):
+    def run_in_test_mode(args=[], tests_succeed=True, tests_run=1, process_responses={}):
         events = Events()
         args = Args.create_null(args)
         terminal = Terminal.create_null()
         terminal.register_event_listener(events)
         tests = Tests.create_null(was_successful=tests_succeed, tests_run=tests_run)
         tests.register_event_listener(events)
-        process = Process.create_null()
+        process = Process.create_null(responses=process_responses)
         process.register_event_listener(events)
         app = ZeroApp(args=args, terminal=terminal, tests=tests, process=process)
         try:
