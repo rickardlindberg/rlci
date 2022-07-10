@@ -72,7 +72,7 @@ class ZeroApp:
     I deploy a version of RLCI to /opt/rlci:
 
     >>> ZeroApp.run_in_test_mode(args=['deploy', '<git-hash>']).filter("PROCESS")
-    PROCESS => ['find', '/opt/rlci', '-mindepth', '1', '-maxdepth', '1', '-exec', 'rm', '-rf', '{}', '\\\\;']
+    PROCESS => ['find', '/opt/rlci', '-mindepth', '1', '-maxdepth', '1', '-exec', 'rm', '-rf', '{}', ';']
     PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/']
     PROCESS => ['git', '-C', '/opt/rlci', 'checkout', '<git-hash>']
 
@@ -111,7 +111,7 @@ class ZeroApp:
                 self.terminal.print_line("No version given to deploy.")
                 sys.exit(1)
             version = self.args.get()[1]
-            self.process.run(["find", "/opt/rlci", "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "{}", "\;"])
+            self.process.run(["find", "/opt/rlci", "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "{}", ";"])
             self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/"])
             self.process.run(["git", "-C", "/opt/rlci", "checkout", version])
         else:
