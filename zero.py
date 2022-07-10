@@ -198,7 +198,10 @@ class Tests(Observable):
         self.notify("DOCTEST_MODULE", module_name)
         self.suite.addTest(
             self.doctest.DocTestSuite(
-                self.importlib.import_module(module_name)))
+                self.importlib.import_module(module_name),
+                optionflags=doctest.REPORT_NDIFF
+            )
+        )
 
     def run(self):
         self.notify("TEST_RUN", None)
@@ -231,7 +234,7 @@ class Tests(Observable):
             def addTest(self, test):
                 pass
         class NullDoctest:
-            def DocTestSuite(self, module):
+            def DocTestSuite(self, module, optionflags):
                 pass
         class NullImportLib:
             def import_module(self, name):
