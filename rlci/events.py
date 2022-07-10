@@ -19,8 +19,8 @@ class Events(list):
     def notify(self, event, data):
         self.append((event, data))
 
-    def filter(self, event):
-        return Events(x for x in self if x[0] == event)
+    def filter(self, *events):
+        return Events(x for x in self if x[0] in events)
 
     def has(self, event, data):
         return (event, data) in self
