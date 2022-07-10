@@ -14,30 +14,30 @@ class Engine:
     ...    ('mktemp', '-d'): [
     ...        {"output": ["/tmp/workspace"]}
     ...    ],
-    ...    ('python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse', 'HEAD'): [
+    ...    tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
     ...        {"output": ["<git-commit>"]}
     ...    ],
     ... }))
     >>> Engine(terminal=terminal, process=process).trigger()
     True
-    >>> events
+    >>> events # doctest: +ELLIPSIS
     STDOUT => 'Triggered RLCIPipeline'
     STDOUT => "['mktemp', '-d']"
     PROCESS => ['mktemp', '-d']
     STDOUT => '/tmp/workspace'
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'build']
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'push']
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse', 'HEAD']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', 'git', 'rev-parse', 'HEAD']
+    STDOUT => "[..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
+    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
+    STDOUT => "[..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
+    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
+    STDOUT => "[..., './zero.py', 'build']"
+    PROCESS => [..., './zero.py', 'build']
+    STDOUT => "[..., 'git', 'push']"
+    PROCESS => [..., 'git', 'push']
+    STDOUT => "[..., 'git', 'rev-parse', 'HEAD']"
+    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
     STDOUT => '<git-commit>'
-    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'deploy', '<git-commit>']"
-    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/workspace', './zero.py', 'deploy', '<git-commit>']
+    STDOUT => "[..., './zero.py', 'deploy', '<git-commit>']"
+    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
     PROCESS => ['rm', '-rf', '/tmp/workspace']
 
@@ -92,17 +92,28 @@ class Workspace:
 
 class ProcessInDirectory:
 
+    """
+    I execute a command in a directory:
+
+    >>> events = Events()
+    >>> process = events.listen(Process.create_null())
+    >>> ProcessInDirectory(process, "/tmp/foo").run(["ls"])
+    >>> events
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/tmp/foo', 'ls']
+    """
+
     def __init__(self, process, directory):
         self.process = process
         self.directory = directory
 
     def slurp(self, command):
-        return self.process.slurp(self.create_command(command))
+        return self.process.slurp(self.create_command(command, self.directory))
 
     def run(self, command):
-        self.process.run(self.create_command(command))
+        self.process.run(self.create_command(command, self.directory))
 
-    def create_command(self, command):
+    @staticmethod
+    def create_command(command, directory):
         return [
             "python3",
             "-c",
@@ -112,7 +123,7 @@ class ProcessInDirectory:
                 "os.chdir(sys.argv[1])",
                 "os.execvp(sys.argv[2], sys.argv[2:])",
             ]),
-            self.directory
+            directory
         ] + command
 
 class ProcessWithLogging:
