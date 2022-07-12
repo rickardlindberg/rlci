@@ -249,3 +249,23 @@ improvements to work on before considering the story done:
 * Ugly tests. How to make them better?
 * Don't execute zero.py through Shell? Missed failure of git checkout ''
 * Clean up CI serer home folder
+
+I worked on those in another video:
+
+**VIDEO:** [Therapeutic refactoring and polishing of a
+feature.](https://youtu.be/C05OD7h0-gg)
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/video-w28-end)
+as it looked like at the end of the video and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/video-w28-start...video-w28-end)
+of changes.
+
+#### Retro
+
+I feel like there is a tension between extending the codebase with new
+functionality versus keeping it clean.
+
+I am still not sure how to integrate refactoring and design into an agile
+approach. It is supposed to be done in the background somehow while the main
+focus is delivering stories.
