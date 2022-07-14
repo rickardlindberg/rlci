@@ -87,7 +87,7 @@ class RLCIApp:
         events = Events()
         if simulate_pipeline_failure:
             process_responses = {
-               ('mktemp', '-d'): [{'returncode': 1}],
+               tuple(Workspace.create_create_command()): [{'returncode': 1}],
             }
         else:
             process_responses = {}
