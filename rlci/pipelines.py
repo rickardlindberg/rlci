@@ -65,17 +65,7 @@ class Engine:
         self.terminal = terminal
         self.process = process
         self.db = db
-        self.db.save_pipeline({
-            "name": "RLCIPipeline",
-            "steps": [
-                {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
-                {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
-                {"command": ["./zero.py", "build"]},
-                {"command": ["git", "push"]},
-                {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
-                {"command": ["./zero.py", "deploy", {"variable": "version"}]},
-            ],
-        })
+        self.db.save_pipeline(rlci_pipeline())
 
     def trigger(self):
         try:
@@ -100,6 +90,20 @@ class Engine:
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
             return False
+
+
+def rlci_pipeline():
+    return {
+        "name": "RLCIPipeline",
+        "steps": [
+            {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
+            {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
+            {"command": ["./zero.py", "build"]},
+            {"command": ["git", "push"]},
+            {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
+            {"command": ["./zero.py", "deploy", {"variable": "version"}]},
+        ],
+    }
 
 class DB:
 
