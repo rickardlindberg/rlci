@@ -24,7 +24,7 @@ class Engine:
     STDOUT => "[..., 'ls']"
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
 
-    I return False and log a failure message if workspace creation fails:
+    ### Failure
 
     >>> trigger = Engine.trigger_in_test_mode(
     ...     {"name": "TEST"},
@@ -34,8 +34,14 @@ class Engine:
     ...         ],
     ...     }
     ... )
+
+    I return False:
+
     >>> trigger["successful"]
     False
+
+    I log a failure message:
+
     >>> trigger["events"].has("STDOUT", "FAIL")
     True
     """
