@@ -26,7 +26,7 @@ class Engine:
 
     I return False and log a failure message if workspace creation fails:
 
-    >>> foo = Engine.trigger_in_test_mode(
+    >>> trigger = Engine.trigger_in_test_mode(
     ...     {"name": "TEST"},
     ...     responses={
     ...         tuple(Workspace.create_create_command()): [
@@ -34,9 +34,9 @@ class Engine:
     ...         ],
     ...     }
     ... )
-    >>> foo["successful"]
+    >>> trigger["successful"]
     False
-    >>> foo["events"].has("STDOUT", "FAIL")
+    >>> trigger["events"].has("STDOUT", "FAIL")
     True
     """
 
