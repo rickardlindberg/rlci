@@ -13,7 +13,7 @@ class Engine:
     >>> successful, events = Engine.trigger_in_test_mode(
     ...     {"name": "TEST"},
     ...     responses={
-    ...         tuple(Workspace.CREATE_COMMAND): [
+    ...         tuple(Workspace.create_create_command()): [
     ...             {"returncode": 1}
     ...         ],
     ...     }
@@ -141,19 +141,22 @@ class InMemoryDocumentStore:
 
 class Workspace:
 
-    CREATE_COMMAND = ["mktemp", "-d"]
-
     def __init__(self, process):
         self.process = process
 
     def __enter__(self):
         output = []
-        self.process.run(self.CREATE_COMMAND, output=output.append)
+        self.process.run(self.create_create_command(), output=output.append)
         self.workspace = "".join(output)
         return ProcessInDirectory(self.process, self.workspace)
 
     def __exit__(self, type, value, traceback):
         self.process.run(["rm", "-rf", self.workspace])
+
+    @staticmethod
+    def create_create_command():
+        return ["mktemp", "-d"]
+
 
 class ProcessInDirectory:
 

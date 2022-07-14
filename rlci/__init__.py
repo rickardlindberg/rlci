@@ -107,7 +107,7 @@ def rlci_pipeline():
     >>> successful, events = Engine.trigger_in_test_mode(
     ...     rlci_pipeline(),
     ...     responses={
-    ...         tuple(Workspace.CREATE_COMMAND): [
+    ...         tuple(Workspace.create_create_command()): [
     ...             {"output": ["/tmp/workspace"]}
     ...         ],
     ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
