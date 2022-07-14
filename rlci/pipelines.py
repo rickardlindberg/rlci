@@ -17,7 +17,7 @@ class Engine:
     ...             {"output": ["/tmp/workspace"]}
     ...         ],
     ...     }
-    ... )[1].filter("STDOUT") # doctest: +ELLIPSIS
+    ... )["events"].filter("STDOUT") # doctest: +ELLIPSIS
     STDOUT => 'Triggered TEST'
     STDOUT => "['mktemp', '-d']"
     STDOUT => '/tmp/workspace'
@@ -26,7 +26,7 @@ class Engine:
 
     I fail if workspace creation fails:
 
-    >>> successful, events = Engine.trigger_in_test_mode(
+    >>> foo = Engine.trigger_in_test_mode(
     ...     {"name": "TEST"},
     ...     responses={
     ...         tuple(Workspace.create_create_command()): [
@@ -34,9 +34,9 @@ class Engine:
     ...         ],
     ...     }
     ... )
-    >>> successful
+    >>> foo["successful"]
     False
-    >>> events
+    >>> foo["events"]
     STDOUT => 'Triggered TEST'
     STDOUT => "['mktemp', '-d']"
     PROCESS => ['mktemp', '-d']
@@ -80,7 +80,7 @@ class Engine:
         terminal = events.listen(Terminal.create_null())
         process = events.listen(Process.create_null(responses=responses))
         successful = Engine(terminal=terminal, process=process, db=db).trigger()
-        return (successful, events)
+        return {"successful": successful, "events": events}
 
 class DB:
 

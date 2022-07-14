@@ -104,7 +104,7 @@ class RLCIApp:
 
 def rlci_pipeline():
     """
-    >>> successful, events = Engine.trigger_in_test_mode(
+    >>> Engine.trigger_in_test_mode(
     ...     rlci_pipeline(),
     ...     responses={
     ...         tuple(Workspace.create_create_command()): [
@@ -114,10 +114,7 @@ def rlci_pipeline():
     ...             {"output": ["<git-commit>"]}
     ...         ],
     ...     }
-    ... )
-    >>> successful
-    True
-    >>> events.filter("PROCESS") # doctest: +ELLIPSIS
+    ... )["events"].filter("PROCESS") # doctest: +ELLIPSIS
     PROCESS => ['mktemp', '-d']
     PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
     PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
