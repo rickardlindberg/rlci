@@ -6,21 +6,22 @@ class Engine:
     """
     I am the engine that runs pipelines.
 
-    Pipeline is aborted if process fails:
+    ## Stage execution
 
-    >>> db = DB.create_in_memory()
-    >>> db.save_pipeline(rlci_pipeline())
-    >>> events = Events()
-    >>> terminal = events.listen(Terminal.create_null())
-    >>> process = events.listen(Process.create_null(responses={
-    ...    ('mktemp', '-d'): [
-    ...        {"returncode": 1}
-    ...    ],
-    ... }))
-    >>> Engine(terminal=terminal, process=process, db=db).trigger()
+    I fail if workspace creation fails:
+
+    >>> successful, events = Engine.trigger_in_test_mode(
+    ...     {"name": "TEST"},
+    ...     responses={
+    ...         tuple(Workspace.CREATE_COMMAND): [
+    ...             {"returncode": 1}
+    ...         ],
+    ...     }
+    ... )
+    >>> successful
     False
     >>> events
-    STDOUT => 'Triggered RLCIPipeline'
+    STDOUT => 'Triggered TEST'
     STDOUT => "['mktemp', '-d']"
     PROCESS => ['mktemp', '-d']
     STDOUT => 'FAIL'
@@ -71,7 +72,7 @@ def rlci_pipeline():
     >>> successful, events = Engine.trigger_in_test_mode(
     ...     rlci_pipeline(),
     ...     responses={
-    ...         ('mktemp', '-d'): [
+    ...         tuple(Workspace.CREATE_COMMAND): [
     ...             {"output": ["/tmp/workspace"]}
     ...         ],
     ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
@@ -189,12 +190,14 @@ class InMemoryDocumentStore:
 
 class Workspace:
 
+    CREATE_COMMAND = ["mktemp", "-d"]
+
     def __init__(self, process):
         self.process = process
 
     def __enter__(self):
         output = []
-        self.process.run(["mktemp", "-d"], output=output.append)
+        self.process.run(self.CREATE_COMMAND, output=output.append)
         self.workspace = "".join(output)
         return ProcessInDirectory(self.process, self.workspace)
 
