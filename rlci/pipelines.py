@@ -6,43 +6,6 @@ class Engine:
     """
     I am the engine that runs pipelines.
 
-    I can trigger a pre-defined pipeline:
-
-    >>> db = DB.create_in_memory()
-    >>> db.save_pipeline(rlci_pipeline())
-    >>> events = Events()
-    >>> terminal = events.listen(Terminal.create_null())
-    >>> process = events.listen(Process.create_null(responses={
-    ...    ('mktemp', '-d'): [
-    ...        {"output": ["/tmp/workspace"]}
-    ...    ],
-    ...    tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
-    ...        {"output": ["<git-commit>"]}
-    ...    ],
-    ... }))
-    >>> Engine(terminal=terminal, process=process, db=db).trigger()
-    True
-    >>> events # doctest: +ELLIPSIS
-    STDOUT => 'Triggered RLCIPipeline'
-    STDOUT => "['mktemp', '-d']"
-    PROCESS => ['mktemp', '-d']
-    STDOUT => '/tmp/workspace'
-    STDOUT => "[..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
-    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    STDOUT => "[..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
-    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    STDOUT => "[..., './zero.py', 'build']"
-    PROCESS => [..., './zero.py', 'build']
-    STDOUT => "[..., 'git', 'push']"
-    PROCESS => [..., 'git', 'push']
-    STDOUT => "[..., 'git', 'rev-parse', 'HEAD']"
-    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
-    STDOUT => '<git-commit>'
-    STDOUT => "[..., './zero.py', 'deploy', '<git-commit>']"
-    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
-    STDOUT => "['rm', '-rf', '/tmp/workspace']"
-    PROCESS => ['rm', '-rf', '/tmp/workspace']
-
     Pipeline is aborted if process fails:
 
     >>> db = DB.create_in_memory()
