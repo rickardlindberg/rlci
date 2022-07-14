@@ -66,55 +66,6 @@ class Engine:
         successful = Engine(terminal=terminal, process=process, db=db).trigger()
         return (successful, events)
 
-
-def rlci_pipeline():
-    """
-    >>> successful, events = Engine.trigger_in_test_mode(
-    ...     rlci_pipeline(),
-    ...     responses={
-    ...         tuple(Workspace.CREATE_COMMAND): [
-    ...             {"output": ["/tmp/workspace"]}
-    ...         ],
-    ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
-    ...             {"output": ["<git-commit>"]}
-    ...         ],
-    ...     }
-    ... )
-    >>> successful
-    True
-    >>> events # doctest: +ELLIPSIS
-    STDOUT => 'Triggered RLCIPipeline'
-    STDOUT => "['mktemp', '-d']"
-    PROCESS => ['mktemp', '-d']
-    STDOUT => '/tmp/workspace'
-    STDOUT => "[..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
-    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    STDOUT => "[..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
-    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    STDOUT => "[..., './zero.py', 'build']"
-    PROCESS => [..., './zero.py', 'build']
-    STDOUT => "[..., 'git', 'push']"
-    PROCESS => [..., 'git', 'push']
-    STDOUT => "[..., 'git', 'rev-parse', 'HEAD']"
-    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
-    STDOUT => '<git-commit>'
-    STDOUT => "[..., './zero.py', 'deploy', '<git-commit>']"
-    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
-    STDOUT => "['rm', '-rf', '/tmp/workspace']"
-    PROCESS => ['rm', '-rf', '/tmp/workspace']
-    """
-    return {
-        "name": "RLCIPipeline",
-        "steps": [
-            {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
-            {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
-            {"command": ["./zero.py", "build"]},
-            {"command": ["git", "push"]},
-            {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
-            {"command": ["./zero.py", "deploy", {"variable": "version"}]},
-        ],
-    }
-
 class DB:
 
     def __init__(self, document_store):
