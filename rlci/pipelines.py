@@ -9,6 +9,7 @@ class Engine:
     I can trigger a pre-defined pipeline:
 
     >>> db = DB.create_in_memory()
+    >>> db.save_pipeline(rlci_pipeline())
     >>> events = Events()
     >>> terminal = events.listen(Terminal.create_null())
     >>> process = events.listen(Process.create_null(responses={
@@ -45,6 +46,7 @@ class Engine:
     Pipeline is aborted if process fails:
 
     >>> db = DB.create_in_memory()
+    >>> db.save_pipeline(rlci_pipeline())
     >>> events = Events()
     >>> terminal = events.listen(Terminal.create_null())
     >>> process = events.listen(Process.create_null(responses={
@@ -65,7 +67,6 @@ class Engine:
         self.terminal = terminal
         self.process = process
         self.db = db
-        self.db.save_pipeline(rlci_pipeline())
 
     def trigger(self):
         try:

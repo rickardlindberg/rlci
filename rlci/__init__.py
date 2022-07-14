@@ -1,7 +1,7 @@
 import sys
 
 from rlci.events import Observable, Events
-from rlci.pipelines import Engine, DB
+from rlci.pipelines import Engine, DB, rlci_pipeline
 from rlci.infrastructure import Args, Terminal, Process
 
 class RLCIApp:
@@ -62,6 +62,7 @@ class RLCIApp:
 
     def run(self):
         if self.args.get() == ["trigger"]:
+            self.db.save_pipeline(rlci_pipeline())
             successful = Engine(
                 terminal=self.terminal,
                 process=self.process,
