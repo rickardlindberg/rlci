@@ -8,6 +8,22 @@ class Engine:
 
     ## Stage execution
 
+    I log an execution:
+
+    >>> Engine.trigger_in_test_mode(
+    ...     {"name": "TEST", "steps": [{"command": ["ls"]}]},
+    ...     responses={
+    ...         tuple(Workspace.create_create_command()): [
+    ...             {"output": ["/tmp/workspace"]}
+    ...         ],
+    ...     }
+    ... )[1].filter("STDOUT") # doctest: +ELLIPSIS
+    STDOUT => 'Triggered TEST'
+    STDOUT => "['mktemp', '-d']"
+    STDOUT => '/tmp/workspace'
+    STDOUT => "[..., 'ls']"
+    STDOUT => "['rm', '-rf', '/tmp/workspace']"
+
     I fail if workspace creation fails:
 
     >>> successful, events = Engine.trigger_in_test_mode(
@@ -156,7 +172,6 @@ class Workspace:
     @staticmethod
     def create_create_command():
         return ["mktemp", "-d"]
-
 
 class ProcessInDirectory:
 
