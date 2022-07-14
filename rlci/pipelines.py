@@ -24,6 +24,30 @@ class Engine:
     STDOUT => "[..., 'ls']"
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
 
+    ### Success
+
+    >>> trigger = Engine.trigger_in_test_mode(
+    ...     {"name": "TEST", "steps": []}
+    ... )
+
+    I return True:
+
+    >>> trigger["successful"]
+    True
+
+    I don't log a failure message:
+
+    >>> trigger["events"].has("STDOUT", "FAIL")
+    False
+
+    The database has a success flag:
+
+    >>> executions_ids = trigger["db"].get_pipeline()["executions"]
+    >>> len(executions_ids)
+    1
+    >>> trigger["db"].get_execution(executions_ids[0])["status"]
+    'succeeded'
+
     ### Failure
 
     >>> trigger = Engine.trigger_in_test_mode(
@@ -44,6 +68,14 @@ class Engine:
 
     >>> trigger["events"].has("STDOUT", "FAIL")
     True
+
+    The database has a failure flag:
+
+    >>> executions_ids = trigger["db"].get_pipeline()["executions"]
+    >>> len(executions_ids)
+    1
+    >>> trigger["db"].get_execution(executions_ids[0])["status"]
+    'failed'
     """
 
     def __init__(self, terminal, process, db):
@@ -52,10 +84,10 @@ class Engine:
         self.db = db
 
     def trigger(self):
+        pipeline = self.db.get_pipeline()["definition"]
+        self.terminal.print_line(f"Triggered {pipeline['name']}")
+        execution_id = self.db.create_execution()
         try:
-            pipeline = self.db.get_pipeline()
-            self.terminal.print_line(f"Triggered {pipeline['name']}")
-            execution_id = self.db.create_execution()
             with Workspace(PipelineStageProcess(self.terminal, self.process, self.db, execution_id)) as workspace:
                 variables = {}
                 for step in pipeline["steps"]:
@@ -70,8 +102,10 @@ class Engine:
                         output = []
                         workspace.run(command, output.append)
                         variables[step["variable"]] = " ".join(output)
+                self.db.set_execution_status(execution_id, "succeeded")
                 return True
         except CommandFailure:
+            self.db.set_execution_status(execution_id, "failed")
             self.terminal.print_line(f"FAIL")
             return False
 
@@ -83,7 +117,7 @@ class Engine:
         terminal = events.listen(Terminal.create_null())
         process = events.listen(Process.create_null(responses=responses))
         successful = Engine(terminal=terminal, process=process, db=db).trigger()
-        return {"successful": successful, "events": events}
+        return {"successful": successful, "events": events, "db": db}
 
 class DB:
 
@@ -97,18 +131,24 @@ class DB:
         }, "default-pipeline")
 
     def get_pipeline(self):
-        return self.document_store.get("default-pipeline")["definition"]
-
-    def get_execution(self, execution_id):
-        return self.document_store.get(execution_id)
+        return self.document_store.get("default-pipeline")
 
     def create_execution(self):
-        execution_id = self.document_store.create([])
+        execution_id = self.document_store.create({"status": "running", "commands": []})
         self.document_store.modify(
             "default-pipeline",
             lambda x: x["executions"].append(execution_id)
         )
         return execution_id
+
+    def get_execution(self, execution_id):
+        return self.document_store.get(execution_id)
+
+    def set_execution_status(self, execution_id, status):
+        self.document_store.modify(
+            execution_id,
+            lambda x: x.__setitem__("status", status)
+        )
 
     def create_output(self, command):
         return self.document_store.create({"command": command, "returncode": None, "lines": []})
@@ -128,8 +168,11 @@ class DB:
     def add_output(self, execution_id, output_id):
         self.document_store.modify(
             execution_id,
-            lambda x: x.append(output_id)
+            lambda x: x["commands"].append(output_id)
         )
+
+    def get_output(self, output_id):
+        return self.document_store.get(output_id)
 
     @staticmethod
     def create():
