@@ -24,7 +24,7 @@ class Engine:
     STDOUT => "[..., 'ls']"
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
 
-    I fail if workspace creation fails:
+    I return False and log a failure message if workspace creation fails:
 
     >>> foo = Engine.trigger_in_test_mode(
     ...     {"name": "TEST"},
@@ -36,11 +36,8 @@ class Engine:
     ... )
     >>> foo["successful"]
     False
-    >>> foo["events"]
-    STDOUT => 'Triggered TEST'
-    STDOUT => "['mktemp', '-d']"
-    PROCESS => ['mktemp', '-d']
-    STDOUT => 'FAIL'
+    >>> foo["events"].has("STDOUT", "FAIL")
+    True
     """
 
     def __init__(self, terminal, process, db):
