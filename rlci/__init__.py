@@ -1,7 +1,7 @@
 import sys
 
 from rlci.events import Observable, Events
-from rlci.pipelines import Engine, DB
+from rlci.pipelines import Engine, DB, Workspace, ProcessInDirectory
 from rlci.infrastructure import Args, Terminal, Process
 
 class RLCIApp:
@@ -62,6 +62,7 @@ class RLCIApp:
 
     def run(self):
         if self.args.get() == ["trigger"]:
+            self.db.save_pipeline(rlci_pipeline())
             successful = Engine(
                 terminal=self.terminal,
                 process=self.process,
@@ -86,7 +87,7 @@ class RLCIApp:
         events = Events()
         if simulate_pipeline_failure:
             process_responses = {
-               ('mktemp', '-d'): [{'returncode': 1}],
+               tuple(Workspace.create_create_command()): [{'returncode': 1}],
             }
         else:
             process_responses = {}
@@ -100,3 +101,37 @@ class RLCIApp:
         except SystemExit as e:
             events.append(("EXIT", e.code))
         return events
+
+def rlci_pipeline():
+    """
+    >>> Engine.trigger_in_test_mode(
+    ...     rlci_pipeline(),
+    ...     responses={
+    ...         tuple(Workspace.create_create_command()): [
+    ...             {"output": ["/tmp/workspace"]}
+    ...         ],
+    ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
+    ...             {"output": ["<git-commit>"]}
+    ...         ],
+    ...     }
+    ... )["events"].filter("PROCESS") # doctest: +ELLIPSIS
+    PROCESS => ['mktemp', '-d']
+    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
+    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
+    PROCESS => [..., './zero.py', 'build']
+    PROCESS => [..., 'git', 'push']
+    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
+    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
+    PROCESS => ['rm', '-rf', '/tmp/workspace']
+    """
+    return {
+        "name": "RLCIPipeline",
+        "steps": [
+            {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
+            {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
+            {"command": ["./zero.py", "build"]},
+            {"command": ["git", "push"]},
+            {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
+            {"command": ["./zero.py", "deploy", {"variable": "version"}]},
+        ],
+    }

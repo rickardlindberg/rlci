@@ -6,82 +6,88 @@ class Engine:
     """
     I am the engine that runs pipelines.
 
-    I can trigger a pre-defined pipeline:
+    ## Stage execution
 
-    >>> db = DB.create_in_memory()
-    >>> events = Events()
-    >>> terminal = events.listen(Terminal.create_null())
-    >>> process = events.listen(Process.create_null(responses={
-    ...    ('mktemp', '-d'): [
-    ...        {"output": ["/tmp/workspace"]}
-    ...    ],
-    ...    tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
-    ...        {"output": ["<git-commit>"]}
-    ...    ],
-    ... }))
-    >>> Engine(terminal=terminal, process=process, db=db).trigger()
-    True
-    >>> events # doctest: +ELLIPSIS
-    STDOUT => 'Triggered RLCIPipeline'
+    I log an execution:
+
+    >>> Engine.trigger_in_test_mode(
+    ...     {"name": "TEST", "steps": [{"command": ["ls"]}]},
+    ...     responses={
+    ...         tuple(Workspace.create_create_command()): [
+    ...             {"output": ["/tmp/workspace"]}
+    ...         ],
+    ...     }
+    ... )["events"].filter("STDOUT") # doctest: +ELLIPSIS
+    STDOUT => 'Triggered TEST'
     STDOUT => "['mktemp', '-d']"
-    PROCESS => ['mktemp', '-d']
     STDOUT => '/tmp/workspace'
-    STDOUT => "[..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']"
-    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    STDOUT => "[..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']"
-    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    STDOUT => "[..., './zero.py', 'build']"
-    PROCESS => [..., './zero.py', 'build']
-    STDOUT => "[..., 'git', 'push']"
-    PROCESS => [..., 'git', 'push']
-    STDOUT => "[..., 'git', 'rev-parse', 'HEAD']"
-    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
-    STDOUT => '<git-commit>'
-    STDOUT => "[..., './zero.py', 'deploy', '<git-commit>']"
-    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
+    STDOUT => "[..., 'ls']"
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
-    PROCESS => ['rm', '-rf', '/tmp/workspace']
 
-    Pipeline is aborted if process fails:
+    ### Success
 
-    >>> db = DB.create_in_memory()
-    >>> events = Events()
-    >>> terminal = events.listen(Terminal.create_null())
-    >>> process = events.listen(Process.create_null(responses={
-    ...    ('mktemp', '-d'): [
-    ...        {"returncode": 1}
-    ...    ],
-    ... }))
-    >>> Engine(terminal=terminal, process=process, db=db).trigger()
+    >>> trigger = Engine.trigger_in_test_mode(
+    ...     {"name": "TEST", "steps": []}
+    ... )
+
+    I return True:
+
+    >>> trigger["successful"]
+    True
+
+    I don't log a failure message:
+
+    >>> trigger["events"].has("STDOUT", "FAIL")
     False
-    >>> events
-    STDOUT => 'Triggered RLCIPipeline'
-    STDOUT => "['mktemp', '-d']"
-    PROCESS => ['mktemp', '-d']
-    STDOUT => 'FAIL'
+
+    The database has a success flag:
+
+    >>> executions_ids = trigger["db"].get_pipeline()["executions"]
+    >>> len(executions_ids)
+    1
+    >>> trigger["db"].get_execution(executions_ids[0])["status"]
+    'succeeded'
+
+    ### Failure
+
+    >>> trigger = Engine.trigger_in_test_mode(
+    ...     {"name": "TEST"},
+    ...     responses={
+    ...         tuple(Workspace.create_create_command()): [
+    ...             {"returncode": 1}
+    ...         ],
+    ...     }
+    ... )
+
+    I return False:
+
+    >>> trigger["successful"]
+    False
+
+    I log a failure message:
+
+    >>> trigger["events"].has("STDOUT", "FAIL")
+    True
+
+    The database has a failure flag:
+
+    >>> executions_ids = trigger["db"].get_pipeline()["executions"]
+    >>> len(executions_ids)
+    1
+    >>> trigger["db"].get_execution(executions_ids[0])["status"]
+    'failed'
     """
 
     def __init__(self, terminal, process, db):
         self.terminal = terminal
         self.process = process
         self.db = db
-        self.db.save_pipeline({
-            "name": "RLCIPipeline",
-            "steps": [
-                {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
-                {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
-                {"command": ["./zero.py", "build"]},
-                {"command": ["git", "push"]},
-                {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
-                {"command": ["./zero.py", "deploy", {"variable": "version"}]},
-            ],
-        })
 
     def trigger(self):
+        pipeline = self.db.get_pipeline()["definition"]
+        self.terminal.print_line(f"Triggered {pipeline['name']}")
+        execution_id = self.db.create_execution()
         try:
-            pipeline = self.db.get_pipeline()
-            self.terminal.print_line(f"Triggered {pipeline['name']}")
-            execution_id = self.db.create_execution()
             with Workspace(PipelineStageProcess(self.terminal, self.process, self.db, execution_id)) as workspace:
                 variables = {}
                 for step in pipeline["steps"]:
@@ -96,10 +102,22 @@ class Engine:
                         output = []
                         workspace.run(command, output.append)
                         variables[step["variable"]] = " ".join(output)
+                self.db.set_execution_status(execution_id, "succeeded")
                 return True
         except CommandFailure:
+            self.db.set_execution_status(execution_id, "failed")
             self.terminal.print_line(f"FAIL")
             return False
+
+    @staticmethod
+    def trigger_in_test_mode(pipeline, responses={}):
+        db = DB.create_in_memory()
+        db.save_pipeline(pipeline)
+        events = Events()
+        terminal = events.listen(Terminal.create_null())
+        process = events.listen(Process.create_null(responses=responses))
+        successful = Engine(terminal=terminal, process=process, db=db).trigger()
+        return {"successful": successful, "events": events, "db": db}
 
 class DB:
 
@@ -113,18 +131,24 @@ class DB:
         }, "default-pipeline")
 
     def get_pipeline(self):
-        return self.document_store.get("default-pipeline")["definition"]
-
-    def get_execution(self, execution_id):
-        return self.document_store.get(execution_id)
+        return self.document_store.get("default-pipeline")
 
     def create_execution(self):
-        execution_id = self.document_store.create([])
+        execution_id = self.document_store.create({"status": "running", "commands": []})
         self.document_store.modify(
             "default-pipeline",
             lambda x: x["executions"].append(execution_id)
         )
         return execution_id
+
+    def get_execution(self, execution_id):
+        return self.document_store.get(execution_id)
+
+    def set_execution_status(self, execution_id, status):
+        self.document_store.modify(
+            execution_id,
+            lambda x: x.__setitem__("status", status)
+        )
 
     def create_output(self, command):
         return self.document_store.create({"command": command, "returncode": None, "lines": []})
@@ -144,8 +168,11 @@ class DB:
     def add_output(self, execution_id, output_id):
         self.document_store.modify(
             execution_id,
-            lambda x: x.append(output_id)
+            lambda x: x["commands"].append(output_id)
         )
+
+    def get_output(self, output_id):
+        return self.document_store.get(output_id)
 
     @staticmethod
     def create():
@@ -181,12 +208,16 @@ class Workspace:
 
     def __enter__(self):
         output = []
-        self.process.run(["mktemp", "-d"], output=output.append)
+        self.process.run(self.create_create_command(), output=output.append)
         self.workspace = "".join(output)
         return ProcessInDirectory(self.process, self.workspace)
 
     def __exit__(self, type, value, traceback):
         self.process.run(["rm", "-rf", self.workspace])
+
+    @staticmethod
+    def create_create_command():
+        return ["mktemp", "-d"]
 
 class ProcessInDirectory:
 
