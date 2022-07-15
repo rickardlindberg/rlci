@@ -86,9 +86,6 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* **Custom pipelines** There is only one hard coded pipeline. Make it possible
-  to define more and trigger them from the CLI.
-
 * **More realistic output** The pipeline currently writes its "report" to
   stdout. I imagine the CI-server having a web-front end to display its status.
   Therefore convert the stdout report to a HTLM-file that can be served by a
@@ -269,3 +266,8 @@ functionality versus keeping it clean.
 I am still not sure how to integrate refactoring and design into an agile
 approach. It is supposed to be done in the background somehow while the main
 focus is delivering stories.
+
+### #6 Custom pipelines
+
+*There is only one hard coded pipeline. Make it possible to define more and
+trigger them from the CLI.*
