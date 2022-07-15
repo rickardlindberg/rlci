@@ -96,7 +96,7 @@ class RLCIApp:
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
                 process=events.listen(Process.create_null(responses=process_responses)),
-                db=DB.create_in_memory()
+                db=DB.create()
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
