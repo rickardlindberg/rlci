@@ -177,8 +177,7 @@ class PipelineStageProcess:
             self.terminal.print_line(line)
             output(line)
         self.terminal.print_line(repr(command))
-        returncode = self.process.run(command, output=log)
-        if returncode != 0:
+        if self.process.run(command, output=log) != 0:
             raise CommandFailure()
 
 class CommandFailure(Exception):
