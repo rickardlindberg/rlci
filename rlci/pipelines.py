@@ -67,8 +67,8 @@ class Engine:
         self.process = process
         self.db = db
 
-    def trigger(self):
-        pipeline = self.db.get_pipeline()
+    def trigger(self, name):
+        pipeline = self.db.get_pipeline(name)
         self.terminal.print_line(f"Triggered {pipeline['name']}")
         try:
             with Workspace(PipelineStageProcess(self.terminal, self.process)) as workspace:
@@ -93,20 +93,23 @@ class Engine:
     @staticmethod
     def trigger_in_test_mode(pipeline, responses={}):
         db = DB.create()
-        db.save_pipeline(pipeline)
+        db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
         process = events.listen(Process.create_null(responses=responses))
-        successful = Engine(terminal=terminal, process=process, db=db).trigger()
+        successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
         return {"successful": successful, "events": events}
 
 class DB:
 
-    def save_pipeline(self, pipeline):
-        self.pipeline = pipeline
+    def __init__(self):
+        self.pipelines = {}
 
-    def get_pipeline(self):
-        return self.pipeline
+    def save_pipeline(self, name, pipeline):
+        self.pipelines[name] = pipeline
+
+    def get_pipeline(self, name):
+        return self.pipelines[name]
 
     @staticmethod
     def create():
