@@ -67,8 +67,8 @@ class Engine:
         self.process = process
         self.db = db
 
-    def trigger(self):
-        pipeline = self.db.get_pipeline()
+    def trigger(self, name):
+        pipeline = self.db.get_pipeline(name)
         self.terminal.print_line(f"Triggered {pipeline['name']}")
         try:
             with Workspace(PipelineStageProcess(self.terminal, self.process)) as workspace:
@@ -82,9 +82,7 @@ class Engine:
                     if step.get("variable") is None:
                         workspace.run(command)
                     else:
-                        output = []
-                        workspace.run(command, output.append)
-                        variables[step["variable"]] = " ".join(output)
+                        variables[step["variable"]] = workspace.slurp(command)
                 return True
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
@@ -92,25 +90,32 @@ class Engine:
 
     @staticmethod
     def trigger_in_test_mode(pipeline, responses={}):
-        db = DB.create()
-        db.save_pipeline(pipeline)
+        db = DB.create_in_memory()
+        db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
         process = events.listen(Process.create_null(responses=responses))
-        successful = Engine(terminal=terminal, process=process, db=db).trigger()
+        successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
         return {"successful": successful, "events": events}
 
 class DB:
 
-    def save_pipeline(self, pipeline):
-        self.pipeline = pipeline
+    def __init__(self):
+        self.pipelines = {}
 
-    def get_pipeline(self):
-        return self.pipeline
+    def save_pipeline(self, name, pipeline):
+        self.pipelines[name] = pipeline
+
+    def get_pipeline(self, name):
+        return self.pipelines[name]
+
+    @staticmethod
+    def create_in_memory():
+        return DB()
 
     @staticmethod
     def create():
-        return DB()
+        return DB.create_in_memory()
 
 class Workspace:
 
@@ -118,9 +123,7 @@ class Workspace:
         self.process = process
 
     def __enter__(self):
-        output = []
-        self.process.run(self.create_create_command(), output=output.append)
-        self.workspace = "".join(output)
+        self.workspace = self.process.slurp(self.create_create_command())
         return ProcessInDirectory(self.process, self.workspace)
 
     def __exit__(self, type, value, traceback):
@@ -130,7 +133,14 @@ class Workspace:
     def create_create_command():
         return ["mktemp", "-d"]
 
-class ProcessInDirectory:
+class SlurpMixin:
+
+    def slurp(self, command):
+        output = []
+        self.run(command, output=output.append)
+        return "".join(output)
+
+class ProcessInDirectory(SlurpMixin):
 
     """
     I execute a command in a directory:
@@ -163,7 +173,7 @@ class ProcessInDirectory:
             directory
         ] + command
 
-class PipelineStageProcess:
+class PipelineStageProcess(SlurpMixin):
 
     def __init__(self, terminal, process):
         self.terminal = terminal
@@ -174,9 +184,13 @@ class PipelineStageProcess:
             self.terminal.print_line(line)
             output(line)
         self.terminal.print_line(repr(command))
-        returncode = self.process.run(command, output=log)
-        if returncode != 0:
+        if self.process.run(command, output=log) != 0:
             raise CommandFailure()
+
+def slurp(process, command):
+    output = []
+    process.run(command, output=output.append)
+    return "".join(output)
 
 class CommandFailure(Exception):
     pass

@@ -25,6 +25,13 @@ class RLCIApp:
     We might replace the print to stdout with a write to a database for
     example.
 
+    I can trigger a another pipeline:
+
+    >>> RLCIApp.run_in_test_mode(
+    ...     args=["trigger", "test-pipeline"]
+    ... ).has("STDOUT", "Triggered TEST-PIPELINE")
+    True
+
     I exit with 0 if a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("EXIT")
@@ -59,19 +66,25 @@ class RLCIApp:
         self.args = args
         self.process = process
         self.db = db
+        self.db.save_pipeline("rlci", rlci_pipeline())
+        self.db.save_pipeline("test-pipeline", {"name": "TEST-PIPELINE", "steps": []})
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            self.db.save_pipeline(rlci_pipeline())
-            successful = Engine(
-                terminal=self.terminal,
-                process=self.process,
-                db=self.db
-            ).trigger()
-            sys.exit(0 if successful else 1)
+            self.trigger("rlci")
+        elif self.args.get()[:1] == ["trigger"]:
+            self.trigger(self.args.get()[1])
         else:
             self.terminal.print_line("Usage: python3 rlci.py trigger")
             sys.exit(1)
+
+    def trigger(self, name):
+        successful = Engine(
+            terminal=self.terminal,
+            process=self.process,
+            db=self.db
+        ).trigger(name)
+        sys.exit(0 if successful else 1)
 
     @staticmethod
     def create():
@@ -96,7 +109,7 @@ class RLCIApp:
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
                 process=events.listen(Process.create_null(responses=process_responses)),
-                db=DB.create()
+                db=DB.create_in_memory()
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
