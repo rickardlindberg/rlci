@@ -82,9 +82,7 @@ class Engine:
                     if step.get("variable") is None:
                         workspace.run(command)
                     else:
-                        output = []
-                        workspace.run(command, output.append)
-                        variables[step["variable"]] = " ".join(output)
+                        variables[step["variable"]] = workspace.slurp(command)
                 return True
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
@@ -125,9 +123,7 @@ class Workspace:
         self.process = process
 
     def __enter__(self):
-        output = []
-        self.process.run(self.create_create_command(), output=output.append)
-        self.workspace = "".join(output)
+        self.workspace = self.process.slurp(self.create_create_command())
         return ProcessInDirectory(self.process, self.workspace)
 
     def __exit__(self, type, value, traceback):
@@ -137,7 +133,14 @@ class Workspace:
     def create_create_command():
         return ["mktemp", "-d"]
 
-class ProcessInDirectory:
+class SlurpMixin:
+
+    def slurp(self, command):
+        output = []
+        self.run(command, output=output.append)
+        return "".join(output)
+
+class ProcessInDirectory(SlurpMixin):
 
     """
     I execute a command in a directory:
@@ -170,7 +173,7 @@ class ProcessInDirectory:
             directory
         ] + command
 
-class PipelineStageProcess:
+class PipelineStageProcess(SlurpMixin):
 
     def __init__(self, terminal, process):
         self.terminal = terminal
@@ -183,6 +186,11 @@ class PipelineStageProcess:
         self.terminal.print_line(repr(command))
         if self.process.run(command, output=log) != 0:
             raise CommandFailure()
+
+def slurp(process, command):
+    output = []
+    process.run(command, output=output.append)
+    return "".join(output)
 
 class CommandFailure(Exception):
     pass
