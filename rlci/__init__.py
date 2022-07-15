@@ -11,38 +11,42 @@ class RLCIApp:
 
     ## Pipeline triggering
 
-    I can trigger a predefined pipeline:
+    I can trigger different pipelines:
 
     >>> RLCIApp.run_in_test_mode(
-    ...     args=["trigger"]
+    ...     args=["trigger", "rlci"]
     ... ).has("STDOUT", "Triggered RLCIPipeline")
     True
-
-    DESIGN NOTE: In the above test test, we just want to assert that the
-    predefined pipeline was triggered. We don't care about the details of how
-    it was run. How can we "externally" observe that it was run? We choose to
-    only look at what was printed to stdout. In the future this might change.
-    We might replace the print to stdout with a write to a database for
-    example.
-
-    I can trigger a another pipeline:
 
     >>> RLCIApp.run_in_test_mode(
     ...     args=["trigger", "test-pipeline"]
     ... ).has("STDOUT", "Triggered TEST-PIPELINE")
     True
 
+    DESIGN NOTE: In the above test tests, we just want to assert that the
+    predefined pipeline was triggered. We don't care about the details of how
+    it was run. How can we "externally" observe that it was run? We choose to
+    only look at what was printed to stdout. In the future this might change.
+    We might replace the print to stdout with a write to a database for
+    example.
+
     I exit with 0 if a triggered pipeline succeeds:
 
-    >>> RLCIApp.run_in_test_mode(args=["trigger"]).filter("EXIT")
+    >>> RLCIApp.run_in_test_mode(args=["trigger", "rlci"]).filter("EXIT")
     EXIT => 0
 
     I exit with 1 if a triggered pipeline fails:
 
     >>> RLCIApp.run_in_test_mode(
-    ...     args=["trigger"],
+    ...     args=["trigger", "rlci"],
     ...     simulate_pipeline_failure=True
     ... ).filter("EXIT")
+    EXIT => 1
+
+    I exit with usage when given no pipeline:
+
+    >>> RLCIApp.run_in_test_mode(args=["trigger"])
+    STDOUT => 'Usage: python3 rlci.py trigger <pipeline>'
     EXIT => 1
 
     ## Other
@@ -71,7 +75,8 @@ class RLCIApp:
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            self.trigger("rlci")
+            self.terminal.print_line("Usage: python3 rlci.py trigger <pipeline>")
+            sys.exit(1)
         elif self.args.get()[:1] == ["trigger"]:
             self.trigger(self.args.get()[1])
         else:
