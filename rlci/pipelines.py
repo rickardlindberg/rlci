@@ -92,7 +92,7 @@ class Engine:
 
     @staticmethod
     def trigger_in_test_mode(pipeline, responses={}):
-        db = DB.create()
+        db = DB.create_in_memory()
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
@@ -112,8 +112,12 @@ class DB:
         return self.pipelines[name]
 
     @staticmethod
-    def create():
+    def create_in_memory():
         return DB()
+
+    @staticmethod
+    def create():
+        return DB.create_in_memory()
 
 class Workspace:
 
