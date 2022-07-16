@@ -6,7 +6,8 @@ class Engine:
     """
     I am the engine that runs pipelines.
 
-    ## Stage execution
+    Stage execution
+    ===============
 
     I log an execution:
 
@@ -24,7 +25,8 @@ class Engine:
     STDOUT => "[..., 'ls']"
     STDOUT => "['rm', '-rf', '/tmp/workspace']"
 
-    ### Success
+    Success
+    -------
 
     >>> trigger = Engine.trigger_in_test_mode(
     ...     {"name": "TEST", "steps": []}
@@ -40,7 +42,8 @@ class Engine:
     >>> trigger["events"].has("STDOUT", "FAIL")
     False
 
-    ### Failure
+    Failure
+    -------
 
     >>> trigger = Engine.trigger_in_test_mode(
     ...     {"name": "TEST"},

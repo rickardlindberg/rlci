@@ -7,9 +7,10 @@ from rlci.infrastructure import Args, Terminal, Process
 class RLCIApp:
 
     """
-    I am a tool to facilitate CI/CD.
+    I am a command line interface to RLCI.
 
-    ## Pipeline triggering
+    Pipeline triggering
+    ===================
 
     I can trigger different pipelines:
 
@@ -24,18 +25,17 @@ class RLCIApp:
     True
 
     DESIGN NOTE: In the above test tests, we just want to assert that the
-    predefined pipeline was triggered. We don't care about the details of how
-    it was run. How can we "externally" observe that it was run? We choose to
-    only look at what was printed to stdout. In the future this might change.
-    We might replace the print to stdout with a write to a database for
-    example.
+    pipelines were triggered. We don't care about the details of how they were
+    run. How can we "externally" observe that they were run? We choose to only
+    look at what was printed to stdout. In the future this might change. We
+    might replace the print to stdout with a write to a database for example.
 
-    I exit with 0 if a triggered pipeline succeeds:
+    I exit with 0 when a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger", "rlci"]).filter("EXIT")
     EXIT => 0
 
-    I exit with 1 if a triggered pipeline fails:
+    I exit with 1 when a triggered pipeline fails:
 
     >>> RLCIApp.run_in_test_mode(
     ...     args=["trigger", "rlci"],
@@ -43,13 +43,14 @@ class RLCIApp:
     ... ).filter("EXIT")
     EXIT => 1
 
-    I exit with usage when given no pipeline:
+    I exit with usage when no pipeline is given:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"])
     STDOUT => 'Usage: python3 rlci.py trigger <pipeline>'
     EXIT => 1
 
-    ## Other
+    Other
+    =====
 
     I fail when given unknown arguments:
 
@@ -57,7 +58,8 @@ class RLCIApp:
     STDOUT => 'Usage: python3 rlci.py trigger'
     EXIT => 1
 
-    ## Internal health checks
+    Internal health checks
+    ======================
 
     The real app can be created:
 
