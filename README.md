@@ -271,3 +271,40 @@ focus is delivering stories.
 
 *There is only one hard coded pipeline. Make it possible to define more and
 trigger them from the CLI.*
+
+I started this story by working on extracting a database class. I figured,
+with a database, we can store multiple pipelines, and we can also store the
+logs so that we can show history of pipeline runs.
+
+I made a video about this process:
+
+**VIDEO:** COMING UP
+
+After working on the database for a while, I realized that I had designed it
+too much up front.
+
+I reverted the [speculative
+changes](https://github.com/rickardlindberg/rlci/commit/44601aca04c11ba20f01d65b3b11ffd060217a45)
+and instead committed to this story only.
+
+The following tests prove that multiple pipelines can be triggered.
+
+    >>> RLCIApp.run_in_test_mode(
+    ...     args=["trigger", "rlci"]
+    ... ).has("STDOUT", "Triggered RLCIPipeline")
+    True
+
+    >>> RLCIApp.run_in_test_mode(
+    ...     args=["trigger", "test-pipeline"]
+    ... ).has("STDOUT", "Triggered TEST-PIPELINE")
+    True
+
+We still have to define the pipelines in the source code. Eventually though we
+should be able to store them in an external database instead. But that is for
+another story.
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/story-6-end)
+as it looked like at the end of the story and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/story-6-start...story-6-end)
+of changes.
