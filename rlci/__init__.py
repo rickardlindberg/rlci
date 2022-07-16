@@ -9,7 +9,8 @@ class RLCIApp:
     """
     I am a tool to facilitate CI/CD.
 
-    ## Pipeline triggering
+    Pipeline triggering
+    ===================
 
     I can trigger different pipelines:
 
@@ -49,7 +50,8 @@ class RLCIApp:
     STDOUT => 'Usage: python3 rlci.py trigger <pipeline>'
     EXIT => 1
 
-    ## Other
+    Other
+    =====
 
     I fail when given unknown arguments:
 
@@ -57,7 +59,8 @@ class RLCIApp:
     STDOUT => 'Usage: python3 rlci.py trigger'
     EXIT => 1
 
-    ## Internal health checks
+    Internal health checks
+    ======================
 
     The real app can be created:
 
