@@ -14,7 +14,8 @@ class ZeroApp:
     """
     I am a tool for zero friction development.
 
-    ## Usage
+    Usage
+    =====
 
     I print usage when run with no arguments:
 
@@ -26,7 +27,8 @@ class ZeroApp:
     STDOUT => '    ./zero.py build'
     EXIT => 1
 
-    ## Building
+    Building
+    ========
 
     I run tests when run with the 'build' argument:
 
@@ -53,7 +55,8 @@ class ZeroApp:
     ... ).filter("EXIT")
     EXIT => 1
 
-    ## Integrating
+    Integrating
+    ===========
 
     I integrate code by pushing changes to a branch and triggering the
     pre-defined pipeline.
@@ -83,7 +86,8 @@ class ZeroApp:
     PROCESS => ['git', 'push', 'origin', 'BRANCH', '--delete']
     EXIT => 1
 
-    ## Deploying
+    Deploying
+    =========
 
     I deploy a version of RLCI to /opt/rlci:
 
