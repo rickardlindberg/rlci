@@ -209,12 +209,12 @@ class DB:
         return self.pipelines[name]
 
     @staticmethod
-    def create_in_memory():
-        return DB()
-
-    @staticmethod
     def create():
         return DB.create_in_memory()
+
+    @staticmethod
+    def create_in_memory():
+        return DB()
 
 class Workspace:
 

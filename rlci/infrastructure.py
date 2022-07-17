@@ -64,6 +64,10 @@ class Process(Observable):
         return process.returncode
 
     @staticmethod
+    def create():
+        return Process(subprocess=subprocess)
+
+    @staticmethod
     def create_null(responses={}):
         class NullSubprocess:
             PIPE = None
@@ -83,10 +87,6 @@ class Process(Observable):
             def wait(self):
                 pass
         return Process(subprocess=NullSubprocess())
-
-    @staticmethod
-    def create():
-        return Process(subprocess=subprocess)
 
 class Terminal(Observable):
 
