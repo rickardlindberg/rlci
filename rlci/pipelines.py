@@ -74,19 +74,8 @@ class Engine:
         pipeline = self.db.get_pipeline(name)
         self.terminal.print_line(f"Triggered {pipeline['name']}")
         try:
-            with Workspace(PipelineStageProcess(self.terminal, self.process)) as workspace:
-                variables = {}
-                for step in pipeline["steps"]:
-                    command = [
-                        x if isinstance(x, str) else variables[x["variable"]]
-                        for x
-                        in step["command"]
-                    ]
-                    if step.get("variable") is None:
-                        workspace.run(command)
-                    else:
-                        variables[step["variable"]] = workspace.slurp(command)
-                return True
+            StageExecution(terminal=self.terminal, process=self.process).run(pipeline)
+            return True
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
             return False
@@ -100,6 +89,88 @@ class Engine:
         process = events.listen(Process.create_null(responses=responses))
         successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
         return {"successful": successful, "events": events}
+
+class StageExecution:
+
+    """
+    I execute a single stage in a pipeline.
+
+    >>> BUILD_DEPLOY_STAGE = {
+    ...     "steps": [
+    ...         {"command": ["./build"]},
+    ...         {"command": ["./deploy"]}
+    ...     ]
+    ... }
+
+    Workspace isolation
+    ===================
+
+    I execute the steps in an isolated workspace:
+
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
+    ...     tuple(Workspace.create_create_command()): [
+    ...         {"output": ["/workspace"]}
+    ...     ]
+    ... }).filter("PROCESS", "EXCEPTION")
+    PROCESS => ['mktemp', '-d']
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './deploy']
+    PROCESS => ['rm', '-rf', '/workspace']
+
+    If workspace creations fails, I fail:
+
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
+    ...     tuple(Workspace.create_create_command()): [
+    ...         {"output": ["/workspace"], "returncode": 99}
+    ...     ],
+    ... }).filter("PROCESS", "EXCEPTION")
+    PROCESS => ['mktemp', '-d']
+    EXCEPTION => 'CommandFailure'
+
+    If a step fails, I fail, but still clean up the workspace:
+
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
+    ...     tuple(Workspace.create_create_command()): [
+    ...         {"output": ["/workspace"]}
+    ...     ],
+    ...     tuple(ProcessInDirectory.create_command(["./build"], "/workspace")): [
+    ...         {"returncode": 99}
+    ...     ]
+    ... }).filter("PROCESS", "EXCEPTION")
+    PROCESS => ['mktemp', '-d']
+    PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']
+    PROCESS => ['rm', '-rf', '/workspace']
+    EXCEPTION => 'CommandFailure'
+    """
+
+    def __init__(self, terminal, process):
+        self.terminal = terminal
+        self.process = process
+
+    def run(self, stage):
+        with Workspace(PipelineStageProcess(self.terminal, self.process)) as workspace:
+            variables = {}
+            for step in stage["steps"]:
+                command = [
+                    x if isinstance(x, str) else variables[x["variable"]]
+                    for x
+                    in step["command"]
+                ]
+                if step.get("variable") is None:
+                    workspace.run(command)
+                else:
+                    variables[step["variable"]] = workspace.slurp(command)
+
+    @staticmethod
+    def run_in_test_mode(stage, process_responses={}):
+        events = Events()
+        terminal = events.listen(Terminal.create_null())
+        process = events.listen(Process.create_null(responses=process_responses))
+        try:
+            StageExecution(terminal=terminal, process=process).run(stage)
+        except CommandFailure:
+            events.append(("EXCEPTION", "CommandFailure"))
+        return events
 
 class DB:
 
