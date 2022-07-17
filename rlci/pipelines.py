@@ -286,10 +286,5 @@ class PipelineStageProcess(SlurpMixin):
         if self.process.run(command, output=log) != 0:
             raise CommandFailure()
 
-def slurp(process, command):
-    output = []
-    process.run(command, output=output.append)
-    return "".join(output)
-
 class CommandFailure(Exception):
     pass
