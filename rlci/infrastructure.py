@@ -54,8 +54,8 @@ class Process(Observable):
         self.notify("PROCESS", command)
         process = self.subprocess.Popen(
             command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=self.subprocess.PIPE,
+            stderr=self.subprocess.STDOUT,
             text=True
         )
         for line in process.stdout:
@@ -65,8 +65,9 @@ class Process(Observable):
 
     @staticmethod
     def create_null(responses={}):
-        PIPE = None
         class NullSubprocess:
+            PIPE = None
+            STDOUT = None
             def Popen(self, command, stdout, stderr, text):
                 response = {"returncode": 0, "output": []}
                 if tuple(command) in responses:
