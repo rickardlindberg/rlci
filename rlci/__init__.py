@@ -126,11 +126,11 @@ def rlci_pipeline():
     """
     >>> Engine.trigger_in_test_mode(
     ...     rlci_pipeline(),
-    ...     responses={
+    ...     process_responses={
     ...         tuple(Workspace.create_create_command()): [
-    ...             {"output": ["/tmp/workspace"]}
+    ...             {"output": ["/workspace"]}
     ...         ],
-    ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/tmp/workspace')): [
+    ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/workspace')): [
     ...             {"output": ["<git-commit>"]}
     ...         ],
     ...     }
@@ -142,7 +142,7 @@ def rlci_pipeline():
     PROCESS => [..., 'git', 'push']
     PROCESS => [..., 'git', 'rev-parse', 'HEAD']
     PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
-    PROCESS => ['rm', '-rf', '/tmp/workspace']
+    PROCESS => ['rm', '-rf', '/workspace']
     """
     return {
         "name": "RLCIPipeline",
