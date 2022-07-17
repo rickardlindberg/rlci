@@ -150,6 +150,8 @@ class StageExecution:
     Command interpretation
     ======================
 
+    I can capture output from commands and use that in later commands:
+
     >>> StageExecution.run_in_test_mode({
     ...     "steps": [
     ...         {"command": ["cat", "path.txt"], "variable": "path"},
