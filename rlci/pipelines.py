@@ -146,6 +146,24 @@ class StageExecution:
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']"
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './deploy']"
     STDOUT => "['rm', '-rf', '/workspace']"
+
+    Command interpretation
+    ======================
+
+    >>> StageExecution.run_in_test_mode({
+    ...     "steps": [
+    ...         {"command": ["cat", "path.txt"], "variable": "path"},
+    ...         {"command": ["cd", {"variable": "path"}]},
+    ...     ]
+    ... }, process_responses={
+    ...     tuple(ProcessInDirectory.create_command(["cat", "path.txt"], "")): [
+    ...         {"output": ["secret-path"]}
+    ...     ]
+    ... }).filter("PROCESS") # doctest: +ELLIPSIS
+    PROCESS => [...]
+    PROCESS => [..., 'cat', 'path.txt']
+    PROCESS => [..., 'cd', 'secret-path']
+    PROCESS => [...]
     """
 
     def __init__(self, terminal, process):
