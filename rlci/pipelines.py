@@ -141,6 +141,22 @@ class StageExecution:
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']
     PROCESS => ['rm', '-rf', '/workspace']
     EXCEPTION => 'CommandFailure'
+
+    Logging
+    =======
+
+    I log the commands I run:
+
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
+    ...     tuple(Workspace.create_create_command()): [
+    ...         {"output": ["/workspace"]}
+    ...     ]
+    ... }).filter("STDOUT")
+    STDOUT => "['mktemp', '-d']"
+    STDOUT => '/workspace'
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']"
+    STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './deploy']"
+    STDOUT => "['rm', '-rf', '/workspace']"
     """
 
     def __init__(self, terminal, process):
