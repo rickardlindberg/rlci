@@ -35,11 +35,7 @@ class Engine:
     Pipeline fails
     --------------
 
-    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE, process_responses={
-    ...     tuple(Workspace.create_create_command()): [
-    ...         {"returncode": 1}
-    ...     ],
-    ... })
+    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE, simulate_failure=True)
 
     I return False:
 
@@ -68,11 +64,17 @@ class Engine:
             return False
 
     @staticmethod
-    def trigger_in_test_mode(pipeline, process_responses={}):
+    def trigger_in_test_mode(pipeline, simulate_failure=False, process_responses={}):
         db = DB.create_in_memory()
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
+        if simulate_failure:
+            process_responses = {
+                tuple(Workspace.create_create_command()): [
+                    {"returncode": 99}
+                ]
+            }
         process = events.listen(Process.create_null(responses=process_responses))
         successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
         return {"successful": successful, "events": events}
