@@ -126,7 +126,7 @@ def rlci_pipeline():
     """
     >>> Engine.trigger_in_test_mode(
     ...     rlci_pipeline(),
-    ...     responses={
+    ...     process_responses={
     ...         tuple(Workspace.create_create_command()): [
     ...             {"output": ["/tmp/workspace"]}
     ...         ],

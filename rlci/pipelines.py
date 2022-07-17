@@ -6,31 +6,21 @@ class Engine:
     """
     I am the engine that runs pipelines.
 
-    Stage execution
-    ===============
+    >>> TEST_PIPELINE = {"name": "TEST", "steps": []}
 
-    I log an execution:
+    Triggering
+    ==========
 
-    >>> Engine.trigger_in_test_mode(
-    ...     {"name": "TEST", "steps": [{"command": ["ls"]}]},
-    ...     responses={
-    ...         tuple(Workspace.create_create_command()): [
-    ...             {"output": ["/tmp/workspace"]}
-    ...         ],
-    ...     }
-    ... )["events"].filter("STDOUT") # doctest: +ELLIPSIS
-    STDOUT => 'Triggered TEST'
-    STDOUT => "['mktemp', '-d']"
-    STDOUT => '/tmp/workspace'
-    STDOUT => "[..., 'ls']"
-    STDOUT => "['rm', '-rf', '/tmp/workspace']"
+    I log which pipeline I triggered:
 
-    Success
-    -------
+    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE)
+    >>> trigger["events"].has("STDOUT", "Triggered TEST")
+    True
 
-    >>> trigger = Engine.trigger_in_test_mode(
-    ...     {"name": "TEST", "steps": []}
-    ... )
+    Pipeline succeeds
+    -----------------
+
+    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE)
 
     I return True:
 
@@ -42,17 +32,14 @@ class Engine:
     >>> trigger["events"].has("STDOUT", "FAIL")
     False
 
-    Failure
-    -------
+    Pipeline fails
+    --------------
 
-    >>> trigger = Engine.trigger_in_test_mode(
-    ...     {"name": "TEST"},
-    ...     responses={
-    ...         tuple(Workspace.create_create_command()): [
-    ...             {"returncode": 1}
-    ...         ],
-    ...     }
-    ... )
+    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE, process_responses={
+    ...     tuple(Workspace.create_create_command()): [
+    ...         {"returncode": 1}
+    ...     ],
+    ... })
 
     I return False:
 
@@ -81,12 +68,12 @@ class Engine:
             return False
 
     @staticmethod
-    def trigger_in_test_mode(pipeline, responses={}):
+    def trigger_in_test_mode(pipeline, process_responses={}):
         db = DB.create_in_memory()
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
-        process = events.listen(Process.create_null(responses=responses))
+        process = events.listen(Process.create_null(responses=process_responses))
         successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
         return {"successful": successful, "events": events}
 
