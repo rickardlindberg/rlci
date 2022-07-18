@@ -14,7 +14,8 @@ class ZeroApp:
     """
     I am a tool for zero friction development.
 
-    ## Usage
+    Usage
+    =====
 
     I print usage when run with no arguments:
 
@@ -26,7 +27,8 @@ class ZeroApp:
     STDOUT => '    ./zero.py build'
     EXIT => 1
 
-    ## Building
+    Building
+    ========
 
     I run tests when run with the 'build' argument:
 
@@ -53,7 +55,8 @@ class ZeroApp:
     ... ).filter("EXIT")
     EXIT => 1
 
-    ## Integrating
+    Integrating
+    ===========
 
     I integrate code by pushing changes to a branch and triggering the
     pre-defined pipeline.
@@ -69,11 +72,13 @@ class ZeroApp:
 
     When integration fails, I still delete the temporary branch:
 
-    >>> ZeroApp.run_in_test_mode(args=['integrate'], process_responses={
-    ...     ('ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger', 'rlci'): [
-    ...         {"returncode": 99}
-    ...     ]
-    ... }).filter("PROCESS", "EXIT")
+    >>> ZeroApp.run_in_test_mode(args=['integrate'], process_responses=[
+    ...     {
+    ...         "command": ['ssh', 'rlci@ci.rickardlindberg.me', 'python',
+    ...                     '/opt/rlci/rlci.py', 'trigger', 'rlci'],
+    ...         "returncode": 99,
+    ...     }
+    ... ]).filter("PROCESS", "EXIT")
     PROCESS => ['git', 'checkout', '-b', 'BRANCH']
     PROCESS => ['git', 'push', '--set-upstream', 'origin', 'BRANCH']
     PROCESS => ['ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger', 'rlci']
@@ -83,7 +88,8 @@ class ZeroApp:
     PROCESS => ['git', 'push', 'origin', 'BRANCH', '--delete']
     EXIT => 1
 
-    ## Deploying
+    Deploying
+    =========
 
     I deploy a version of RLCI to /opt/rlci:
 
@@ -150,7 +156,7 @@ class ZeroApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], tests_succeed=True, tests_run=1, process_responses={}):
+    def run_in_test_mode(args=[], tests_succeed=True, tests_run=1, process_responses=[]):
         events = Events()
         args = Args.create_null(args)
         terminal = Terminal.create_null()
@@ -217,7 +223,7 @@ class Tests(Observable):
         self.suite.addTest(
             self.doctest.DocTestSuite(
                 self.importlib.import_module(module_name),
-                optionflags=doctest.REPORT_NDIFF
+                optionflags=doctest.REPORT_NDIFF|doctest.FAIL_FAST
             )
         )
 
@@ -268,9 +274,9 @@ class ExitLoggingProcess:
     """
     I run and log commands:
 
-    >>> ExitLoggingProcess.run_in_test_mode(["ls", "/tmp"], responses={
-    ...     ('ls', '/tmp'): [{"output": ["foo", "bar"]}]
-    ... })
+    >>> ExitLoggingProcess.run_in_test_mode(["ls", "/tmp"], responses=[
+    ...     {"command": ['ls', '/tmp'], "output": ["foo", "bar"]}
+    ... ])
     STDOUT => "['ls', '/tmp']"
     PROCESS => ['ls', '/tmp']
     STDOUT => 'foo'
@@ -278,9 +284,9 @@ class ExitLoggingProcess:
 
     I exit with 1 if a command fails:
 
-    >>> ExitLoggingProcess.run_in_test_mode(["ls", "/tmp"], responses={
-    ...     ('ls', '/tmp'): [{"returncode": 99}]
-    ... })
+    >>> ExitLoggingProcess.run_in_test_mode(["ls", "/tmp"], responses=[
+    ...     {"command": ['ls', '/tmp'], "returncode": 99}
+    ... ])
     STDOUT => "['ls', '/tmp']"
     PROCESS => ['ls', '/tmp']
     EXIT => 1
@@ -296,7 +302,7 @@ class ExitLoggingProcess:
             sys.exit(1)
 
     @staticmethod
-    def run_in_test_mode(command, responses={}):
+    def run_in_test_mode(command, responses):
         events = Events()
         process = events.listen(Process.create_null(responses=responses))
         terminal = events.listen(Terminal.create_null())
