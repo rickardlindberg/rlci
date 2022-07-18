@@ -221,7 +221,7 @@ class Tests(Observable):
         self.suite.addTest(
             self.doctest.DocTestSuite(
                 self.importlib.import_module(module_name),
-                optionflags=doctest.REPORT_NDIFF
+                optionflags=doctest.REPORT_NDIFF|doctest.FAIL_FAST
             )
         )
 
