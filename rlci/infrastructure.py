@@ -37,13 +37,30 @@ class Process(Observable):
 
     The null version of me can configure responses:
 
+    >>> process = Process.create_null(responses=[
+    ...     {
+    ...         "command": ["./a_program"],
+    ...         "output": ["fake_one"],
+    ...         "returncode": 1
+    ...     },
+    ...     {
+    ...         "command": ["./a_program"],
+    ...         "output": ["fake_two"],
+    ...         "returncode": 2
+    ...     }
+    ... ])
+
     >>> output = []
-    >>> Process.create_null({
-    ...     ("./a_program",): [{"output": ["fake_one", "fake_two"], "returncode": 1}]
-    ... }).run(["./a_program"], output=output.append)
+    >>> process.run(["./a_program"], output=output.append)
     1
     >>> output
-    ['fake_one', 'fake_two']
+    ['fake_one']
+
+    >>> output = []
+    >>> process.run(["./a_program"], output=output.append)
+    2
+    >>> output
+    ['fake_two']
     """
 
     def __init__(self, subprocess):
@@ -68,14 +85,16 @@ class Process(Observable):
         return Process(subprocess=subprocess)
 
     @staticmethod
-    def create_null(responses={}):
+    def create_null(responses=[]):
         class NullSubprocess:
             PIPE = None
             STDOUT = None
             def Popen(self, command, stdout, stderr, text):
                 response = {"returncode": 0, "output": []}
-                if tuple(command) in responses:
-                    response = dict(response, **responses[tuple(command)].pop(0))
+                for i in range(len(responses)):
+                    if responses[i]["command"] == command:
+                        response = dict(response, **responses.pop(i))
+                        break
                 return NullProcess(
                     returncode=response["returncode"],
                     output=response["output"],

@@ -103,14 +103,14 @@ class RLCIApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], process_responses={}, simulate_pipeline_failure=False):
+    def run_in_test_mode(args=[], simulate_pipeline_failure=False):
         events = Events()
+        process_responses = []
         if simulate_pipeline_failure:
-            process_responses = {
-               tuple(Workspace.create_create_command()): [{'returncode': 1}],
-            }
-        else:
-            process_responses = {}
+            process_responses.append({
+                "command": Workspace.create_create_command(),
+                "returncode": 99,
+            })
         try:
             RLCIApp(
                 terminal=events.listen(Terminal.create_null()),
@@ -126,14 +126,16 @@ def rlci_pipeline():
     """
     >>> Engine.trigger_in_test_mode(
     ...     rlci_pipeline(),
-    ...     process_responses={
-    ...         tuple(Workspace.create_create_command()): [
-    ...             {"output": ["/workspace"]}
-    ...         ],
-    ...         tuple(ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/workspace')): [
-    ...             {"output": ["<git-commit>"]}
-    ...         ],
-    ...     }
+    ...     process_responses=[
+    ...         {
+    ...             "command": Workspace.create_create_command(),
+    ...             "output": ["/workspace"],
+    ...         },
+    ...         {
+    ...             "command": ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/workspace'),
+    ...             "output": ["<git-commit>"],
+    ...         },
+    ...     ]
     ... )["events"].filter("PROCESS") # doctest: +ELLIPSIS
     PROCESS => ['mktemp', '-d']
     PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']

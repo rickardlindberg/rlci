@@ -64,17 +64,16 @@ class Engine:
             return False
 
     @staticmethod
-    def trigger_in_test_mode(pipeline, simulate_failure=False, process_responses={}):
+    def trigger_in_test_mode(pipeline, simulate_failure=False, process_responses=[]):
         db = DB.create_in_memory()
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
         if simulate_failure:
-            process_responses = {
-                tuple(Workspace.create_create_command()): [
-                    {"returncode": 99}
-                ]
-            }
+            process_responses.append({
+                "command": Workspace.create_create_command(),
+                "returncode": 99,
+            })
         process = events.listen(Process.create_null(responses=process_responses))
         successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
         return {"successful": successful, "events": events}
@@ -96,11 +95,12 @@ class StageExecution:
 
     I execute the steps in an isolated workspace:
 
-    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
-    ...     tuple(Workspace.create_create_command()): [
-    ...         {"output": ["/workspace"]}
-    ...     ]
-    ... }).filter("PROCESS", "EXCEPTION")
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses=[
+    ...     {
+    ...         "command": Workspace.create_create_command(),
+    ...         "output": ["/workspace"],
+    ...     },
+    ... ]).filter("PROCESS", "EXCEPTION")
     PROCESS => ['mktemp', '-d']
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './deploy']
@@ -108,24 +108,27 @@ class StageExecution:
 
     If workspace creations fails, I fail:
 
-    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
-    ...     tuple(Workspace.create_create_command()): [
-    ...         {"output": ["/workspace"], "returncode": 99}
-    ...     ],
-    ... }).filter("PROCESS", "EXCEPTION")
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses=[
+    ...     {
+    ...         "command": Workspace.create_create_command(),
+    ...         "returncode": 99,
+    ...     },
+    ... ]).filter("PROCESS", "EXCEPTION")
     PROCESS => ['mktemp', '-d']
     EXCEPTION => 'CommandFailure'
 
     If a step fails, I fail, but still clean up the workspace:
 
-    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
-    ...     tuple(Workspace.create_create_command()): [
-    ...         {"output": ["/workspace"]}
-    ...     ],
-    ...     tuple(ProcessInDirectory.create_command(["./build"], "/workspace")): [
-    ...         {"returncode": 99}
-    ...     ]
-    ... }).filter("PROCESS", "EXCEPTION")
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses=[
+    ...     {
+    ...         "command": Workspace.create_create_command(),
+    ...         "output": ["/workspace"],
+    ...     },
+    ...     {
+    ...         "command": ProcessInDirectory.create_command(["./build"], "/workspace"),
+    ...         "returncode": 99,
+    ...     },
+    ... ]).filter("PROCESS", "EXCEPTION")
     PROCESS => ['mktemp', '-d']
     PROCESS => ['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']
     PROCESS => ['rm', '-rf', '/workspace']
@@ -136,11 +139,12 @@ class StageExecution:
 
     I log the commands I run:
 
-    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses={
-    ...     tuple(Workspace.create_create_command()): [
-    ...         {"output": ["/workspace"]}
-    ...     ]
-    ... }).filter("STDOUT")
+    >>> StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses=[
+    ...     {
+    ...         "command": Workspace.create_create_command(),
+    ...         "output": ["/workspace"],
+    ...     },
+    ... ]).filter("STDOUT")
     STDOUT => "['mktemp', '-d']"
     STDOUT => '/workspace'
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './build']"
@@ -157,11 +161,12 @@ class StageExecution:
     ...         {"command": ["cat", "path.txt"], "variable": "path"},
     ...         {"command": ["cd", {"variable": "path"}]},
     ...     ]
-    ... }, process_responses={
-    ...     tuple(ProcessInDirectory.create_command(["cat", "path.txt"], "")): [
-    ...         {"output": ["secret-path"]}
-    ...     ]
-    ... }).filter("PROCESS") # doctest: +ELLIPSIS
+    ... }, process_responses=[
+    ...     {
+    ...         "command": ProcessInDirectory.create_command(["cat", "path.txt"], ""),
+    ...         "output": ["secret-path"],
+    ...     },
+    ... ]).filter("PROCESS") # doctest: +ELLIPSIS
     PROCESS => [...]
     PROCESS => [..., 'cat', 'path.txt']
     PROCESS => [..., 'cd', 'secret-path']
@@ -187,7 +192,7 @@ class StageExecution:
                     variables[step["variable"]] = workspace.slurp(command)
 
     @staticmethod
-    def run_in_test_mode(stage, process_responses={}):
+    def run_in_test_mode(stage, process_responses=[]):
         events = Events()
         terminal = events.listen(Terminal.create_null())
         process = events.listen(Process.create_null(responses=process_responses))
