@@ -86,11 +86,6 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* **More realistic output** The pipeline currently writes its "report" to
-  stdout. I imagine the CI-server having a web-front end to display its status.
-  Therefore convert the stdout report to a HTLM-file that can be served by a
-  web server.
-
 ## History
 
 This is where I document the completed stories.
@@ -308,3 +303,9 @@ Browse the
 as it looked like at the end of the story and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/story-6-start...story-6-end)
 of changes.
+
+### #7 More realistic output
+
+*The pipeline currently writes its "report" to stdout. I imagine the CI-server
+having a web-front end to display its status. Therefore convert the stdout
+report to a HTML-file that can be served by a web server.*
