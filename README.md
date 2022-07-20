@@ -63,6 +63,7 @@ these requirements are not automated, but RLCI assumes that they are in place:
 * SSH access (using keys) for user X
 * Directory `/opt/rlci` present with full permissions to user X
 * Git configured with email/username
+* Web server configured to serve static content from `/opt/rlci/html`
 * Software installed:
     * Python
     * Git
