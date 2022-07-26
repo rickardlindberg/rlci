@@ -1,7 +1,75 @@
+import builtins
 import subprocess
 import sys
 
 from rlci.events import Observable, Events
+
+class Filesystem:
+
+    """
+    I can read and write files.
+
+    >>> import tempfile, os
+
+    >>> filesystem = Filesystem.create()
+    >>> with tempfile.TemporaryDirectory() as d:
+    ...     path = os.path.join(d, "tmp.txt")
+    ...     filesystem.write(path, "hello")
+    ...     filesystem.read(path)
+    ...     os.path.exists(path)
+    'hello'
+    True
+
+    The in memory version of me does not touch the filesystem:
+
+    >>> filesystem = Filesystem.create_in_memory()
+    >>> with tempfile.TemporaryDirectory() as d:
+    ...     path = os.path.join(d, "tmp.txt")
+    ...     filesystem.write(path, "hello")
+    ...     filesystem.read(path)
+    ...     os.path.exists(path)
+    'hello'
+    False
+    """
+
+    def __init__(self, builtins):
+        self.builtins = builtins
+
+    def write(self, path, contents):
+        with self.builtins.open(path, "w") as f:
+            f.write(contents)
+
+    def read(self, path):
+        with self.builtins.open(path, "r") as f:
+            return f.read()
+
+    @staticmethod
+    def create():
+        return Filesystem(builtins=builtins)
+
+    @staticmethod
+    def create_in_memory():
+        store = {}
+        class File:
+            def __init__(self, path):
+                self.path = path
+            def __enter__(self):
+                return self
+            def __exit__(self, a, b, c):
+                pass
+        class FileRead(File):
+            def read(self):
+                return store[self.path]
+        class FileWrite(File):
+            def write(self, contents):
+                store[self.path] = contents
+        class InMemoryOpen:
+            def open(self, path, mode):
+                if mode == "r":
+                    return FileRead(path)
+                elif mode == "w":
+                    return FileWrite(path)
+        return Filesystem(builtins=InMemoryOpen())
 
 class Process(Observable):
 
