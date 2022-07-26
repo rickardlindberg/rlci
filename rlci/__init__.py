@@ -2,7 +2,7 @@ import sys
 
 from rlci.events import Observable, Events
 from rlci.pipelines import Engine, DB, Workspace, ProcessInDirectory
-from rlci.infrastructure import Args, Terminal, Process
+from rlci.infrastructure import Args, Terminal, Process, Filesystem
 
 class RLCIApp:
 
@@ -43,6 +43,15 @@ class RLCIApp:
     ... ).filter("EXIT")
     EXIT => 1
 
+    I write a report of the pipeline run:
+
+    >>> report = RLCIApp.run_in_test_mode(
+    ...     args=["trigger", "rlci"],
+    ...     return_filesystem=True,
+    ... ).read("/opt/rlci/html/index.html")
+    >>> "rlci" in report
+    True
+
     I exit with usage when no pipeline is given:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"])
@@ -67,11 +76,12 @@ class RLCIApp:
     True
     """
 
-    def __init__(self, terminal, args, process, db):
+    def __init__(self, terminal, args, process, db, filesystem):
         self.terminal = terminal
         self.args = args
         self.process = process
         self.db = db
+        self.filesystem = filesystem
         self.db.save_pipeline("rlci", rlci_pipeline())
         self.db.save_pipeline("test-pipeline", {"name": "TEST-PIPELINE", "steps": []})
 
@@ -91,6 +101,10 @@ class RLCIApp:
             process=self.process,
             db=self.db
         ).trigger(name)
+        self.filesystem.write(
+            "/opt/rlci/html/index.html",
+            f"<h1>Last run pipeline: {name}</h1>"
+        )
         sys.exit(0 if successful else 1)
 
     @staticmethod
@@ -99,11 +113,12 @@ class RLCIApp:
             terminal=Terminal.create(),
             args=Args.create(),
             process=Process.create(),
-            db=DB.create()
+            db=DB.create(),
+            filesystem=Filesystem.create()
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], simulate_pipeline_failure=False):
+    def run_in_test_mode(args=[], simulate_pipeline_failure=False, return_filesystem=False):
         events = Events()
         process_responses = []
         if simulate_pipeline_failure:
@@ -111,15 +126,19 @@ class RLCIApp:
                 "command": Workspace.create_create_command(),
                 "returncode": 99,
             })
+        filesystem = Filesystem.create_in_memory()
         try:
             RLCIApp(
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
                 process=events.listen(Process.create_null(responses=process_responses)),
-                db=DB.create_in_memory()
+                db=DB.create_in_memory(),
+                filesystem=filesystem
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
+        if return_filesystem:
+            return filesystem
         return events
 
 def rlci_pipeline():
