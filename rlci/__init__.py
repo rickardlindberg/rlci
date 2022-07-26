@@ -47,8 +47,8 @@ class RLCIApp:
 
     >>> report = RLCIApp.run_in_test_mode(
     ...     args=["trigger", "rlci"],
-    ...     return_filesystem=True,
-    ... ).read("/opt/rlci/html/index.html")
+    ...     return_events=False,
+    ... )["filesystem"].read("/opt/rlci/html/index.html")
     >>> "rlci" in report
     True
 
@@ -118,7 +118,7 @@ class RLCIApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], simulate_pipeline_failure=False, return_filesystem=False):
+    def run_in_test_mode(args=[], simulate_pipeline_failure=False, return_events=True):
         events = Events()
         process_responses = []
         if simulate_pipeline_failure:
@@ -137,9 +137,10 @@ class RLCIApp:
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
-        if return_filesystem:
-            return filesystem
-        return events
+        if return_events:
+            return events
+        else:
+            return {"filesystem": filesystem}
 
 def rlci_pipeline():
     """
