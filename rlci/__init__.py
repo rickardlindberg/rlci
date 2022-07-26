@@ -30,6 +30,16 @@ class RLCIApp:
     look at what was printed to stdout. In the future this might change. We
     might replace the print to stdout with a write to a database for example.
 
+    I write a report of the pipeline run:
+
+    >>> run = RLCIApp.run_in_test_mode(
+    ...     args=["trigger", "test-pipeline"],
+    ...     return_events=False,
+    ... )
+    >>> report = run["filesystem"].read("/opt/rlci/html/index.html")
+    >>> "test-pipeline" in report
+    True
+
     I exit with 0 when a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger", "rlci"]).filter("EXIT")
@@ -42,15 +52,6 @@ class RLCIApp:
     ...     simulate_pipeline_failure=True
     ... ).filter("EXIT")
     EXIT => 1
-
-    I write a report of the pipeline run:
-
-    >>> report = RLCIApp.run_in_test_mode(
-    ...     args=["trigger", "rlci"],
-    ...     return_events=False,
-    ... )["filesystem"].read("/opt/rlci/html/index.html")
-    >>> "rlci" in report
-    True
 
     I exit with usage when no pipeline is given:
 
