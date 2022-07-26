@@ -55,7 +55,7 @@ class Filesystem:
                 self.path = path
             def __enter__(self):
                 return self
-            def __exit__(self, a, b, c):
+            def __exit__(self, type, value, traceback):
                 pass
         class FileRead(File):
             def read(self):
