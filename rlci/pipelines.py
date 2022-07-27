@@ -1,3 +1,5 @@
+import pprint
+
 from rlci.events import Events
 from rlci.infrastructure import Terminal, Process
 
@@ -57,7 +59,11 @@ class Engine:
         pipeline = self.db.get_pipeline(name)
         self.terminal.print_line(f"Triggered {pipeline['name']}")
         try:
-            StageExecution(terminal=self.terminal, process=self.process).run(pipeline)
+            StageExecution(
+                terminal=self.terminal,
+                process=self.process,
+                db=self.db
+            ).run(pipeline)
             return True
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
@@ -151,6 +157,31 @@ class StageExecution:
     STDOUT => "['python3', '-c', 'import sys; import os; os.chdir(sys.argv[1]); os.execvp(sys.argv[2], sys.argv[2:])', '/workspace', './deploy']"
     STDOUT => "['rm', '-rf', '/workspace']"
 
+    I store logs in the database of the commands I run:
+
+    >>> run = StageExecution.run_in_test_mode(BUILD_DEPLOY_STAGE, process_responses=[
+    ...     {
+    ...         "command": Workspace.create_create_command(),
+    ...         "output": ["/workspace"],
+    ...     },
+    ...     {
+    ...         "command": ProcessInDirectory.create_command(["./build"], "/workspace"),
+    ...         "output": ["I failed :("],
+    ...         "returncode": 99,
+    ...     },
+    ... ], return_events=False)
+    >>> pprint.pprint(run["db"].get_stage_commands())
+    [{'command': ['mktemp', '-d'], 'output': ['/workspace'], 'returncode': 0},
+     {'command': ['python3',
+                  '-c',
+                  'import sys; import os; os.chdir(sys.argv[1]); '
+                  'os.execvp(sys.argv[2], sys.argv[2:])',
+                  '/workspace',
+                  './build'],
+      'output': ['I failed :('],
+      'returncode': 99},
+     {'command': ['rm', '-rf', '/workspace'], 'output': [], 'returncode': 0}]
+
     Command interpretation
     ======================
 
@@ -173,12 +204,14 @@ class StageExecution:
     PROCESS => [...]
     """
 
-    def __init__(self, terminal, process):
+    def __init__(self, terminal, process, db):
         self.terminal = terminal
         self.process = process
+        self.db = db
 
     def run(self, stage):
-        with Workspace(PipelineStageProcess(self.terminal, self.process)) as workspace:
+        self.db.create_stage_commands()
+        with Workspace(PipelineStageProcess(self.terminal, self.process, self.db)) as workspace:
             variables = {}
             for step in stage["steps"]:
                 command = [
@@ -192,15 +225,19 @@ class StageExecution:
                     variables[step["variable"]] = workspace.slurp(command)
 
     @staticmethod
-    def run_in_test_mode(stage, process_responses=[]):
+    def run_in_test_mode(stage, process_responses=[], return_events=True):
         events = Events()
         terminal = events.listen(Terminal.create_null())
         process = events.listen(Process.create_null(responses=process_responses))
+        db = DB.create_in_memory()
         try:
-            StageExecution(terminal=terminal, process=process).run(stage)
+            StageExecution(terminal=terminal, process=process, db=db).run(stage)
         except CommandFailure:
             events.append(("EXCEPTION", "CommandFailure"))
-        return events
+        if return_events:
+            return events
+        else:
+            return {"db": db}
 
 class DB:
 
@@ -212,6 +249,21 @@ class DB:
 
     def get_pipeline(self, name):
         return self.pipelines[name]
+
+    def create_stage_commands(self):
+        self.stage_commands = []
+
+    def get_stage_commands(self):
+        return self.stage_commands
+
+    def add_stage_command(self, command):
+        self.stage_commands.append({"returncode": None, "output": [], "command": command})
+
+    def set_stage_command_returncode(self, returncode):
+        self.stage_commands[-1]["returncode"] = returncode
+
+    def add_stage_command_output(self, line):
+        self.stage_commands[-1]["output"].append(line)
 
     @staticmethod
     def create():
@@ -279,16 +331,21 @@ class ProcessInDirectory(SlurpMixin):
 
 class PipelineStageProcess(SlurpMixin):
 
-    def __init__(self, terminal, process):
+    def __init__(self, terminal, process, db):
         self.terminal = terminal
         self.process = process
+        self.db = db
 
     def run(self, command, output=lambda x: None):
         def log(line):
             self.terminal.print_line(line)
+            self.db.add_stage_command_output(line)
             output(line)
         self.terminal.print_line(repr(command))
-        if self.process.run(command, output=log) != 0:
+        self.db.add_stage_command(command)
+        returncode = self.process.run(command, output=log)
+        self.db.set_stage_command_returncode(returncode)
+        if returncode != 0:
             raise CommandFailure()
 
 class CommandFailure(Exception):

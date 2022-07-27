@@ -102,10 +102,16 @@ class RLCIApp:
             process=self.process,
             db=self.db
         ).trigger(name)
-        self.filesystem.write(
-            "/opt/rlci/html/index.html",
-            f"<h1>Last run pipeline: {name}</h1>"
-        )
+        report = []
+        report.append(f"<h1>Last run pipeline: {name}</h1>")
+        for stage_command in self.db.get_stage_commands():
+            report.append(f"<h2><pre>{stage_command['command']}<pre></h2>")
+            report.append(f"<p><b>returncode: {stage_command['returncode']}</b></p>")
+            report.append("<pre>")
+            for line in stage_command["output"]:
+                report.append(line)
+            report.append("</pre>")
+        self.filesystem.write("/opt/rlci/html/index.html", "\n".join(report))
         sys.exit(0 if successful else 1)
 
     @staticmethod
