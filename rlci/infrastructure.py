@@ -1,6 +1,8 @@
 import builtins
+import os
 import subprocess
 import sys
+import tempfile
 
 from rlci.events import Observable, Events
 
@@ -9,26 +11,24 @@ class Filesystem:
     """
     I can read and write files.
 
-    >>> import tempfile, os
-
     >>> filesystem = Filesystem.create()
-    >>> with tempfile.TemporaryDirectory() as d:
-    ...     path = os.path.join(d, "tmp.txt")
-    ...     filesystem.write(path, "hello")
-    ...     filesystem.read(path)
-    ...     os.path.exists(path)
+    >>> tmp_dir = tempfile.TemporaryDirectory()
+    >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
+    >>> filesystem.write(tmp_path, "hello")
+    >>> filesystem.read(tmp_path)
     'hello'
+    >>> os.path.exists(tmp_path)
     True
 
     The in memory version of me does not touch the filesystem:
 
     >>> filesystem = Filesystem.create_in_memory()
-    >>> with tempfile.TemporaryDirectory() as d:
-    ...     path = os.path.join(d, "tmp.txt")
-    ...     filesystem.write(path, "hello")
-    ...     filesystem.read(path)
-    ...     os.path.exists(path)
+    >>> tmp_dir = tempfile.TemporaryDirectory()
+    >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
+    >>> filesystem.write(tmp_path, "hello")
+    >>> filesystem.read(tmp_path)
     'hello'
+    >>> os.path.exists(tmp_path)
     False
     """
 
@@ -55,7 +55,7 @@ class Filesystem:
                 self.path = path
             def __enter__(self):
                 return self
-            def __exit__(self, a, b, c):
+            def __exit__(self, type, value, traceback):
                 pass
         class FileRead(File):
             def read(self):

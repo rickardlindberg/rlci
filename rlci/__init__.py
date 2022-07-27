@@ -30,6 +30,16 @@ class RLCIApp:
     look at what was printed to stdout. In the future this might change. We
     might replace the print to stdout with a write to a database for example.
 
+    I write a report of the pipeline run:
+
+    >>> run = RLCIApp.run_in_test_mode(
+    ...     args=["trigger", "test-pipeline"],
+    ...     return_events=False,
+    ... )
+    >>> report = run["filesystem"].read("/opt/rlci/html/index.html")
+    >>> "test-pipeline" in report
+    True
+
     I exit with 0 when a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger", "rlci"]).filter("EXIT")
@@ -42,15 +52,6 @@ class RLCIApp:
     ...     simulate_pipeline_failure=True
     ... ).filter("EXIT")
     EXIT => 1
-
-    I write a report of the pipeline run:
-
-    >>> report = RLCIApp.run_in_test_mode(
-    ...     args=["trigger", "rlci"],
-    ...     return_filesystem=True,
-    ... ).read("/opt/rlci/html/index.html")
-    >>> "rlci" in report
-    True
 
     I exit with usage when no pipeline is given:
 
@@ -101,10 +102,16 @@ class RLCIApp:
             process=self.process,
             db=self.db
         ).trigger(name)
-        self.filesystem.write(
-            "/opt/rlci/html/index.html",
-            f"<h1>Last run pipeline: {name}</h1>"
-        )
+        report = []
+        report.append(f"<h1>Last run pipeline: {name}</h1>")
+        for stage_command in self.db.get_stage_commands():
+            report.append(f"<h2><pre>{stage_command['command']}<pre></h2>")
+            report.append(f"<p><b>returncode: {stage_command['returncode']}</b></p>")
+            report.append("<pre>")
+            for line in stage_command["output"]:
+                report.append(line)
+            report.append("</pre>")
+        self.filesystem.write("/opt/rlci/html/index.html", "\n".join(report))
         sys.exit(0 if successful else 1)
 
     @staticmethod
@@ -118,7 +125,7 @@ class RLCIApp:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], simulate_pipeline_failure=False, return_filesystem=False):
+    def run_in_test_mode(args=[], simulate_pipeline_failure=False, return_events=True):
         events = Events()
         process_responses = []
         if simulate_pipeline_failure:
@@ -137,9 +144,10 @@ class RLCIApp:
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
-        if return_filesystem:
-            return filesystem
-        return events
+        if return_events:
+            return events
+        else:
+            return {"filesystem": filesystem}
 
 def rlci_pipeline():
     """
