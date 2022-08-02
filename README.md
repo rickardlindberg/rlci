@@ -320,6 +320,9 @@ I made a video about the process of working on this story:
 **VIDEO:** [I did the simplest thing that could possibly work. Here's what
 happened.](https://youtu.be/BXyiqhqXT0U)
 
+I did the absolute minimal and simple thing that could possible work. Many more
+improvements can be made to the HTML report, but this is a first version.
+
 Browse the
 [code](https://github.com/rickardlindberg/rlci/tree/story-7-end)
 as it looked like at the end of the story and look at the complete
