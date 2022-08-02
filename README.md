@@ -2,6 +2,8 @@
 
 **An experimental CI/CD system designed to suit my needs.**
 
+**DEMO**: http://ci.rickardlindberg.me/
+
 I have used [Jenkins](https://www.jenkins.io/) in many projects and I've had a
 lot of success with it. However, over time I've also become more and more
 frustrated with it, thinking that it is not the right tool for the job. It
