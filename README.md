@@ -277,7 +277,8 @@ logs so that we can show history of pipeline runs.
 
 I made a video about this process:
 
-**VIDEO:** COMING UP
+**VIDEO:** [I made a mistake when evolving the design of RLCI to support a
+database.](https://youtu.be/WlvsjCeuT6w)
 
 After working on the database for a while, I realized that I had designed it
 too much up front.
@@ -313,3 +314,15 @@ of changes.
 *The pipeline currently writes its "report" to stdout. I imagine the CI-server
 having a web-front end to display its status. Therefore convert the stdout
 report to a HTML-file that can be served by a web server.*
+
+I made a video about the process of working on this story:
+
+**VIDEO:** [I did the simplest thing that could possibly work. Here's what
+happened.](https://youtu.be/BXyiqhqXT0U)
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/story-7-end)
+as it looked like at the end of the story and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/story-7-start...story-7-end)
+of changes.
+
