@@ -87,6 +87,9 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
+* When I integrate my changes, and someone else is currently integrating, I
+  have to wait for them to finish.
+
 ## History
 
 This is where I document the completed stories.
