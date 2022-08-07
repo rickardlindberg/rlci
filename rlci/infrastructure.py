@@ -1,8 +1,10 @@
 import builtins
 import os
+import socket
 import subprocess
 import sys
 import tempfile
+import time
 
 from rlci.events import Observable, Events
 
@@ -273,3 +275,100 @@ class Args:
         class NullSys:
             argv = [None]+args
         return Args(NullSys())
+
+class UnixDomainSocketServer(Observable):
+
+    """
+    I am a Unix domain socket server.
+
+    An echo server can be created like this:
+
+    >>> server_process = subprocess.Popen([
+    ...     "python", "-c",
+    ...     "from rlci.infrastructure import UnixDomainSocketServer;"
+    ...     "handler = lambda x: x;"
+    ...     "server = UnixDomainSocketServer.create();"
+    ...     "server.register_handler(handler);"
+    ...     "server.start('/tmp/test-server.socket');"
+    ... ], stdout=subprocess.PIPE).stdout
+
+    And queried like this:
+
+    >>> time.sleep(0.1)
+    >>> s = socket.socket(socket.AF_UNIX)
+    >>> s.connect("/tmp/test-server.socket")
+    >>> s.sendall(b"test")
+    >>> s.recv(1024)
+    b'test'
+
+    The null version of me doesn't create actual sockets:
+
+    >>> x = {}
+    >>> def handler(request):
+    ...    x["request"] = request
+    >>> server = UnixDomainSocketServer.create_null(simulate_request=b"hello")
+    >>> server.register_handler(handler)
+    >>> server.start("/tmp/null-test-server.socket")
+    >>> x
+    {'request': b'hello'}
+
+    I log responses:
+
+    >>> def handler(request):
+    ...    return request
+    >>> events = Events()
+    >>> server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b"hello"))
+    >>> server.register_handler(handler)
+    >>> server.start("/tmp/null-test-server.socket")
+    >>> events
+    SERVER_RESPONSE => b'hello'
+    """
+
+    def __init__(self, os, socket):
+        Observable.__init__(self)
+        self.os = os
+        self.socket = socket
+
+    def register_handler(self, handler):
+        self.handler = handler
+
+    def start(self, path):
+        try:
+            self.os.remove(path)
+        except FileNotFoundError:
+            pass
+        s = self.socket.socket(family=self.socket.AF_UNIX)
+        s.bind(path)
+        s.listen()
+        connection, address = s.accept()
+        request = connection.recv(1024)
+        response = self.handler(request)
+        self.notify("SERVER_RESPONSE", response)
+        connection.sendall(response)
+
+    @staticmethod
+    def create():
+        return UnixDomainSocketServer(os=os, socket=socket)
+
+    @staticmethod
+    def create_null(simulate_request):
+        class NullOs:
+            def remove(self, path):
+                pass
+        class NullSocketModule:
+            AF_UNIX = object()
+            def socket(self, family):
+                return NullSocket()
+        class NullSocket:
+            def bind(self, address):
+                pass
+            def listen(self):
+                pass
+            def accept(self):
+                return (NullConnection(), None)
+        class NullConnection:
+            def recv(self, bufsize):
+                return simulate_request
+            def sendall(self, bytes):
+                pass
+        return UnixDomainSocketServer(os=NullOs(), socket=NullSocketModule())
