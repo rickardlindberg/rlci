@@ -20,8 +20,13 @@ class EngineServer:
     True
     """
 
-    def __init__(self, engine, server):
-        self.engine = engine
+    def __init__(self, terminal, process, db, filesystem, server):
+        self.engine = Engine(
+            terminal=terminal,
+            process=process,
+            db=db,
+            filesystem=filesystem
+        )
         self.server = server
         self.server.register_handler(self.handle_request)
 
@@ -34,12 +39,10 @@ class EngineServer:
     @staticmethod
     def create():
         return EngineServer(
-            engine=Engine(
-                terminal=Terminal.create(),
-                process=Process.create(),
-                db=DB.create(),
-                filesystem=Filesystem.create()
-            ),
+            terminal=Terminal.create(),
+            process=Process.create(),
+            db=DB.create(),
+            filesystem=Filesystem.create(),
             server=UnixDomainSocketServer.create()
         )
 
@@ -142,15 +145,14 @@ class Engine:
                 "returncode": 99,
             })
         process = events.listen(Process.create_null(responses=process_responses))
-        engine = Engine(
+        server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b'test'))
+        EngineServer(
             terminal=terminal,
             process=process,
             db=db,
-            filesystem=filesystem
-        )
-        server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b'test'))
-        engine_server = EngineServer(engine=engine, server=server)
-        engine_server.start()
+            filesystem=filesystem,
+            server=server
+        ).start()
         return {
             "events": events,
             "filesystem": filesystem
