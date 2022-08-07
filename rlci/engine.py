@@ -18,19 +18,19 @@ class EngineServer:
 
     >>> EngineServer.send_in_test_mode(
     ...     b'rlci'
-    ... )["events"].has("STDOUT", "Triggered RLCIPipeline")
+    ... ).has("STDOUT", "Triggered RLCIPipeline")
     True
 
     >>> EngineServer.send_in_test_mode(
     ...     b'test-pipeline'
-    ... )["events"].has("STDOUT", "Triggered TEST-PIPELINE")
+    ... ).has("STDOUT", "Triggered TEST-PIPELINE")
     True
 
     I reply with success response if triggered pipeline succeeds:
 
     >>> EngineServer.send_in_test_mode(
     ...     b'rlci'
-    ... )["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_SUCCESS)
+    ... ).has("SERVER_RESPONSE", TRIGGER_RESPONSE_SUCCESS)
     True
 
     I reply with fail response if triggered pipeline fails:
@@ -38,7 +38,7 @@ class EngineServer:
     >>> EngineServer.send_in_test_mode(
     ...     b'rlci',
     ...     simulate_failure=True
-    ... )["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_FAIL)
+    ... ).has("SERVER_RESPONSE", TRIGGER_RESPONSE_FAIL)
     True
 
     Internal health checks
@@ -79,7 +79,6 @@ class EngineServer:
     @staticmethod
     def send_in_test_mode(message, simulate_failure=False):
         events = Events()
-        filesystem = Filesystem.create_in_memory()
         process_responses = []
         if simulate_failure:
             process_responses.append({
@@ -90,13 +89,10 @@ class EngineServer:
             terminal=events.listen(Terminal.create_null()),
             process=events.listen(Process.create_null(responses=process_responses)),
             db=DB.create_in_memory(),
-            filesystem=filesystem,
+            filesystem=Filesystem.create_in_memory(),
             server=events.listen(UnixDomainSocketServer.create_null(simulate_request=message))
         ).start()
-        return {
-            "events": events,
-            "filesystem": filesystem
-        }
+        return events
 
 class Engine:
 
