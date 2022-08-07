@@ -1,7 +1,7 @@
 import pprint
 
 from rlci.events import Events
-from rlci.infrastructure import Terminal, Process, Filesystem
+from rlci.infrastructure import Terminal, Process, Filesystem, UnixDomainSocketServer
 
 class Engine:
 
@@ -103,17 +103,35 @@ class Engine:
                 "returncode": 99,
             })
         process = events.listen(Process.create_null(responses=process_responses))
-        successful = Engine(
+        engine = Engine(
             terminal=terminal,
             process=process,
             db=db,
             filesystem=filesystem
-        ).trigger("test")
+        )
+        server = UnixDomainSocketServer.create_null(simulate_request=b'test')
+        engine_server = EngineServer(engine=engine, server=server)
+        engine_server.start()
+        successful = engine_server.successful
         return {
             "successful": successful,
             "events": events,
             "filesystem": filesystem
         }
+
+class EngineServer:
+
+    def __init__(self, engine, server):
+        self.engine = engine
+        self.server = server
+        self.server.register_handler(self.handle_request)
+
+    def start(self):
+        self.server.start("/tmp/rlci-engine.socket")
+
+    def handle_request(self, request):
+        self.successful = self.engine.trigger(request.decode('ascii'))
+        return str(self.successful).encode('ascii')
 
 class StageExecution:
 
