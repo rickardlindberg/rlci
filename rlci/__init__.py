@@ -30,16 +30,6 @@ class RLCIApp:
     look at what was printed to stdout. In the future this might change. We
     might replace the print to stdout with a write to a database for example.
 
-    I write a report of the pipeline run:
-
-    >>> run = RLCIApp.run_in_test_mode(
-    ...     args=["trigger", "test-pipeline"],
-    ...     return_events=False,
-    ... )
-    >>> report = run["filesystem"].read("/opt/rlci/html/index.html")
-    >>> "test-pipeline" in report
-    True
-
     I exit with 0 when a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger", "rlci"]).filter("EXIT")
@@ -83,8 +73,6 @@ class RLCIApp:
         self.process = process
         self.db = db
         self.filesystem = filesystem
-        self.db.save_pipeline("rlci", rlci_pipeline())
-        self.db.save_pipeline("test-pipeline", {"name": "TEST-PIPELINE", "steps": []})
 
     def run(self):
         if self.args.get() == ["trigger"]:
@@ -100,18 +88,9 @@ class RLCIApp:
         successful = Engine(
             terminal=self.terminal,
             process=self.process,
-            db=self.db
+            db=self.db,
+            filesystem=self.filesystem
         ).trigger(name)
-        report = []
-        report.append(f"<h1>Last run pipeline: {name}</h1>")
-        for stage_command in self.db.get_stage_commands():
-            report.append(f"<h2><pre>{stage_command['command']}<pre></h2>")
-            report.append(f"<p><b>returncode: {stage_command['returncode']}</b></p>")
-            report.append("<pre>")
-            for line in stage_command["output"]:
-                report.append(line)
-            report.append("</pre>")
-        self.filesystem.write("/opt/rlci/html/index.html", "\n".join(report))
         sys.exit(0 if successful else 1)
 
     @staticmethod
@@ -148,39 +127,3 @@ class RLCIApp:
             return events
         else:
             return {"filesystem": filesystem}
-
-def rlci_pipeline():
-    """
-    >>> Engine.trigger_in_test_mode(
-    ...     rlci_pipeline(),
-    ...     process_responses=[
-    ...         {
-    ...             "command": Workspace.create_create_command(),
-    ...             "output": ["/workspace"],
-    ...         },
-    ...         {
-    ...             "command": ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/workspace'),
-    ...             "output": ["<git-commit>"],
-    ...         },
-    ...     ]
-    ... )["events"].filter("PROCESS") # doctest: +ELLIPSIS
-    PROCESS => ['mktemp', '-d']
-    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    PROCESS => [..., './zero.py', 'build']
-    PROCESS => [..., 'git', 'push']
-    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
-    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
-    PROCESS => ['rm', '-rf', '/workspace']
-    """
-    return {
-        "name": "RLCIPipeline",
-        "steps": [
-            {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
-            {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
-            {"command": ["./zero.py", "build"]},
-            {"command": ["git", "push"]},
-            {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
-            {"command": ["./zero.py", "deploy", {"variable": "version"}]},
-        ],
-    }
