@@ -1,7 +1,7 @@
 import pprint
 
 from rlci.events import Events
-from rlci.infrastructure import Terminal, Process
+from rlci.infrastructure import Terminal, Process, Filesystem
 
 class Engine:
 
@@ -17,6 +17,13 @@ class Engine:
 
     >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE)
     >>> trigger["events"].has("STDOUT", "Triggered TEST")
+    True
+
+    I write a report of the pipeline run:
+
+    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE)
+    >>> report = trigger["filesystem"].read("/opt/rlci/html/index.html")
+    >>> "test" in report
     True
 
     Pipeline succeeds
@@ -50,10 +57,11 @@ class Engine:
     True
     """
 
-    def __init__(self, terminal, process, db):
+    def __init__(self, terminal, process, db, filesystem):
         self.terminal = terminal
         self.process = process
         self.db = db
+        self.filesystem = filesystem
         self.db.save_pipeline("rlci", rlci_pipeline())
         self.db.save_pipeline("test-pipeline", {"name": "TEST-PIPELINE", "steps": []})
 
@@ -70,6 +78,17 @@ class Engine:
         except CommandFailure:
             self.terminal.print_line(f"FAIL")
             return False
+        finally:
+            report = []
+            report.append(f"<h1>Last run pipeline: {name}</h1>")
+            for stage_command in self.db.get_stage_commands():
+                report.append(f"<h2><pre>{stage_command['command']}<pre></h2>")
+                report.append(f"<p><b>returncode: {stage_command['returncode']}</b></p>")
+                report.append("<pre>")
+                for line in stage_command["output"]:
+                    report.append(line)
+                report.append("</pre>")
+            self.filesystem.write("/opt/rlci/html/index.html", "\n".join(report))
 
     @staticmethod
     def trigger_in_test_mode(pipeline, simulate_failure=False, process_responses=[]):
@@ -77,14 +96,24 @@ class Engine:
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
+        filesystem = Filesystem.create_in_memory()
         if simulate_failure:
             process_responses.append({
                 "command": Workspace.create_create_command(),
                 "returncode": 99,
             })
         process = events.listen(Process.create_null(responses=process_responses))
-        successful = Engine(terminal=terminal, process=process, db=db).trigger("test")
-        return {"successful": successful, "events": events}
+        successful = Engine(
+            terminal=terminal,
+            process=process,
+            db=db,
+            filesystem=filesystem
+        ).trigger("test")
+        return {
+            "successful": successful,
+            "events": events,
+            "filesystem": filesystem
+        }
 
 class StageExecution:
 

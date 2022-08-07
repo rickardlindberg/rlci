@@ -30,16 +30,6 @@ class RLCIApp:
     look at what was printed to stdout. In the future this might change. We
     might replace the print to stdout with a write to a database for example.
 
-    I write a report of the pipeline run:
-
-    >>> run = RLCIApp.run_in_test_mode(
-    ...     args=["trigger", "test-pipeline"],
-    ...     return_events=False,
-    ... )
-    >>> report = run["filesystem"].read("/opt/rlci/html/index.html")
-    >>> "test-pipeline" in report
-    True
-
     I exit with 0 when a triggered pipeline succeeds:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger", "rlci"]).filter("EXIT")
@@ -98,18 +88,9 @@ class RLCIApp:
         successful = Engine(
             terminal=self.terminal,
             process=self.process,
-            db=self.db
+            db=self.db,
+            filesystem=self.filesystem
         ).trigger(name)
-        report = []
-        report.append(f"<h1>Last run pipeline: {name}</h1>")
-        for stage_command in self.db.get_stage_commands():
-            report.append(f"<h2><pre>{stage_command['command']}<pre></h2>")
-            report.append(f"<p><b>returncode: {stage_command['returncode']}</b></p>")
-            report.append("<pre>")
-            for line in stage_command["output"]:
-                report.append(line)
-            report.append("</pre>")
-        self.filesystem.write("/opt/rlci/html/index.html", "\n".join(report))
         sys.exit(0 if successful else 1)
 
     @staticmethod
