@@ -34,7 +34,7 @@ class ZeroApp:
 
     >>> ZeroApp.run_in_test_mode(args=['build'])
     DOCTEST_MODULE => 'zero'
-    DOCTEST_MODULE => 'rlci'
+    DOCTEST_MODULE => 'rlci.cli'
     DOCTEST_MODULE => 'rlci.pipelines'
     DOCTEST_MODULE => 'rlci.infrastructure'
     TEST_RUN => None
@@ -115,7 +115,7 @@ class ZeroApp:
     def run(self):
         if self.args.get() == ["build"]:
             self.tests.add_doctest("zero")
-            self.tests.add_doctest("rlci")
+            self.tests.add_doctest("rlci.cli")
             self.tests.add_doctest("rlci.pipelines")
             self.tests.add_doctest("rlci.infrastructure")
             successful, count = self.tests.run()
