@@ -119,6 +119,13 @@ class Engine:
 
 class EngineServer:
 
+    """
+    I can be instantiates:
+
+    >>> isinstance(EngineServer.create(), EngineServer)
+    True
+    """
+
     def __init__(self, engine, server):
         self.engine = engine
         self.server = server
@@ -129,6 +136,18 @@ class EngineServer:
 
     def handle_request(self, request):
         return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')
+
+    @staticmethod
+    def create():
+        return EngineServer(
+            engine=Engine(
+                terminal=Terminal.create(),
+                process=Process.create(),
+                db=DB.create(),
+                filesystem=Filesystem.create()
+            ),
+            server=UnixDomainSocketServer.create()
+        )
 
 class StageExecution:
 

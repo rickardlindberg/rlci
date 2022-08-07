@@ -333,7 +333,10 @@ class UnixDomainSocketServer(Observable):
         self.handler = handler
 
     def start(self, path):
-        self.os.remove(path)
+        try:
+            self.os.remove(path)
+        except FileNotFoundError:
+            pass
         s = self.socket.socket(family=self.socket.AF_UNIX)
         s.bind(path)
         s.listen()
