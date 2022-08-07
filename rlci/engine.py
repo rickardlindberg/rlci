@@ -127,7 +127,7 @@ class Engine:
 
     I return True:
 
-    >>> trigger["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_SUCCESS)
+    >>> trigger["success"]
     True
 
     I don't log a failure message:
@@ -142,8 +142,8 @@ class Engine:
 
     I return False:
 
-    >>> trigger["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_FAIL)
-    True
+    >>> trigger["success"]
+    False
 
     I log a failure message:
 
@@ -197,15 +197,14 @@ class Engine:
                 "returncode": 99,
             })
         process = events.listen(Process.create_null(responses=process_responses))
-        server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b'test'))
-        EngineServer(
+        success = Engine(
             terminal=terminal,
             process=process,
             db=db,
             filesystem=filesystem,
-            server=server
-        ).start()
+        ).trigger("test")
         return {
+            "success": success,
             "events": events,
             "filesystem": filesystem
         }
