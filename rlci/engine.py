@@ -3,6 +3,49 @@ import pprint
 from rlci.events import Events
 from rlci.infrastructure import Terminal, Process, Filesystem, UnixDomainSocketServer
 
+TRIGGER_RESPONSE_SUCCESS = b"True"
+TRIGGER_RESPONSE_FAIL = b"False"
+
+class EngineServer:
+
+    """
+    I am a Unix socket interface to the RLCI engine.
+
+    Internal health checks
+    ======================
+
+    I can be instantiates:
+
+    >>> isinstance(EngineServer.create(), EngineServer)
+    True
+    """
+
+    def __init__(self, terminal, process, db, filesystem, server):
+        self.engine = Engine(
+            terminal=terminal,
+            process=process,
+            db=db,
+            filesystem=filesystem
+        )
+        self.server = server
+        self.server.register_handler(self.handle_request)
+
+    def start(self):
+        self.server.start("/tmp/rlci-engine.socket")
+
+    def handle_request(self, request):
+        return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')
+
+    @staticmethod
+    def create():
+        return EngineServer(
+            terminal=Terminal.create(),
+            process=Process.create(),
+            db=DB.create(),
+            filesystem=Filesystem.create(),
+            server=UnixDomainSocketServer.create()
+        )
+
 class Engine:
 
     """
@@ -21,7 +64,6 @@ class Engine:
 
     I write a report of the pipeline run:
 
-    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE)
     >>> report = trigger["filesystem"].read("/opt/rlci/html/index.html")
     >>> "test" in report
     True
@@ -33,8 +75,8 @@ class Engine:
 
     I return True:
 
-    >>> trigger["events"].filter("SERVER_RESPONSE")
-    SERVER_RESPONSE => b'True'
+    >>> trigger["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_SUCCESS)
+    True
 
     I don't log a failure message:
 
@@ -48,8 +90,8 @@ class Engine:
 
     I return False:
 
-    >>> trigger["events"].filter("SERVER_RESPONSE")
-    SERVER_RESPONSE => b'False'
+    >>> trigger["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_FAIL)
+    True
 
     I log a failure message:
 
@@ -103,51 +145,18 @@ class Engine:
                 "returncode": 99,
             })
         process = events.listen(Process.create_null(responses=process_responses))
-        engine = Engine(
+        server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b'test'))
+        EngineServer(
             terminal=terminal,
             process=process,
             db=db,
-            filesystem=filesystem
-        )
-        server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b'test'))
-        engine_server = EngineServer(engine=engine, server=server)
-        engine_server.start()
+            filesystem=filesystem,
+            server=server
+        ).start()
         return {
             "events": events,
             "filesystem": filesystem
         }
-
-class EngineServer:
-
-    """
-    I can be instantiates:
-
-    >>> isinstance(EngineServer.create(), EngineServer)
-    True
-    """
-
-    def __init__(self, engine, server):
-        self.engine = engine
-        self.server = server
-        self.server.register_handler(self.handle_request)
-
-    def start(self):
-        self.server.start("/tmp/rlci-engine.socket")
-
-    def handle_request(self, request):
-        return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')
-
-    @staticmethod
-    def create():
-        return EngineServer(
-            engine=Engine(
-                terminal=Terminal.create(),
-                process=Process.create(),
-                db=DB.create(),
-                filesystem=Filesystem.create()
-            ),
-            server=UnixDomainSocketServer.create()
-        )
 
 class StageExecution:
 
