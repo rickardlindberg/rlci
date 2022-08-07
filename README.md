@@ -104,6 +104,7 @@ user=rlci
 * Software installed:
     * Python
     * Git
+    * Supervisor
 
 I'm currently not sure how/where to automate all of this, so that's why the
 documentation exists instead. But hopefully, we can get rid of it.
