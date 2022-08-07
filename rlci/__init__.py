@@ -83,8 +83,6 @@ class RLCIApp:
         self.process = process
         self.db = db
         self.filesystem = filesystem
-        self.db.save_pipeline("rlci", rlci_pipeline())
-        self.db.save_pipeline("test-pipeline", {"name": "TEST-PIPELINE", "steps": []})
 
     def run(self):
         if self.args.get() == ["trigger"]:
@@ -148,39 +146,3 @@ class RLCIApp:
             return events
         else:
             return {"filesystem": filesystem}
-
-def rlci_pipeline():
-    """
-    >>> Engine.trigger_in_test_mode(
-    ...     rlci_pipeline(),
-    ...     process_responses=[
-    ...         {
-    ...             "command": Workspace.create_create_command(),
-    ...             "output": ["/workspace"],
-    ...         },
-    ...         {
-    ...             "command": ProcessInDirectory.create_command(['git', 'rev-parse', 'HEAD'], '/workspace'),
-    ...             "output": ["<git-commit>"],
-    ...         },
-    ...     ]
-    ... )["events"].filter("PROCESS") # doctest: +ELLIPSIS
-    PROCESS => ['mktemp', '-d']
-    PROCESS => [..., 'git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '.']
-    PROCESS => [..., 'git', 'merge', '--no-ff', '-m', 'Integrate.', 'origin/BRANCH']
-    PROCESS => [..., './zero.py', 'build']
-    PROCESS => [..., 'git', 'push']
-    PROCESS => [..., 'git', 'rev-parse', 'HEAD']
-    PROCESS => [..., './zero.py', 'deploy', '<git-commit>']
-    PROCESS => ['rm', '-rf', '/workspace']
-    """
-    return {
-        "name": "RLCIPipeline",
-        "steps": [
-            {"command": ["git", "clone", "git@github.com:rickardlindberg/rlci.git", "."]},
-            {"command": ["git", "merge", "--no-ff", "-m", "Integrate.", "origin/BRANCH"]},
-            {"command": ["./zero.py", "build"]},
-            {"command": ["git", "push"]},
-            {"command": ["git", "rev-parse", "HEAD"], "variable": "version"},
-            {"command": ["./zero.py", "deploy", {"variable": "version"}]},
-        ],
-    }
