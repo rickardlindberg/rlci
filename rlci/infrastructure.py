@@ -276,7 +276,7 @@ class Args:
             argv = [None]+args
         return Args(NullSys())
 
-class UnixDomainSocketServer:
+class UnixDomainSocketServer(Observable):
 
     """
     I am a Unix domain socket server.
@@ -311,9 +311,21 @@ class UnixDomainSocketServer:
     >>> server.start("/tmp/null-test-server.socket")
     >>> x
     {'request': b'hello'}
+
+    I log responses:
+
+    >>> def handler(request):
+    ...    return request
+    >>> events = Events()
+    >>> server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b"hello"))
+    >>> server.register_handler(handler)
+    >>> server.start("/tmp/null-test-server.socket")
+    >>> events
+    SERVER_RESPONSE => b'hello'
     """
 
     def __init__(self, os, socket):
+        Observable.__init__(self)
         self.os = os
         self.socket = socket
 
@@ -327,7 +339,9 @@ class UnixDomainSocketServer:
         s.listen()
         connection, address = s.accept()
         request = connection.recv(1024)
-        connection.sendall(self.handler(request))
+        response = self.handler(request)
+        self.notify("SERVER_RESPONSE", response)
+        connection.sendall(response)
 
     @staticmethod
     def create():

@@ -33,8 +33,8 @@ class Engine:
 
     I return True:
 
-    >>> trigger["successful"]
-    True
+    >>> trigger["events"].filter("SERVER_RESPONSE")
+    SERVER_RESPONSE => b'True'
 
     I don't log a failure message:
 
@@ -48,8 +48,8 @@ class Engine:
 
     I return False:
 
-    >>> trigger["successful"]
-    False
+    >>> trigger["events"].filter("SERVER_RESPONSE")
+    SERVER_RESPONSE => b'False'
 
     I log a failure message:
 
@@ -109,12 +109,10 @@ class Engine:
             db=db,
             filesystem=filesystem
         )
-        server = UnixDomainSocketServer.create_null(simulate_request=b'test')
+        server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b'test'))
         engine_server = EngineServer(engine=engine, server=server)
         engine_server.start()
-        successful = engine_server.successful
         return {
-            "successful": successful,
             "events": events,
             "filesystem": filesystem
         }
@@ -130,8 +128,7 @@ class EngineServer:
         self.server.start("/tmp/rlci-engine.socket")
 
     def handle_request(self, request):
-        self.successful = self.engine.trigger(request.decode('ascii'))
-        return str(self.successful).encode('ascii')
+        return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')
 
 class StageExecution:
 
