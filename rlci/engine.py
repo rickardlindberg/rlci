@@ -6,6 +6,43 @@ from rlci.infrastructure import Terminal, Process, Filesystem, UnixDomainSocketS
 TRIGGER_RESPONSE_SUCCESS = b"True"
 TRIGGER_RESPONSE_FAIL = b"False"
 
+class EngineServer:
+
+    """
+    I am a Unix socket interface to the RLCI engine.
+
+    Internal health checks
+    ======================
+
+    I can be instantiates:
+
+    >>> isinstance(EngineServer.create(), EngineServer)
+    True
+    """
+
+    def __init__(self, engine, server):
+        self.engine = engine
+        self.server = server
+        self.server.register_handler(self.handle_request)
+
+    def start(self):
+        self.server.start("/tmp/rlci-engine.socket")
+
+    def handle_request(self, request):
+        return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')
+
+    @staticmethod
+    def create():
+        return EngineServer(
+            engine=Engine(
+                terminal=Terminal.create(),
+                process=Process.create(),
+                db=DB.create(),
+                filesystem=Filesystem.create()
+            ),
+            server=UnixDomainSocketServer.create()
+        )
+
 class Engine:
 
     """
@@ -118,38 +155,6 @@ class Engine:
             "events": events,
             "filesystem": filesystem
         }
-
-class EngineServer:
-
-    """
-    I can be instantiates:
-
-    >>> isinstance(EngineServer.create(), EngineServer)
-    True
-    """
-
-    def __init__(self, engine, server):
-        self.engine = engine
-        self.server = server
-        self.server.register_handler(self.handle_request)
-
-    def start(self):
-        self.server.start("/tmp/rlci-engine.socket")
-
-    def handle_request(self, request):
-        return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')
-
-    @staticmethod
-    def create():
-        return EngineServer(
-            engine=Engine(
-                terminal=Terminal.create(),
-                process=Process.create(),
-                db=DB.create(),
-                filesystem=Filesystem.create()
-            ),
-            server=UnixDomainSocketServer.create()
-        )
 
 class StageExecution:
 
