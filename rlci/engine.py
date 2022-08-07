@@ -127,7 +127,7 @@ class Engine:
 
     I return True:
 
-    >>> trigger["success"]
+    >>> trigger["successful"]
     True
 
     I don't log a failure message:
@@ -142,7 +142,7 @@ class Engine:
 
     I return False:
 
-    >>> trigger["success"]
+    >>> trigger["successful"]
     False
 
     I log a failure message:
@@ -197,14 +197,14 @@ class Engine:
                 "returncode": 99,
             })
         process = events.listen(Process.create_null(responses=process_responses))
-        success = Engine(
+        successful = Engine(
             terminal=terminal,
             process=process,
             db=db,
             filesystem=filesystem,
         ).trigger("test")
         return {
-            "success": success,
+            "successful": successful,
             "events": events,
             "filesystem": filesystem
         }
