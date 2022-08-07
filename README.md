@@ -127,6 +127,9 @@ interesting to work on next.
 * When I integrate my changes, and someone else is currently integrating, I
   have to wait for them to finish.
 
+* When I integrate my changes and deployment fails, the old version of rlci
+  should still be running.
+
 ## History
 
 This is where I document the completed stories.
