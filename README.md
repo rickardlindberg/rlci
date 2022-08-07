@@ -104,6 +104,7 @@ user=rlci
 * Software installed:
     * Python
     * Git
+    * Supervisor
 
 I'm currently not sure how/where to automate all of this, so that's why the
 documentation exists instead. But hopefully, we can get rid of it.
@@ -126,6 +127,9 @@ interesting to work on next.
 
 * When I integrate my changes, and someone else is currently integrating, I
   have to wait for them to finish.
+
+* When I integrate my changes and deployment fails, the old version of rlci
+  should still be running.
 
 ## History
 
