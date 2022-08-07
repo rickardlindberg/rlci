@@ -3,6 +3,9 @@ import pprint
 from rlci.events import Events
 from rlci.infrastructure import Terminal, Process, Filesystem, UnixDomainSocketServer
 
+TRIGGER_RESPONSE_SUCCESS = b"True"
+TRIGGER_RESPONSE_FAIL = b"False"
+
 class Engine:
 
     """
@@ -21,7 +24,6 @@ class Engine:
 
     I write a report of the pipeline run:
 
-    >>> trigger = Engine.trigger_in_test_mode(TEST_PIPELINE)
     >>> report = trigger["filesystem"].read("/opt/rlci/html/index.html")
     >>> "test" in report
     True
@@ -33,8 +35,8 @@ class Engine:
 
     I return True:
 
-    >>> trigger["events"].filter("SERVER_RESPONSE")
-    SERVER_RESPONSE => b'True'
+    >>> trigger["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_SUCCESS)
+    True
 
     I don't log a failure message:
 
@@ -48,8 +50,8 @@ class Engine:
 
     I return False:
 
-    >>> trigger["events"].filter("SERVER_RESPONSE")
-    SERVER_RESPONSE => b'False'
+    >>> trigger["events"].has("SERVER_RESPONSE", TRIGGER_RESPONSE_FAIL)
+    True
 
     I log a failure message:
 
