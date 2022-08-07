@@ -64,7 +64,7 @@ class ZeroApp:
     >>> ZeroApp.run_in_test_mode(args=['integrate']).filter("PROCESS", "EXIT")
     PROCESS => ['git', 'checkout', '-b', 'BRANCH']
     PROCESS => ['git', 'push', '--set-upstream', 'origin', 'BRANCH']
-    PROCESS => ['ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger', 'rlci']
+    PROCESS => ['ssh', '-t', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger', 'rlci']
     PROCESS => ['git', 'checkout', 'main']
     PROCESS => ['git', 'pull', '--ff-only']
     PROCESS => ['git', 'branch', '-d', 'BRANCH']
@@ -74,14 +74,14 @@ class ZeroApp:
 
     >>> ZeroApp.run_in_test_mode(args=['integrate'], process_responses=[
     ...     {
-    ...         "command": ['ssh', 'rlci@ci.rickardlindberg.me', 'python',
+    ...         "command": ['ssh', '-t', 'rlci@ci.rickardlindberg.me', 'python',
     ...                     '/opt/rlci/rlci.py', 'trigger', 'rlci'],
     ...         "returncode": 99,
     ...     }
     ... ]).filter("PROCESS", "EXIT")
     PROCESS => ['git', 'checkout', '-b', 'BRANCH']
     PROCESS => ['git', 'push', '--set-upstream', 'origin', 'BRANCH']
-    PROCESS => ['ssh', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger', 'rlci']
+    PROCESS => ['ssh', '-t', 'rlci@ci.rickardlindberg.me', 'python', '/opt/rlci/rlci.py', 'trigger', 'rlci']
     PROCESS => ['git', 'checkout', 'main']
     PROCESS => ['git', 'pull', '--ff-only']
     PROCESS => ['git', 'branch', '-d', 'BRANCH']
@@ -125,7 +125,7 @@ class ZeroApp:
             self.process.run(["git", "checkout", "-b", "BRANCH"])
             self.process.run(["git", "push", "--set-upstream", "origin", "BRANCH"])
             try:
-                self.process.run(["ssh", "rlci@ci.rickardlindberg.me", "python", "/opt/rlci/rlci.py", "trigger", "rlci"])
+                self.process.run(["ssh", "-t", "rlci@ci.rickardlindberg.me", "python", "/opt/rlci/rlci.py", "trigger", "rlci"])
             finally:
                 self.process.run(["git", "checkout", "main"])
                 self.process.run(["git", "pull", "--ff-only"])
