@@ -104,7 +104,7 @@ class CLI:
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], simulate_pipeline_failure=False, return_events=True):
+    def run_in_test_mode(args=[], simulate_pipeline_failure=False):
         events = Events()
         process_responses = []
         if simulate_pipeline_failure:
@@ -112,18 +112,14 @@ class CLI:
                 "command": Workspace.create_create_command(),
                 "returncode": 99,
             })
-        filesystem = Filesystem.create_in_memory()
         try:
             CLI(
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
                 process=events.listen(Process.create_null(responses=process_responses)),
                 db=DB.create_in_memory(),
-                filesystem=filesystem
+                filesystem=Filesystem.create_in_memory()
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))
-        if return_events:
-            return events
-        else:
-            return {"filesystem": filesystem}
+        return events
