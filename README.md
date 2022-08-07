@@ -64,23 +64,42 @@ these requirements are not automated, but RLCI assumes that they are in place:
 
 * SSH access (using keys) for user X
 
-    # /etc/ssh/sshd_config
-    PrintLastLog no
-    PermitRootLogin no
-    PasswordAuthentication no
+```
+# /etc/ssh/sshd_config
+PrintLastLog no
+PermitRootLogin no
+PasswordAuthentication no
+```
 
 * Directory `/opt/rlci` present with full permissions to user X
 * Git configured with email/username
 * Web server configured to serve static content from `/opt/rlci/html`
 
-    # /etc/nginx/conf.d/rlci.conf
-    server {
-        listen       80;
-        server_name  ci.rickardlindberg.me;
-        location / {
-            root         /opt/rlci/html;
-        }
+```
+# /etc/nginx/conf.d/rlci.conf
+server {
+    listen       80;
+    server_name  ci.rickardlindberg.me;
+    location / {
+        root         /opt/rlci/html;
     }
+}
+```
+
+* Supervisor configuration
+
+```
+# /etc/sudoers
+rlci ALL=NOPASSWD:/usr/bin/supervisorctl restart rlci-engine
+
+# /etc/supervisord.d/rlci-engine.ini
+[program:rlci-engine]
+command=python /opt/rlci/rlci-engine.py
+numprocs=1
+autostart=true
+autorestart=true
+user=rlci
+```
 
 * Software installed:
     * Python
