@@ -46,7 +46,7 @@ class RLCIApp:
     I exit with usage when no pipeline is given:
 
     >>> RLCIApp.run_in_test_mode(args=["trigger"])
-    STDOUT => 'Usage: python3 rlci.py trigger <pipeline>'
+    STDOUT => 'Usage: python3 rlci-cli.py trigger <pipeline>'
     EXIT => 1
 
     Other
@@ -55,7 +55,7 @@ class RLCIApp:
     I fail when given unknown arguments:
 
     >>> RLCIApp.run_in_test_mode(args=[])
-    STDOUT => 'Usage: python3 rlci.py trigger'
+    STDOUT => 'Usage: python3 rlci-cli.py trigger'
     EXIT => 1
 
     Internal health checks
@@ -76,12 +76,12 @@ class RLCIApp:
 
     def run(self):
         if self.args.get() == ["trigger"]:
-            self.terminal.print_line("Usage: python3 rlci.py trigger <pipeline>")
+            self.terminal.print_line("Usage: python3 rlci-cli.py trigger <pipeline>")
             sys.exit(1)
         elif self.args.get()[:1] == ["trigger"]:
             self.trigger(self.args.get()[1])
         else:
-            self.terminal.print_line("Usage: python3 rlci.py trigger")
+            self.terminal.print_line("Usage: python3 rlci-cli.py trigger")
             sys.exit(1)
 
     def trigger(self, name):
