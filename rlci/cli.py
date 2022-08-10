@@ -1,8 +1,8 @@
 import sys
 
 from rlci.events import Observable, Events
-from rlci.engine import Engine, DB, Workspace, ProcessInDirectory
-from rlci.infrastructure import Args, Terminal, Process, Filesystem
+from rlci.engine import Engine, DB, Workspace, ProcessInDirectory, TRIGGER_RESPONSE_FAIL, TRIGGER_RESPONSE_SUCCESS
+from rlci.infrastructure import Args, Terminal, Process, Filesystem, UnixDomainSocketClient
 
 class CLI:
 
@@ -15,20 +15,9 @@ class CLI:
     I can trigger different pipelines:
 
     >>> CLI.run_in_test_mode(
-    ...     args=["trigger", "rlci"]
-    ... ).has("STDOUT", "Triggered RLCIPipeline")
-    True
-
-    >>> CLI.run_in_test_mode(
     ...     args=["trigger", "test-pipeline"]
-    ... ).has("STDOUT", "Triggered TEST-PIPELINE")
-    True
-
-    DESIGN NOTE: In the above test tests, we just want to assert that the
-    pipelines were triggered. We don't care about the details of how they were
-    run. How can we "externally" observe that they were run? We choose to only
-    look at what was printed to stdout. In the future this might change. We
-    might replace the print to stdout with a write to a database for example.
+    ... ).filter("SERVER_REQUEST")
+    SERVER_REQUEST => ('/tmp/rlci-engine.socket', b'test-pipeline')
 
     I exit with 0 when a triggered pipeline succeeds:
 
@@ -40,6 +29,14 @@ class CLI:
     >>> CLI.run_in_test_mode(
     ...     args=["trigger", "rlci"],
     ...     simulate_pipeline_failure=True
+    ... ).filter("EXIT")
+    EXIT => 1
+
+    I exit with 1 when I can't contact the server:
+
+    >>> CLI.run_in_test_mode(
+    ...     args=["trigger", "rlci"],
+    ...     simulate_server_failure=True
     ... ).filter("EXIT")
     EXIT => 1
 
@@ -67,12 +64,13 @@ class CLI:
     True
     """
 
-    def __init__(self, terminal, args, process, db, filesystem):
+    def __init__(self, terminal, args, process, db, filesystem, client):
         self.terminal = terminal
         self.args = args
         self.process = process
         self.db = db
         self.filesystem = filesystem
+        self.client = client
 
     def run(self):
         if self.args.get() == ["trigger"]:
@@ -85,12 +83,11 @@ class CLI:
             sys.exit(1)
 
     def trigger(self, name):
-        successful = Engine(
-            terminal=self.terminal,
-            process=self.process,
-            db=self.db,
-            filesystem=self.filesystem
-        ).trigger(name)
+        try:
+            response = self.client.send_request("/tmp/rlci-engine.socket", name.encode("ascii"))
+            successful = response == b'True'
+        except:
+            successful = False
         sys.exit(0 if successful else 1)
 
     @staticmethod
@@ -100,25 +97,35 @@ class CLI:
             args=Args.create(),
             process=Process.create(),
             db=DB.create(),
-            filesystem=Filesystem.create()
+            filesystem=Filesystem.create(),
+            client=UnixDomainSocketClient.create()
         )
 
     @staticmethod
-    def run_in_test_mode(args=[], simulate_pipeline_failure=False):
+    def run_in_test_mode(args=[], simulate_pipeline_failure=False,
+                         simulate_server_failure=False):
         events = Events()
         process_responses = []
-        if simulate_pipeline_failure:
-            process_responses.append({
-                "command": Workspace.create_create_command(),
-                "returncode": 99,
-            })
+        client_responses = []
+        if simulate_server_failure:
+            client_responses.append(ValueError("connection failure"))
+        else:
+            if simulate_pipeline_failure:
+                process_responses.append({
+                    "command": Workspace.create_create_command(),
+                    "returncode": 99,
+                })
+                client_responses.append(TRIGGER_RESPONSE_FAIL)
+            else:
+                client_responses.append(TRIGGER_RESPONSE_SUCCESS)
         try:
             CLI(
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
                 process=events.listen(Process.create_null(responses=process_responses)),
                 db=DB.create_in_memory(),
-                filesystem=Filesystem.create_in_memory()
+                filesystem=Filesystem.create_in_memory(),
+                client=events.listen(UnixDomainSocketClient.create_null(responses=client_responses))
             ).run()
         except SystemExit as e:
             events.append(("EXIT", e.code))

@@ -372,3 +372,77 @@ class UnixDomainSocketServer(Observable):
             def sendall(self, bytes):
                 pass
         return UnixDomainSocketServer(os=NullOs(), socket=NullSocketModule())
+
+class UnixDomainSocketClient(Observable):
+
+    """
+    >>> server_process = subprocess.Popen([
+    ...     "python", "-c",
+    ...     "from rlci.infrastructure import UnixDomainSocketServer;"
+    ...     "handler = lambda x: x;"
+    ...     "server = UnixDomainSocketServer.create();"
+    ...     "server.register_handler(handler);"
+    ...     "server.start('/tmp/test-server.socket');"
+    ... ], stdout=subprocess.PIPE).stdout
+    >>> time.sleep(0.1)
+
+    >>> c = UnixDomainSocketClient.create()
+    >>> c.send_request("/tmp/test-server.socket", b"test")
+    b'test'
+
+    The null version does not connect to the real socket:
+
+    >>> c = UnixDomainSocketClient.create_null()
+    >>> _ = c.send_request("/tmp/some-path-that-does-not-exist.socket", b"data")
+
+    The null version returns configured responses:
+
+    >>> c = UnixDomainSocketClient.create_null(responses=[b'first', b'second'])
+    >>> c.send_request("/tmp/some-path-that-does-not-exist.socket", b"data")
+    b'first'
+    >>> c.send_request("/tmp/some-path-that-does-not-exist.socket", b"data")
+    b'second'
+
+    I log requests:
+
+    >>> events = Events()
+    >>> c = events.listen(UnixDomainSocketClient.create_null())
+    >>> _ = c.send_request("/tmp/path.socket", b"data")
+    >>> events
+    SERVER_REQUEST => ('/tmp/path.socket', b'data')
+    """
+
+    def __init__(self, socket):
+        Observable.__init__(self)
+        self.socket = socket
+
+    def send_request(self, path, request):
+        s = self.socket.socket(self.socket.AF_UNIX)
+        s.connect(path)
+        self.notify("SERVER_REQUEST", (path, request))
+        s.sendall(request)
+        return s.recv(1024)
+
+    @staticmethod
+    def create_null(responses=[]):
+        class NullSocketModule:
+            AF_UNIX = object()
+            def socket(self, family):
+                return NullSocket()
+        class NullSocket:
+            def connect(self, path):
+                pass
+            def sendall(self, data):
+                pass
+            def recv(self, bufsize):
+                if responses:
+                    if isinstance(responses[0], Exception):
+                        raise responses.pop(0)
+                    return responses.pop(0)
+                else:
+                    return b''
+        return UnixDomainSocketClient(socket=NullSocketModule())
+
+    @staticmethod
+    def create():
+        return UnixDomainSocketClient(socket=socket)
