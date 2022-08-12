@@ -97,7 +97,7 @@ class ZeroApp:
     PROCESS => ['find', '/opt/rlci', '-mindepth', '1', '-maxdepth', '1', '-exec', 'rm', '-rf', '{}', ';']
     PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/']
     PROCESS => ['git', '-C', '/opt/rlci', 'checkout', '<git-hash>']
-    PROCESS => ['sudo', 'supervisorctl', 'restart', 'rlci-engine']
+    PROCESS => ['python', '/opt/rlci/rlci-cli.py', 'reload-engine']
 
     I fail if no version is given:
 
@@ -139,7 +139,7 @@ class ZeroApp:
             self.process.run(["find", "/opt/rlci", "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "{}", ";"])
             self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/"])
             self.process.run(["git", "-C", "/opt/rlci", "checkout", version])
-            self.process.run(['sudo', 'supervisorctl', 'restart', 'rlci-engine'])
+            self.process.run(['python', '/opt/rlci/rlci-cli.py', 'reload-engine'])
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
             self.terminal.print_line("")

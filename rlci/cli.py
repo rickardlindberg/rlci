@@ -46,6 +46,14 @@ class CLI:
     STDOUT => 'Usage: python3 rlci-cli.py trigger <pipeline>'
     EXIT => 1
 
+    Reloading the engine
+    ====================
+
+    I can signal the engine to reload:
+
+    >>> CLI.run_in_test_mode(args=["reload-engine"])
+    <BLANKLINE>
+
     Other
     =====
 
@@ -78,6 +86,10 @@ class CLI:
             sys.exit(1)
         elif self.args.get()[:1] == ["trigger"]:
             self.trigger(self.args.get()[1])
+        elif self.args.get()[:1] == ["reload-engine"]:
+            # At the moment the server is reloaded after every request, so this
+            # is just a placeholder for now.
+            pass
         else:
             self.terminal.print_line("Usage: python3 rlci-cli.py trigger")
             sys.exit(1)
