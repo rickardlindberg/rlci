@@ -89,9 +89,6 @@ server {
 * Supervisor configuration
 
 ```
-# /etc/sudoers
-rlci ALL=NOPASSWD:/usr/bin/supervisorctl restart rlci-engine
-
 # /etc/supervisord.d/rlci-engine.ini
 [program:rlci-engine]
 command=python /opt/rlci/rlci-engine.py
@@ -99,6 +96,7 @@ numprocs=1
 autostart=true
 autorestart=true
 user=rlci
+environment=HOME="/home/rlci"
 ```
 
 * Software installed:
