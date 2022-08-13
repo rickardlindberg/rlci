@@ -8,6 +8,7 @@ import unittest
 
 from rlci.events import Events, Observable
 from rlci.infrastructure import Args, Terminal, Process
+from rlci.engine import SlurpMixin
 
 class ZeroApp:
 
@@ -94,12 +95,14 @@ class ZeroApp:
     I deploy a version of RLCI to /opt/rlci:
 
     >>> ZeroApp.run_in_test_mode(args=['deploy', '<git-hash>']).filter("PROCESS")
-    PROCESS => ['rm', '-rf', '/opt/rlci/a']
-    PROCESS => ['rm', '/opt/rlci/current']
     PROCESS => ['mkdir', '-p', '/opt/rlci/html']
+    PROCESS => ['readlink', '/opt/rlci/current']
+    PROCESS => ['rm', '-rf', '/opt/rlci/a']
     PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/a']
     PROCESS => ['git', '-C', '/opt/rlci/a', 'checkout', '<git-hash>']
-    PROCESS => ['ln', '-s', '/opt/rlci/a', '/opt/rlci/current']
+    PROCESS => ['rm', '-f', '/opt/rlci/next']
+    PROCESS => ['ln', '-s', '/opt/rlci/a', '/opt/rlci/next']
+    PROCESS => ['mv', '/opt/rlci/next', '/opt/rlci/current']
     PROCESS => ['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine']
 
     I fail if no version is given:
@@ -139,13 +142,18 @@ class ZeroApp:
                 self.terminal.print_line("No version given to deploy.")
                 sys.exit(1)
             version = self.args.get()[1]
-            deploy_dir = "/opt/rlci/a"
-            self.process.run(["rm", "-rf", deploy_dir])
-            self.process.run(["rm", "/opt/rlci/current"])
             self.process.run(["mkdir", "-p", "/opt/rlci/html"])
+            current = self.process.slurp(["readlink", "/opt/rlci/current"])
+            if current == "/opt/rlci/a":
+                deploy_dir = "/opt/rlci/b"
+            else:
+                deploy_dir = "/opt/rlci/a"
+            self.process.run(["rm", "-rf", deploy_dir])
             self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", deploy_dir])
             self.process.run(["git", "-C", deploy_dir, "checkout", version])
-            self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/current"])
+            self.process.run(["rm", "-f", "/opt/rlci/next"])
+            self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/next"])
+            self.process.run(["mv", "/opt/rlci/next", "/opt/rlci/current"])
             self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
@@ -278,7 +286,7 @@ class Tests(Observable):
             importlib=NullImportLib()
         )
 
-class ExitLoggingProcess:
+class ExitLoggingProcess(SlurpMixin):
 
     """
     I run and log commands:
@@ -305,9 +313,12 @@ class ExitLoggingProcess:
         self.process = process
         self.terminal = terminal
 
-    def run(self, command):
+    def run(self, command, output=lambda x: None):
+        def log(line):
+            self.terminal.print_line(line)
+            output(line)
         self.terminal.print_line(str(command))
-        if self.process.run(command, output=self.terminal.print_line) != 0:
+        if self.process.run(command, output=log) != 0:
             sys.exit(1)
 
     @staticmethod
