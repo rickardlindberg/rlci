@@ -1,8 +1,8 @@
 import sys
 
-from rlci.events import Observable, Events
-from rlci.engine import Engine, DB, Workspace, ProcessInDirectory, TRIGGER_RESPONSE_FAIL, TRIGGER_RESPONSE_SUCCESS
-from rlci.infrastructure import Args, Terminal, Process, Filesystem, UnixDomainSocketClient
+from rlci.engine import TRIGGER_RESPONSE_FAIL, TRIGGER_RESPONSE_SUCCESS
+from rlci.events import Events
+from rlci.infrastructure import Args, Terminal, UnixDomainSocketClient
 
 class CLI:
 
@@ -12,7 +12,7 @@ class CLI:
     Pipeline triggering
     ===================
 
-    I can trigger different pipelines:
+    I trigger a pipeline by sending a request to the engine:
 
     >>> CLI.run_in_test_mode(
     ...     args=["trigger", "test-pipeline"]
@@ -32,7 +32,7 @@ class CLI:
     ... ).filter("EXIT")
     EXIT => 1
 
-    I exit with 1 when I can't contact the server:
+    I exit with 1 when I can't contact the engine:
 
     >>> CLI.run_in_test_mode(
     ...     args=["trigger", "rlci"],
@@ -54,6 +54,8 @@ class CLI:
     >>> CLI.run_in_test_mode(args=["reload-engine"])
     <BLANKLINE>
 
+    This is just a placeholder for now.
+
     Other
     =====
 
@@ -72,12 +74,9 @@ class CLI:
     True
     """
 
-    def __init__(self, terminal, args, process, db, filesystem, client):
+    def __init__(self, terminal, args, client):
         self.terminal = terminal
         self.args = args
-        self.process = process
-        self.db = db
-        self.filesystem = filesystem
         self.client = client
 
     def run(self):
@@ -107,9 +106,6 @@ class CLI:
         return CLI(
             terminal=Terminal.create(),
             args=Args.create(),
-            process=Process.create(),
-            db=DB.create(),
-            filesystem=Filesystem.create(),
             client=UnixDomainSocketClient.create()
         )
 
@@ -117,16 +113,11 @@ class CLI:
     def run_in_test_mode(args=[], simulate_pipeline_failure=False,
                          simulate_server_failure=False):
         events = Events()
-        process_responses = []
         client_responses = []
         if simulate_server_failure:
             client_responses.append(ValueError("connection failure"))
         else:
             if simulate_pipeline_failure:
-                process_responses.append({
-                    "command": Workspace.create_create_command(),
-                    "returncode": 99,
-                })
                 client_responses.append(TRIGGER_RESPONSE_FAIL)
             else:
                 client_responses.append(TRIGGER_RESPONSE_SUCCESS)
@@ -134,9 +125,6 @@ class CLI:
             CLI(
                 terminal=events.listen(Terminal.create_null()),
                 args=Args.create_null(args),
-                process=events.listen(Process.create_null(responses=process_responses)),
-                db=DB.create_in_memory(),
-                filesystem=Filesystem.create_in_memory(),
                 client=events.listen(UnixDomainSocketClient.create_null(responses=client_responses))
             ).run()
         except SystemExit as e:
