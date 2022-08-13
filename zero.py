@@ -139,12 +139,13 @@ class ZeroApp:
                 self.terminal.print_line("No version given to deploy.")
                 sys.exit(1)
             version = self.args.get()[1]
-            self.process.run(["rm", "-rf", "/opt/rlci/a"])
+            deploy_dir = "/opt/rlci/a"
+            self.process.run(["rm", "-rf", deploy_dir])
             self.process.run(["rm", "/opt/rlci/current"])
             self.process.run(["mkdir", "-p", "/opt/rlci/html"])
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/a"])
-            self.process.run(["git", "-C", "/opt/rlci/a", "checkout", version])
-            self.process.run(["ln", "-s", "/opt/rlci/a", "/opt/rlci/current"])
+            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", deploy_dir])
+            self.process.run(["git", "-C", deploy_dir, "checkout", version])
+            self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/current"])
             self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
