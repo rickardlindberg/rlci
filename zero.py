@@ -95,8 +95,7 @@ class ZeroApp:
 
     >>> ZeroApp.run_in_test_mode(args=['deploy', '<git-hash>']).filter("PROCESS")
     PROCESS => ['find', '/opt/rlci', '-mindepth', '1', '-maxdepth', '1', '-exec', 'rm', '-rf', '{}', ';']
-    PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/']
-    PROCESS => ['git', '-C', '/opt/rlci', 'checkout', '<git-hash>']
+    PROCESS => ['mkdir', '-p', '/opt/rlci/html']
     PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/current']
     PROCESS => ['git', '-C', '/opt/rlci/current', 'checkout', '<git-hash>']
     PROCESS => ['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine']
@@ -139,8 +138,7 @@ class ZeroApp:
                 sys.exit(1)
             version = self.args.get()[1]
             self.process.run(["find", "/opt/rlci", "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "{}", ";"])
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/"])
-            self.process.run(["git", "-C", "/opt/rlci", "checkout", version])
+            self.process.run(["mkdir", "-p", "/opt/rlci/html"])
             self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/current"])
             self.process.run(["git", "-C", "/opt/rlci/current", "checkout", version])
             self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
