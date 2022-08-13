@@ -96,8 +96,9 @@ class ZeroApp:
     >>> ZeroApp.run_in_test_mode(args=['deploy', '<git-hash>']).filter("PROCESS")
     PROCESS => ['find', '/opt/rlci', '-mindepth', '1', '-maxdepth', '1', '-exec', 'rm', '-rf', '{}', ';']
     PROCESS => ['mkdir', '-p', '/opt/rlci/html']
-    PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/current']
-    PROCESS => ['git', '-C', '/opt/rlci/current', 'checkout', '<git-hash>']
+    PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/a']
+    PROCESS => ['git', '-C', '/opt/rlci/a', 'checkout', '<git-hash>']
+    PROCESS => ['ln', '-s', '/opt/rlci/a', '/opt/rlci/current']
     PROCESS => ['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine']
 
     I fail if no version is given:
@@ -139,8 +140,9 @@ class ZeroApp:
             version = self.args.get()[1]
             self.process.run(["find", "/opt/rlci", "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "{}", ";"])
             self.process.run(["mkdir", "-p", "/opt/rlci/html"])
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/current"])
-            self.process.run(["git", "-C", "/opt/rlci/current", "checkout", version])
+            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", "/opt/rlci/a"])
+            self.process.run(["git", "-C", "/opt/rlci/a", "checkout", version])
+            self.process.run(["ln", "-s", "/opt/rlci/a", "/opt/rlci/current"])
             self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
