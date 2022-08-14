@@ -125,6 +125,9 @@ This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
 * Don't drop connections
+    * Demo: 2 terminals calling
+        `ssh rlci@ci.rickardlindberg.me python /opt/rlci/current/rlci-cli.py trigger test-pipeline; echo $?`
+        * Print more useful error message: pass/fail + reason
     * Reliable socket server loop
 
 * More robust deploy
