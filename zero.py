@@ -96,13 +96,14 @@ class ZeroApp:
 
     >>> ZeroApp.run_in_test_mode(args=['deploy', '<git-hash>']).filter("PROCESS")
     PROCESS => ['mkdir', '-p', '/opt/rlci/html']
+    PROCESS => ['mkdir', '-p', '/opt/rlci/tmp']
     PROCESS => ['readlink', '/opt/rlci/current']
     PROCESS => ['rm', '-rf', '/opt/rlci/a']
     PROCESS => ['git', 'clone', 'git@github.com:rickardlindberg/rlci.git', '/opt/rlci/a']
     PROCESS => ['git', '-C', '/opt/rlci/a', 'checkout', '<git-hash>']
-    PROCESS => ['rm', '-f', '/opt/rlci/next']
-    PROCESS => ['ln', '-s', '/opt/rlci/a', '/opt/rlci/next']
-    PROCESS => ['mv', '/opt/rlci/next', '/opt/rlci/current']
+    PROCESS => ['rm', '-f', '/opt/rlci/tmp/current']
+    PROCESS => ['ln', '-s', '/opt/rlci/a', '/opt/rlci/tmp/current']
+    PROCESS => ['mv', '/opt/rlci/tmp/current', '/opt/rlci']
     PROCESS => ['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine']
 
     I deploy to b if a is current:
@@ -116,7 +117,21 @@ class ZeroApp:
     ...         }
     ...     ]
     ... )
-    >>> events.has("PROCESS", ['ln', '-s', '/opt/rlci/b', '/opt/rlci/next'])
+    >>> events.has("PROCESS", ['ln', '-s', '/opt/rlci/b', '/opt/rlci/tmp/current'])
+    True
+
+    I deploy to a if there is no current link:
+
+    >>> events = ZeroApp.run_in_test_mode(
+    ...     args=['deploy', '<git-hash>'],
+    ...     process_responses=[
+    ...         {
+    ...             "command": ["readlink", "/opt/rlci/current"],
+    ...             "returncode": 1,
+    ...         }
+    ...     ]
+    ... )
+    >>> events.has("PROCESS", ['ln', '-s', '/opt/rlci/a', '/opt/rlci/tmp/current'])
     True
 
     I fail if no version is given:
@@ -157,7 +172,11 @@ class ZeroApp:
                 sys.exit(1)
             version = self.args.get()[1]
             self.process.run(["mkdir", "-p", "/opt/rlci/html"])
-            current = self.process.slurp(["readlink", "/opt/rlci/current"])
+            self.process.run(["mkdir", "-p", "/opt/rlci/tmp"])
+            try:
+                current = self.process.slurp(["readlink", "/opt/rlci/current"])
+            except SystemExit:
+                current = None
             if current == "/opt/rlci/a":
                 deploy_dir = "/opt/rlci/b"
             else:
@@ -165,9 +184,9 @@ class ZeroApp:
             self.process.run(["rm", "-rf", deploy_dir])
             self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", deploy_dir])
             self.process.run(["git", "-C", deploy_dir, "checkout", version])
-            self.process.run(["rm", "-f", "/opt/rlci/next"])
-            self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/next"])
-            self.process.run(["mv", "/opt/rlci/next", "/opt/rlci/current"])
+            self.process.run(["rm", "-f", "/opt/rlci/tmp/current"])
+            self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/tmp/current"])
+            self.process.run(["mv", "/opt/rlci/tmp/current", "/opt/rlci"])
             self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
