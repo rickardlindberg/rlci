@@ -105,6 +105,20 @@ class ZeroApp:
     PROCESS => ['mv', '/opt/rlci/next', '/opt/rlci/current']
     PROCESS => ['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine']
 
+    I deploy to b if a is current:
+
+    >>> events = ZeroApp.run_in_test_mode(
+    ...     args=['deploy', '<git-hash>'],
+    ...     process_responses=[
+    ...         {
+    ...             "command": ["readlink", "/opt/rlci/current"],
+    ...             "output": ["/opt/rlci/a"],
+    ...         }
+    ...     ]
+    ... )
+    >>> events.has("PROCESS", ['ln', '-s', '/opt/rlci/b', '/opt/rlci/next'])
+    True
+
     I fail if no version is given:
 
     >>> ZeroApp.run_in_test_mode(args=['deploy'])
