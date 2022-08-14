@@ -104,7 +104,6 @@ class ZeroApp:
     PROCESS => ['rm', '-f', '/opt/rlci/tmp/current']
     PROCESS => ['ln', '-s', '/opt/rlci/a', '/opt/rlci/tmp/current']
     PROCESS => ['mv', '/opt/rlci/tmp/current', '/opt/rlci']
-    PROCESS => ['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine']
 
     I deploy to b if a is current:
 
@@ -197,7 +196,6 @@ class ZeroApp:
         self.process.run(["rm", "-f", f"{ROOT}/tmp/current"])
         self.process.run(["ln", "-s", deploy_dir, f"{ROOT}/tmp/current"])
         self.process.run(["mv", f"{ROOT}/tmp/current", f"{ROOT}"])
-        self.process.run(["python", f"{ROOT}/current/rlci-cli.py", "reload-engine"])
 
     @staticmethod
     def create():

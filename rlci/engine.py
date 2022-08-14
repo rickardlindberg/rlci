@@ -41,6 +41,13 @@ class EngineServer:
     ... ).has("SERVER_RESPONSE", TRIGGER_RESPONSE_FAIL)
     True
 
+    If two clients trigger the same pipeline at the same time, the second one
+    has to wait on the first:
+
+    This is done automatically now since the server only handles one request at
+    a time. But should the server use asyncio, for example, then we need some
+    kind of lock to prevent two parallel pipelines.
+
     Internal health checks
     ======================
 
