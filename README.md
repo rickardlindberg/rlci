@@ -123,12 +123,6 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* When I integrate my changes, and someone else is currently integrating, I
-  have to wait for them to finish.
-
-* When I integrate my changes and deployment fails, the old version of rlci
-  should still be running.
-
 ## History
 
 This is where I document the completed stories.
@@ -368,3 +362,29 @@ as it looked like at the end of the story and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/story-7-start...story-7-end)
 of changes.
 
+### #8 Synchronize integrations
+
+*When I integrate my changes, and someone else is currently integrating, I have
+to wait for them to finish.*
+
+I made a video series about this change:
+
+**VIDEO:** [Converting RLCI to client/server architecture (part
+1/3).](https://youtu.be/XldYdxAlH2o)
+
+### #9 Safer deployments
+
+*When I integrate my changes and deployment fails, the old version of rlci
+should still be running.*
+
+I modified the deploy script to deploy to a separate folder, and then make the
+switch only once the deployment was successful.
+
+I got that idea from here:
+https://github.com/acg/dream-deploys/blob/master/deploy
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/story-9-end)
+as it looked like at the end of the story and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/story-9-start...story-9-end)
+of changes.
