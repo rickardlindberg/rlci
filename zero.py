@@ -170,24 +170,7 @@ class ZeroApp:
             if len(self.args.get()) < 2:
                 self.terminal.print_line("No version given to deploy.")
                 sys.exit(1)
-            version = self.args.get()[1]
-            self.process.run(["mkdir", "-p", "/opt/rlci/html"])
-            self.process.run(["mkdir", "-p", "/opt/rlci/tmp"])
-            try:
-                current = self.process.slurp(["readlink", "/opt/rlci/current"])
-            except SystemExit:
-                current = None
-            if current == "/opt/rlci/a":
-                deploy_dir = "/opt/rlci/b"
-            else:
-                deploy_dir = "/opt/rlci/a"
-            self.process.run(["rm", "-rf", deploy_dir])
-            self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", deploy_dir])
-            self.process.run(["git", "-C", deploy_dir, "checkout", version])
-            self.process.run(["rm", "-f", "/opt/rlci/tmp/current"])
-            self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/tmp/current"])
-            self.process.run(["mv", "/opt/rlci/tmp/current", "/opt/rlci"])
-            self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
+            self.deploy(self.args.get()[1])
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
             self.terminal.print_line("")
@@ -195,6 +178,25 @@ class ZeroApp:
             self.terminal.print_line("")
             self.terminal.print_line("    ./zero.py build")
             sys.exit(1)
+
+    def deploy(self, version):
+        self.process.run(["mkdir", "-p", "/opt/rlci/html"])
+        self.process.run(["mkdir", "-p", "/opt/rlci/tmp"])
+        try:
+            current = self.process.slurp(["readlink", "/opt/rlci/current"])
+        except SystemExit:
+            current = None
+        if current == "/opt/rlci/a":
+            deploy_dir = "/opt/rlci/b"
+        else:
+            deploy_dir = "/opt/rlci/a"
+        self.process.run(["rm", "-rf", deploy_dir])
+        self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", deploy_dir])
+        self.process.run(["git", "-C", deploy_dir, "checkout", version])
+        self.process.run(["rm", "-f", "/opt/rlci/tmp/current"])
+        self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/tmp/current"])
+        self.process.run(["mv", "/opt/rlci/tmp/current", "/opt/rlci"])
+        self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
 
     @staticmethod
     def create():
