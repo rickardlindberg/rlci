@@ -180,23 +180,24 @@ class ZeroApp:
             sys.exit(1)
 
     def deploy(self, version):
-        self.process.run(["mkdir", "-p", "/opt/rlci/html"])
-        self.process.run(["mkdir", "-p", "/opt/rlci/tmp"])
+        ROOT = "/opt/rlci"
+        self.process.run(["mkdir", "-p", f"{ROOT}/html"])
+        self.process.run(["mkdir", "-p", f"{ROOT}/tmp"])
         try:
-            current = self.process.slurp(["readlink", "/opt/rlci/current"])
+            current = self.process.slurp(["readlink", f"{ROOT}/current"])
         except SystemExit:
             current = None
-        if current == "/opt/rlci/a":
-            deploy_dir = "/opt/rlci/b"
+        if current == f"{ROOT}/a":
+            deploy_dir = f"{ROOT}/b"
         else:
-            deploy_dir = "/opt/rlci/a"
+            deploy_dir = f"{ROOT}/a"
         self.process.run(["rm", "-rf", deploy_dir])
         self.process.run(["git", "clone", "git@github.com:rickardlindberg/rlci.git", deploy_dir])
         self.process.run(["git", "-C", deploy_dir, "checkout", version])
-        self.process.run(["rm", "-f", "/opt/rlci/tmp/current"])
-        self.process.run(["ln", "-s", deploy_dir, "/opt/rlci/tmp/current"])
-        self.process.run(["mv", "/opt/rlci/tmp/current", "/opt/rlci"])
-        self.process.run(['python', '/opt/rlci/current/rlci-cli.py', 'reload-engine'])
+        self.process.run(["rm", "-f", f"{ROOT}/tmp/current"])
+        self.process.run(["ln", "-s", deploy_dir, f"{ROOT}/tmp/current"])
+        self.process.run(["mv", f"{ROOT}/tmp/current", f"{ROOT}"])
+        self.process.run(["python", f"{ROOT}/current/rlci-cli.py", "reload-engine"])
 
     @staticmethod
     def create():
