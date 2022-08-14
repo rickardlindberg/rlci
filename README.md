@@ -117,11 +117,26 @@ principles:
 * **TDD / Refactoring**
     * Get it working as fast as possible, then refactor/design
 * **Zero Friction Development**
+* **How can we make a feature smaller?**
 
 ## Stories
 
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
+
+* Don't drop connections
+    * Reliable socket server loop
+
+* More robust deploy
+    * `./rlci.py engine version` to verify new version
+        * Run in separate stage with restart in between
+
+* More responsive server
+    * Use asyncio to make server process multiple requests simultaeneoysly
+    * Listen in while loop?
+        * Handle reload-engine command
+            * Requires async engine server
+            * Requires more advanced parameter passing IPC
 
 ## History
 
@@ -372,6 +387,12 @@ I made a video series about this change:
 **VIDEO:** [Converting RLCI to client/server architecture (part
 1/3).](https://youtu.be/XldYdxAlH2o)
 
+I found it difficult to implement this story in small steps and without manual
+debugging on the server. How could it have been done better?
+
+I guess I can analyze the situations where I had to do manual work and see how
+I could have prevented it.
+
 ### #9 Safer deployments
 
 *When I integrate my changes and deployment fails, the old version of rlci
@@ -388,3 +409,13 @@ Browse the
 as it looked like at the end of the story and look at the complete
 [diff](https://github.com/rickardlindberg/rlci/compare/story-9-start...story-9-end)
 of changes.
+
+Making these changes, I modified the deploy script incrementally and integrated
+my changes. It worked, but it required RLCI to be deployed incrementally as
+well. You could not go from version 1 to version 5, you had to deploy all the
+versions in between.
+
+I'm not sure how I should approach that.
+
+I guess the deploy script would have to check to see how the current deploy is
+made and adjust accordingly.
