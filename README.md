@@ -393,6 +393,9 @@ I made a video series about this change:
 **VIDEO:** [Converting RLCI to client/server architecture (part
 2/3).](https://youtu.be/9HQB9pt4v30)
 
+**VIDEO:** [Converting RLCI to client/server architecture (part
+3/3).](https://youtu.be/GBfUerlQfuI)
+
 I found it difficult to implement this story in small steps and without manual
 debugging on the server. How could it have been done better?
 
