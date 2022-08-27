@@ -227,10 +227,10 @@ class ZeroApp:
 class Tests(Observable):
 
     """
-    I am a infrastructure wrapper for Python's test modules.
+    I am an infrastructure wrapper for Python's test modules.
 
-    I run doctests, print report to stderr, and return success/number of tests
-    run:
+    I run doctests, print a report to stderr, and return success/number of
+    tests run:
 
     >>> result = subprocess.run([
     ...     "python", "-c",
@@ -238,7 +238,11 @@ class Tests(Observable):
     ...     "tests = zero.Tests.create();"
     ...     "tests.add_doctest('doctest_testmodule');"
     ...     "print(tests.run())",
-    ... ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    ... ],
+    ...     stdout=subprocess.PIPE,
+    ...     stderr=subprocess.PIPE,
+    ...     env={"PYTHONPATH": "test_resources"}
+    ... )
     >>> b'Ran 1 test' in result.stderr
     True
     >>> result.stdout
