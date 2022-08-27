@@ -20,12 +20,13 @@ class ZeroApp:
 
     I print usage when run with no arguments:
 
-    >>> ZeroApp.run_in_test_mode(args=[])
-    STDOUT => 'I am a tool for zero friction development of RLCI.'
-    STDOUT => ''
-    STDOUT => 'Run all tests with'
-    STDOUT => ''
-    STDOUT => '    ./zero.py build'
+    >>> ZeroApp.run_in_test_mode(args=[]).has(
+    ...     "STDOUT",
+    ...    "I am a tool for zero friction development of RLCI."
+    ... )
+    True
+
+    >>> ZeroApp.run_in_test_mode(args=[]).filter("EXIT")
     EXIT => 1
 
     Building
@@ -173,9 +174,9 @@ class ZeroApp:
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
             self.terminal.print_line("")
-            self.terminal.print_line("Run all tests with")
-            self.terminal.print_line("")
             self.terminal.print_line("    ./zero.py build")
+            self.terminal.print_line("    ./zero.py integrate")
+            self.terminal.print_line("    ./zero.py deploy <version>")
             sys.exit(1)
 
     def deploy(self, version):
