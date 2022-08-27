@@ -6,9 +6,9 @@ import subprocess
 import sys
 import unittest
 
+from rlci.engine import SlurpMixin
 from rlci.events import Events, Observable
 from rlci.infrastructure import Args, Terminal, Process
-from rlci.engine import SlurpMixin
 
 class ZeroApp:
 
@@ -20,12 +20,13 @@ class ZeroApp:
 
     I print usage when run with no arguments:
 
-    >>> ZeroApp.run_in_test_mode(args=[])
-    STDOUT => 'I am a tool for zero friction development of RLCI.'
-    STDOUT => ''
-    STDOUT => 'Run all tests with'
-    STDOUT => ''
-    STDOUT => '    ./zero.py build'
+    >>> ZeroApp.run_in_test_mode(args=[]).has(
+    ...     "STDOUT",
+    ...    "I am a tool for zero friction development of RLCI."
+    ... )
+    True
+
+    >>> ZeroApp.run_in_test_mode(args=[]).filter("EXIT")
     EXIT => 1
 
     Building
@@ -173,9 +174,9 @@ class ZeroApp:
         else:
             self.terminal.print_line("I am a tool for zero friction development of RLCI.")
             self.terminal.print_line("")
-            self.terminal.print_line("Run all tests with")
-            self.terminal.print_line("")
             self.terminal.print_line("    ./zero.py build")
+            self.terminal.print_line("    ./zero.py integrate")
+            self.terminal.print_line("    ./zero.py deploy <version>")
             sys.exit(1)
 
     def deploy(self, version):
@@ -226,10 +227,10 @@ class ZeroApp:
 class Tests(Observable):
 
     """
-    I am a infrastructure wrapper for Python's test modules.
+    I am an infrastructure wrapper for Python's test modules.
 
-    I run doctests, print report to stderr, and return success/number of tests
-    run:
+    I run doctests, print a report to stderr, and return success/number of
+    tests run:
 
     >>> result = subprocess.run([
     ...     "python", "-c",
@@ -237,7 +238,11 @@ class Tests(Observable):
     ...     "tests = zero.Tests.create();"
     ...     "tests.add_doctest('doctest_testmodule');"
     ...     "print(tests.run())",
-    ... ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    ... ],
+    ...     stdout=subprocess.PIPE,
+    ...     stderr=subprocess.PIPE,
+    ...     env={"PYTHONPATH": "test_resources"}
+    ... )
     >>> b'Ran 1 test' in result.stderr
     True
     >>> result.stdout
