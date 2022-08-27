@@ -12,7 +12,7 @@ class CLI:
     Pipeline triggering
     ===================
 
-    I trigger a pipeline by sending a request to the engine:
+    I trigger a pipeline by sending a request to the engine server:
 
     >>> CLI.run_in_test_mode(
     ...     args=["trigger", "test-pipeline"]
@@ -32,7 +32,7 @@ class CLI:
     ... ).filter("EXIT")
     EXIT => 1
 
-    I exit with 1 when I can't contact the engine:
+    I exit with 1 when I can't contact the engine server:
 
     >>> CLI.run_in_test_mode(
     ...     args=["trigger", "rlci"],
@@ -58,7 +58,7 @@ class CLI:
     Internal health checks
     ======================
 
-    The real app can be created:
+    The CLI can be created:
 
     >>> isinstance(CLI.create(), CLI)
     True
@@ -81,10 +81,14 @@ class CLI:
 
     def trigger(self, name):
         try:
-            response = self.client.send_request("/tmp/rlci-engine.socket", name.encode("ascii"))
-            successful = response == b'True'
+            response = self.client.send_request(
+                "/tmp/rlci-engine.socket",
+                name.encode("ascii")
+            )
         except:
             successful = False
+        else:
+            successful = response == b'True'
         sys.exit(0 if successful else 1)
 
     @staticmethod
