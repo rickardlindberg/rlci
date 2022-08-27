@@ -9,7 +9,7 @@ TRIGGER_RESPONSE_FAIL = b"False"
 class EngineServer:
 
     """
-    I am a Unix socket server interface to the RLCI engine.
+    I am a Unix domain socket server interface to the RLCI engine.
 
     Pipeline triggering
     ===================
@@ -51,7 +51,7 @@ class EngineServer:
     Internal health checks
     ======================
 
-    I can be instantiates:
+    I can be created:
 
     >>> isinstance(EngineServer.create(), EngineServer)
     True
