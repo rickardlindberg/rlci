@@ -276,10 +276,18 @@ class Args:
             argv = [None]+args
         return Args(NullSys())
 
-class UnixDomainSocketServer(Observable):
+class SocketSerializer:
+
+    def write_object(self, socket, obj):
+        return socket.sendall(obj)
+
+    def read_object(self, socket):
+        return socket.recv(1024)
+
+class UnixDomainSocketServer(Observable, SocketSerializer):
 
     """
-    I am a Unix domain socket server.
+    I am an infrastructure wrapper for a Unix domain socket server.
 
     An echo server can be created like this:
 
@@ -290,38 +298,35 @@ class UnixDomainSocketServer(Observable):
     ...     "server = UnixDomainSocketServer.create();"
     ...     "server.register_handler(handler);"
     ...     "server.start('/tmp/test-server.socket');"
-    ... ], stdout=subprocess.PIPE).stdout
-
-    And queried like this:
-
+    ... ])
     >>> time.sleep(0.1)
-    >>> s = socket.socket(socket.AF_UNIX)
-    >>> s.connect("/tmp/test-server.socket")
-    >>> s.sendall(b"test")
-    >>> s.recv(1024)
+
+    And queried with a client like this:
+
+    >>> client = UnixDomainSocketClient.create()
+    >>> client.send_request("/tmp/test-server.socket", b"test")
     b'test'
 
-    The null version of me doesn't create actual sockets:
+    The server dies after it handles the first request:
 
-    >>> x = {}
-    >>> def handler(request):
-    ...    x["request"] = request
+    >>> server_process.wait(timeout=1)
+    0
+
+    The null version of me simulates a request coming in:
+
     >>> server = UnixDomainSocketServer.create_null(simulate_request=b"hello")
-    >>> server.register_handler(handler)
+    >>> server.register_handler(print)
     >>> server.start("/tmp/null-test-server.socket")
-    >>> x
-    {'request': b'hello'}
+    b'hello'
 
     I log responses:
 
-    >>> def handler(request):
-    ...    return request
     >>> events = Events()
     >>> server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b"hello"))
-    >>> server.register_handler(handler)
+    >>> server.register_handler(lambda x: x*2)
     >>> server.start("/tmp/null-test-server.socket")
     >>> events
-    SERVER_RESPONSE => b'hello'
+    SERVER_RESPONSE => b'hellohello'
     """
 
     def __init__(self, os, socket):
@@ -341,10 +346,10 @@ class UnixDomainSocketServer(Observable):
         s.bind(path)
         s.listen()
         connection, address = s.accept()
-        request = connection.recv(1024)
+        request = self.read_object(connection)
         response = self.handler(request)
         self.notify("SERVER_RESPONSE", response)
-        connection.sendall(response)
+        self.write_object(connection, response)
 
     @staticmethod
     def create():
@@ -373,9 +378,13 @@ class UnixDomainSocketServer(Observable):
                 pass
         return UnixDomainSocketServer(os=NullOs(), socket=NullSocketModule())
 
-class UnixDomainSocketClient(Observable):
+class UnixDomainSocketClient(Observable, SocketSerializer):
 
     """
+    I am an infrastructure wrapper for a Unix domain socket client.
+
+    Given a server:
+
     >>> server_process = subprocess.Popen([
     ...     "python", "-c",
     ...     "from rlci.infrastructure import UnixDomainSocketServer;"
@@ -383,11 +392,13 @@ class UnixDomainSocketClient(Observable):
     ...     "server = UnixDomainSocketServer.create();"
     ...     "server.register_handler(handler);"
     ...     "server.start('/tmp/test-server.socket');"
-    ... ], stdout=subprocess.PIPE).stdout
+    ... ])
     >>> time.sleep(0.1)
 
-    >>> c = UnixDomainSocketClient.create()
-    >>> c.send_request("/tmp/test-server.socket", b"test")
+    I can query it like this:
+
+    >>> client = UnixDomainSocketClient.create()
+    >>> client.send_request("/tmp/test-server.socket", b"test")
     b'test'
 
     The null version does not connect to the real socket:
@@ -420,8 +431,8 @@ class UnixDomainSocketClient(Observable):
         s = self.socket.socket(self.socket.AF_UNIX)
         s.connect(path)
         self.notify("SERVER_REQUEST", (path, request))
-        s.sendall(request)
-        return s.recv(1024)
+        self.write_object(s, request)
+        return self.read_object(s)
 
     @staticmethod
     def create_null(responses=[]):
