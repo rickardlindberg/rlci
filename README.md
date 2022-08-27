@@ -141,6 +141,11 @@ interesting to work on next.
             * Requires async engine server
             * Requires more advanced parameter passing IPC
 
+* `./zero.py integrate` should create branch with unique name instead of
+  `BRANCH`.
+
+* What is the report right after the first deploy?
+
 ## History
 
 This is where I document the completed stories.
