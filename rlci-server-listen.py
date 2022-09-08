@@ -14,4 +14,5 @@ s.bind(path)
 os.dup2(s.fileno(), 0)
 os.close(s.fileno())
 
-subprocess.call(sys.argv[2:])
+while True:
+    subprocess.call(sys.argv[2:])
