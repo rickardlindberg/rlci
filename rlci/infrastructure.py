@@ -292,6 +292,8 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     An echo server can be created like this:
 
     >>> server_process = subprocess.Popen([
+    ...     "python", "rlci-server-listen.py",
+    ...     "/tmp/test-server.socket",
     ...     "python", "-c",
     ...     "from rlci.infrastructure import UnixDomainSocketServer;"
     ...     "handler = lambda x: x;"
