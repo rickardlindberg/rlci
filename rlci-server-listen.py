@@ -1,4 +1,5 @@
 import subprocess
 import sys
 
-subprocess.call(sys.argv[1:])
+socket = sys.argv[1]
+subprocess.call(sys.argv[2:])
