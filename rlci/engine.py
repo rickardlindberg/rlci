@@ -68,7 +68,7 @@ class EngineServer:
         self.server.register_handler(self.handle_request)
 
     def start(self):
-        self.server.start("/tmp/rlci-engine.socket")
+        self.server.start()
 
     def handle_request(self, request):
         return str(self.engine.trigger(request.decode('ascii'))).encode('ascii')

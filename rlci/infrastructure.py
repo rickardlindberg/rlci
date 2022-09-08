@@ -299,7 +299,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     ...     "handler = lambda x: x;"
     ...     "server = UnixDomainSocketServer.create();"
     ...     "server.register_handler(handler);"
-    ...     "server.start('/tmp/test-server.socket');"
+    ...     "server.start();"
     ... ])
     >>> time.sleep(0.5)
 
@@ -318,7 +318,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     >>> server = UnixDomainSocketServer.create_null(simulate_request=b"hello")
     >>> server.register_handler(print)
-    >>> server.start("/tmp/null-test-server.socket")
+    >>> server.start()
     b'hello'
 
     I log responses:
@@ -326,7 +326,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     >>> events = Events()
     >>> server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b"hello"))
     >>> server.register_handler(lambda x: x*2)
-    >>> server.start("/tmp/null-test-server.socket")
+    >>> server.start()
     >>> events
     SERVER_RESPONSE => b'hellohello'
     """
@@ -339,7 +339,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     def register_handler(self, handler):
         self.handler = handler
 
-    def start(self, path):
+    def start(self):
         s = self.socket.socket(fileno=0, family=self.socket.AF_UNIX)
         s.listen()
         connection, address = s.accept()
@@ -390,7 +390,7 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
     ...     "handler = lambda x: x;"
     ...     "server = UnixDomainSocketServer.create();"
     ...     "server.register_handler(handler);"
-    ...     "server.start('/tmp/test-server.socket');"
+    ...     "server.start();"
     ... ])
     >>> time.sleep(0.5)
 
