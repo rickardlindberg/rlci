@@ -340,12 +340,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
         self.handler = handler
 
     def start(self, path):
-        try:
-            self.os.remove(path)
-        except FileNotFoundError:
-            pass
-        s = self.socket.socket(family=self.socket.AF_UNIX)
-        s.bind(path)
+        s = self.socket.socket(fileno=0, family=self.socket.AF_UNIX)
         s.listen()
         connection, address = s.accept()
         request = self.read_object(connection)
@@ -364,7 +359,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
                 pass
         class NullSocketModule:
             AF_UNIX = object()
-            def socket(self, family):
+            def socket(self, family, fileno):
                 return NullSocket()
         class NullSocket:
             def bind(self, address):
