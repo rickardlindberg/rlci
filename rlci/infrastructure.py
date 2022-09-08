@@ -305,8 +305,11 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     And queried with a client like this:
 
-    >>> client = UnixDomainSocketClient.create()
-    >>> client.send_request("/tmp/test-server.socket", b"test")
+    >>> try:
+    ...     client = UnixDomainSocketClient.create()
+    ...     client.send_request("/tmp/test-server.socket", b"test")
+    ... finally:
+    ...     server_process.kill()
     b'test'
 
     The null version of me simulates a request coming in:
@@ -391,8 +394,11 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
 
     I can query it like this:
 
-    >>> client = UnixDomainSocketClient.create()
-    >>> client.send_request("/tmp/test-server.socket", b"test")
+    >>> try:
+    ...     client = UnixDomainSocketClient.create()
+    ...     client.send_request("/tmp/test-server.socket", b"test")
+    ... finally:
+    ...     server_process.kill()
     b'test'
 
     The null version does not connect to the real socket:
