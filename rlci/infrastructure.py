@@ -309,11 +309,6 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     >>> client.send_request("/tmp/test-server.socket", b"test")
     b'test'
 
-    The server dies after it handles the first request:
-
-    >>> server_process.wait(timeout=1)
-    0
-
     The null version of me simulates a request coming in:
 
     >>> server = UnixDomainSocketServer.create_null(simulate_request=b"hello")
