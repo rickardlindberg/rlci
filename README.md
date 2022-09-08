@@ -91,7 +91,7 @@ server {
 ```
 # /etc/supervisord.d/rlci-engine.ini
 [program:rlci-engine]
-command=python /opt/rlci/current/rlci-server-listen.py python /opt/rlci/current/rlci-engine.py
+command=python /opt/rlci/current/rlci-server-listen.py /tmp/rlci-engine.socket python /opt/rlci/current/rlci-engine.py
 numprocs=1
 autostart=true
 autorestart=true
