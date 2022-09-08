@@ -301,7 +301,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     ...     "server.register_handler(handler);"
     ...     "server.start('/tmp/test-server.socket');"
     ... ])
-    >>> time.sleep(0.1)
+    >>> time.sleep(0.5)
 
     And queried with a client like this:
 
@@ -397,7 +397,7 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
     ...     "server.register_handler(handler);"
     ...     "server.start('/tmp/test-server.socket');"
     ... ])
-    >>> time.sleep(0.1)
+    >>> time.sleep(0.5)
 
     I can query it like this:
 
