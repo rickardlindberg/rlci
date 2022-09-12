@@ -148,6 +148,8 @@ interesting to work on next.
 
 * Timing issue in server test. (Get rid of sleep?)
 
+* Restart Supervisor if rlci-server-listen.py changed?
+
 ## History
 
 This is where I document the completed stories.
