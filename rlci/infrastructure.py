@@ -301,7 +301,6 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
     ...     "server.register_handler(handler);"
     ...     "server.start();"
     ... ])
-    >>> time.sleep(0.5)
 
     And queried with a client like this:
 
@@ -388,7 +387,6 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
     ...     "server.register_handler(handler);"
     ...     "server.start();"
     ... ])
-    >>> time.sleep(0.5)
 
     I can query it like this:
 
@@ -427,7 +425,16 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
 
     def send_request(self, path, request):
         s = self.socket.socket(self.socket.AF_UNIX)
-        s.connect(path)
+        retry_delays = [0.01, 0.05, 0.10, 0.20, 0.50, 1.00, 2.00]
+        while True:
+            try:
+                s.connect(path)
+                break
+            except ConnectionRefusedError:
+                if retry_delays:
+                    time.sleep(retry_delays.pop(0))
+                else:
+                    raise
         self.notify("SERVER_REQUEST", (path, request))
         self.write_object(s, request)
         return self.read_object(s)
