@@ -339,7 +339,6 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     def start(self):
         s = self.socket.socket(fileno=0)
-        s.listen()
         connection, address = s.accept()
         request = self.read_object(connection)
         response = self.handler(request)
