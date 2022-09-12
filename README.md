@@ -124,12 +124,6 @@ principles:
 This is the backlog of stories to serve as a reminder of what might be
 interesting to work on next.
 
-* Don't drop connections
-    * Demo: 2 terminals calling
-        `ssh rlci@ci.rickardlindberg.me python /opt/rlci/current/rlci-cli.py trigger test-pipeline; echo $?`
-        * Print more useful error message: pass/fail + reason
-    * Reliable socket server loop
-
 * More robust deploy
     * `./rlci.py engine version` to verify new version
         * Run in separate stage with restart in between
@@ -437,3 +431,32 @@ I'm not sure how I should approach that.
 
 I guess the deploy script would have to check to see how the current deploy is
 made and adjust accordingly.
+
+### #10 Don't drop connections
+
+*When two people try to trigger a pipeline at the same time, the later one will
+get an error because the server restarts and drops the connection.*
+
+I modified the server in small steps to become a reliable socket server that
+never drops connections.
+
+Browse the
+[code](https://github.com/rickardlindberg/rlci/tree/story-10-end)
+as it looked like at the end of the story and look at the complete
+[diff](https://github.com/rickardlindberg/rlci/compare/story-10-start...story-10-end)
+of changes.
+
+I made two videos about this change.
+
+First, the process of the change:
+
+**VIDEO:** [What does working in small steps look
+like?](https://youtu.be/X5yIEELf4t0)
+
+Second, how to write reliable socket servers:
+
+**VIDEO:** [How to write reliable socket servers that survive crashes and
+restarts?](https://youtu.be/tu3Sbm78SpY)
+
+The second one I actually did before and I also have a [blog
+post](http://rickardlindberg.me/writing/reliable-socket-servers/) about it.
