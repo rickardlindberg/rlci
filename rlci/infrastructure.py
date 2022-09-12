@@ -338,7 +338,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
         self.handler = handler
 
     def start(self):
-        s = self.socket.socket(fileno=0, family=self.socket.AF_UNIX)
+        s = self.socket.socket(fileno=0)
         s.listen()
         connection, address = s.accept()
         request = self.read_object(connection)
@@ -356,8 +356,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
             def remove(self, path):
                 pass
         class NullSocketModule:
-            AF_UNIX = object()
-            def socket(self, family, fileno):
+            def socket(self, fileno):
                 return NullSocket()
         class NullSocket:
             def bind(self, address):
