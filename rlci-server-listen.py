@@ -10,6 +10,7 @@ except FileNotFoundError:
     pass
 s = socket.socket(family=socket.AF_UNIX)
 s.bind(path)
+s.listen()
 
 os.dup2(s.fileno(), 0)
 os.close(s.fileno())
