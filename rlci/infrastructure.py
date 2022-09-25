@@ -291,9 +291,11 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     An echo server can be created like this:
 
+    >>> tmp_dir = tempfile.TemporaryDirectory()
+    >>> tmp_socket = os.path.join(tmp_dir.name, "tmp.socket")
     >>> server_process = subprocess.Popen([
     ...     "python", "rlci-server-listen.py",
-    ...     "/tmp/test-server.socket",
+    ...     tmp_socket,
     ...     "python", "-c",
     ...     "from rlci.infrastructure import UnixDomainSocketServer;"
     ...     "handler = lambda x: x;"
@@ -306,7 +308,7 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     >>> try:
     ...     client = UnixDomainSocketClient.create()
-    ...     client.send_request("/tmp/test-server.socket", b"test")
+    ...     client.send_request(tmp_socket, b"test")
     ... finally:
     ...     server_process.kill()
     b'test'
@@ -377,9 +379,11 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
 
     Given a server:
 
+    >>> tmp_dir = tempfile.TemporaryDirectory()
+    >>> tmp_socket = os.path.join(tmp_dir.name, "tmp.socket")
     >>> server_process = subprocess.Popen([
     ...     "python", "rlci-server-listen.py",
-    ...     "/tmp/test-server.socket",
+    ...     tmp_socket,
     ...     "python", "-c",
     ...     "from rlci.infrastructure import UnixDomainSocketServer;"
     ...     "handler = lambda x: x;"
@@ -392,7 +396,7 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
 
     >>> try:
     ...     client = UnixDomainSocketClient.create()
-    ...     client.send_request("/tmp/test-server.socket", b"test")
+    ...     client.send_request(tmp_socket, b"test")
     ... finally:
     ...     server_process.kill()
     b'test'
@@ -430,7 +434,7 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
             try:
                 s.connect(path)
                 break
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, FileNotFoundError):
                 if retry_delays:
                     time.sleep(retry_delays.pop(0))
                 else:
