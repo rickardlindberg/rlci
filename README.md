@@ -140,8 +140,6 @@ interesting to work on next.
 
 * What is the report right after the first deploy?
 
-* Timing issue in server test. (Get rid of sleep?)
-
 * Restart Supervisor if rlci-server-listen.py changed?
 
 ## History
