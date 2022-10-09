@@ -2,18 +2,23 @@ import builtins
 import os
 import tempfile
 
-class Filesystem:
+from rlci.events import Observable, Events
+
+class Filesystem(Observable):
 
     """
     I can read and write files.
 
-    >>> filesystem = Filesystem.create()
+    >>> events = Events()
+    >>> filesystem = events.listen(Filesystem.create())
     >>> tmp_dir = tempfile.TemporaryDirectory()
     >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
     >>> filesystem.write(tmp_path, "hello")
     >>> filesystem.read(tmp_path)
     'hello'
     >>> os.path.exists(tmp_path)
+    True
+    >>> events.has("WRITE_FILE", {"path": tmp_path, "contents": "hello"})
     True
 
     The in memory version of me does not touch the filesystem:
@@ -29,11 +34,13 @@ class Filesystem:
     """
 
     def __init__(self, builtins):
+        Observable.__init__(self)
         self.builtins = builtins
 
     def write(self, path, contents):
         with self.builtins.open(path, "w") as f:
             f.write(contents)
+        self.notify("WRITE_FILE", {"path": path, "contents": contents})
 
     def read(self, path):
         with self.builtins.open(path, "r") as f:
