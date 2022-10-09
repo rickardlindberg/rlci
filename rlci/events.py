@@ -12,6 +12,13 @@ class Observable:
 
 class Events(list):
 
+    @staticmethod
+    def capture_from(*observalbes):
+        events = Events()
+        for observable in observalbes:
+            observable.register_event_listener(events)
+        return events
+
     def listen(self, observable):
         observable.register_event_listener(self)
         return observable

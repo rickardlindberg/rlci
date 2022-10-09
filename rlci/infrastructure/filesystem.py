@@ -1,4 +1,5 @@
 import builtins
+import contextlib
 import os
 import tempfile
 
@@ -7,31 +8,56 @@ from rlci.events import Observable, Events
 class Filesystem(Observable):
 
     """
-    I can read and write files.
+    I am an infrastructure wrapper for filesystem operations.
 
-    >>> events = Events()
-    >>> filesystem = events.listen(Filesystem.create())
+    Writing files
+    =============
+
+    >>> filesystem = Filesystem.create()
+    >>> events = Events.capture_from(filesystem)
+
+    When I write a file like this:
+
     >>> tmp_dir = tempfile.TemporaryDirectory()
     >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
     >>> filesystem.write(tmp_path, "hello")
-    >>> filesystem.read(tmp_path)
+
+    The file is written to disk:
+
+    >>> with open(tmp_path) as f:
+    ...    f.read()
     'hello'
-    >>> os.path.exists(tmp_path)
-    True
-    >>> events.has("WRITE_FILE", {"path": tmp_path, "contents": "hello"})
-    True
 
-    The in memory version of me does not touch the filesystem:
+    You can observe that I wrote the file to disk:
 
-    >>> filesystem = Filesystem.create_in_memory()
+    >>> events # doctest: +ELLIPSIS
+    WRITE_FILE =>
+        contents: 'hello'
+        path: '.../tmp.txt'
+
+    The null version of me does not actually write files to disk:
+
     >>> tmp_dir = tempfile.TemporaryDirectory()
     >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
-    >>> filesystem.write(tmp_path, "hello")
-    >>> filesystem.read(tmp_path)
-    'hello'
+    >>> Filesystem.create_null().write(tmp_path, "hello")
     >>> os.path.exists(tmp_path)
     False
     """
+
+    @staticmethod
+    def create():
+        return Filesystem(builtins=builtins)
+
+    @staticmethod
+    def create_null():
+        class NullFile:
+            def write(self, data):
+                pass
+        class NullBuiltins:
+            @contextlib.contextmanager
+            def open(self, path, mode):
+                yield NullFile()
+        return Filesystem(builtins=NullBuiltins())
 
     def __init__(self, builtins):
         Observable.__init__(self)
@@ -41,36 +67,3 @@ class Filesystem(Observable):
         with self.builtins.open(path, "w") as f:
             f.write(contents)
         self.notify("WRITE_FILE", {"path": path, "contents": contents})
-
-    def read(self, path):
-        with self.builtins.open(path, "r") as f:
-            return f.read()
-
-    @staticmethod
-    def create():
-        return Filesystem(builtins=builtins)
-
-    @staticmethod
-    def create_in_memory():
-        store = {}
-        class File:
-            def __init__(self, path):
-                self.path = path
-            def __enter__(self):
-                return self
-            def __exit__(self, type, value, traceback):
-                pass
-        class FileRead(File):
-            def read(self):
-                return store[self.path]
-        class FileWrite(File):
-            def write(self, contents):
-                store[self.path] = contents
-        class InMemoryOpen:
-            def open(self, path, mode):
-                if mode == "r":
-                    return FileRead(path)
-                elif mode == "w":
-                    return FileWrite(path)
-        return Filesystem(builtins=InMemoryOpen())
-

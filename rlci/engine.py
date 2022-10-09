@@ -96,7 +96,7 @@ class EngineServer:
             terminal=events.listen(Terminal.create_null()),
             process=events.listen(Process.create_null(responses=process_responses)),
             db=DB.create_in_memory(),
-            filesystem=Filesystem.create_in_memory(),
+            filesystem=Filesystem.create_null(),
             server=events.listen(UnixDomainSocketServer.create_null(simulate_request=message))
         ).start()
         return events
@@ -194,7 +194,7 @@ class Engine:
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
-        filesystem = events.listen(Filesystem.create_in_memory())
+        filesystem = events.listen(Filesystem.create_null())
         if simulate_failure:
             process_responses.append({
                 "command": Workspace.create_create_command(),
