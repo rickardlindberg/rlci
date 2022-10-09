@@ -120,7 +120,9 @@ class Engine:
     I write a report of the pipeline run:
 
     >>> trigger["events"].filter("WRITE_FILE") # doctest: +ELLIPSIS
-    WRITE_FILE => {'path': '/opt/rlci/html/index.html', 'contents': "...test..."}
+    WRITE_FILE =>
+        contents: "...test..."
+        path: '/opt/rlci/html/index.html'
 
     Pipeline succeeds
     -----------------

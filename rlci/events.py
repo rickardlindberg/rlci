@@ -26,4 +26,12 @@ class Events(list):
         return (event, data) in self
 
     def __repr__(self):
-        return "\n".join(f"{event} => {repr(data)}" for event, data in self)
+        def data_repr(data):
+            if isinstance(data, dict):
+                return "".join(
+                    f"\n    {key}: {repr(data[key])}"
+                    for key in sorted(data.keys())
+                )
+            else:
+                return f" {repr(data)}"
+        return "\n".join(f"{event} =>{data_repr(data)}" for event, data in self)
