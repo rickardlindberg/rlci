@@ -119,9 +119,8 @@ class Engine:
 
     I write a report of the pipeline run:
 
-    >>> report = trigger["filesystem"].read("/opt/rlci/html/index.html")
-    >>> "test" in report
-    True
+    >>> trigger["events"].filter("WRITE_FILE") # doctest: +ELLIPSIS
+    WRITE_FILE => {'path': '/opt/rlci/html/index.html', 'contents': "...test..."}
 
     Pipeline succeeds
     -----------------
@@ -193,7 +192,7 @@ class Engine:
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
-        filesystem = Filesystem.create_in_memory()
+        filesystem = events.listen(Filesystem.create_in_memory())
         if simulate_failure:
             process_responses.append({
                 "command": Workspace.create_create_command(),
@@ -209,7 +208,6 @@ class Engine:
         return {
             "successful": successful,
             "events": events,
-            "filesystem": filesystem
         }
 
 class StageExecution:
