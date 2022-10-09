@@ -30,8 +30,9 @@ class Process(Observable):
 
     I log the process I run:
 
-    >>> events = Events()
-    >>> _ = events.listen(Process.create_null()).run(["echo", "hello"])
+    >>> process = Process.create_null()
+    >>> events = Events.capture_from(process)
+    >>> _ = process.run(["echo", "hello"])
     >>> events
     PROCESS => ['echo', 'hello']
 
@@ -137,8 +138,8 @@ class Terminal(Observable):
 
     I log the lines that I print:
 
-    >>> events = Events()
-    >>> terminal = events.listen(Terminal.create_null())
+    >>> terminal = Terminal.create_null()
+    >>> events = Events.capture_from(terminal)
     >>> terminal.print_line("hello")
     >>> events
     STDOUT => 'hello'
@@ -257,8 +258,8 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     I log responses:
 
-    >>> events = Events()
-    >>> server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b"hello"))
+    >>> server = UnixDomainSocketServer.create_null(simulate_request=b"hello")
+    >>> events = Events.capture_from(server)
     >>> server.register_handler(lambda x: x*2)
     >>> server.start()
     >>> events
@@ -351,8 +352,8 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
 
     I log requests:
 
-    >>> events = Events()
-    >>> c = events.listen(UnixDomainSocketClient.create_null())
+    >>> c = UnixDomainSocketClient.create_null()
+    >>> events = Events.capture_from(c)
     >>> _ = c.send_request("/tmp/path.socket", b"data")
     >>> events
     SERVER_REQUEST => ('/tmp/path.socket', b'data')
