@@ -1,4 +1,3 @@
-import builtins
 import os
 import socket
 import subprocess
@@ -7,71 +6,7 @@ import tempfile
 import time
 
 from rlci.events import Observable, Events
-
-class Filesystem:
-
-    """
-    I can read and write files.
-
-    >>> filesystem = Filesystem.create()
-    >>> tmp_dir = tempfile.TemporaryDirectory()
-    >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
-    >>> filesystem.write(tmp_path, "hello")
-    >>> filesystem.read(tmp_path)
-    'hello'
-    >>> os.path.exists(tmp_path)
-    True
-
-    The in memory version of me does not touch the filesystem:
-
-    >>> filesystem = Filesystem.create_in_memory()
-    >>> tmp_dir = tempfile.TemporaryDirectory()
-    >>> tmp_path = os.path.join(tmp_dir.name, "tmp.txt")
-    >>> filesystem.write(tmp_path, "hello")
-    >>> filesystem.read(tmp_path)
-    'hello'
-    >>> os.path.exists(tmp_path)
-    False
-    """
-
-    def __init__(self, builtins):
-        self.builtins = builtins
-
-    def write(self, path, contents):
-        with self.builtins.open(path, "w") as f:
-            f.write(contents)
-
-    def read(self, path):
-        with self.builtins.open(path, "r") as f:
-            return f.read()
-
-    @staticmethod
-    def create():
-        return Filesystem(builtins=builtins)
-
-    @staticmethod
-    def create_in_memory():
-        store = {}
-        class File:
-            def __init__(self, path):
-                self.path = path
-            def __enter__(self):
-                return self
-            def __exit__(self, type, value, traceback):
-                pass
-        class FileRead(File):
-            def read(self):
-                return store[self.path]
-        class FileWrite(File):
-            def write(self, contents):
-                store[self.path] = contents
-        class InMemoryOpen:
-            def open(self, path, mode):
-                if mode == "r":
-                    return FileRead(path)
-                elif mode == "w":
-                    return FileWrite(path)
-        return Filesystem(builtins=InMemoryOpen())
+from rlci.infrastructure.filesystem import Filesystem
 
 class Process(Observable):
 
@@ -95,8 +30,9 @@ class Process(Observable):
 
     I log the process I run:
 
-    >>> events = Events()
-    >>> _ = events.listen(Process.create_null()).run(["echo", "hello"])
+    >>> process = Process.create_null()
+    >>> events = Events.capture_from(process)
+    >>> _ = process.run(["echo", "hello"])
     >>> events
     PROCESS => ['echo', 'hello']
 
@@ -202,8 +138,8 @@ class Terminal(Observable):
 
     I log the lines that I print:
 
-    >>> events = Events()
-    >>> terminal = events.listen(Terminal.create_null())
+    >>> terminal = Terminal.create_null()
+    >>> events = Events.capture_from(terminal)
     >>> terminal.print_line("hello")
     >>> events
     STDOUT => 'hello'
@@ -322,8 +258,8 @@ class UnixDomainSocketServer(Observable, SocketSerializer):
 
     I log responses:
 
-    >>> events = Events()
-    >>> server = events.listen(UnixDomainSocketServer.create_null(simulate_request=b"hello"))
+    >>> server = UnixDomainSocketServer.create_null(simulate_request=b"hello")
+    >>> events = Events.capture_from(server)
     >>> server.register_handler(lambda x: x*2)
     >>> server.start()
     >>> events
@@ -416,8 +352,8 @@ class UnixDomainSocketClient(Observable, SocketSerializer):
 
     I log requests:
 
-    >>> events = Events()
-    >>> c = events.listen(UnixDomainSocketClient.create_null())
+    >>> c = UnixDomainSocketClient.create_null()
+    >>> events = Events.capture_from(c)
     >>> _ = c.send_request("/tmp/path.socket", b"data")
     >>> events
     SERVER_REQUEST => ('/tmp/path.socket', b'data')

@@ -96,7 +96,7 @@ class EngineServer:
             terminal=events.listen(Terminal.create_null()),
             process=events.listen(Process.create_null(responses=process_responses)),
             db=DB.create_in_memory(),
-            filesystem=Filesystem.create_in_memory(),
+            filesystem=Filesystem.create_null(),
             server=events.listen(UnixDomainSocketServer.create_null(simulate_request=message))
         ).start()
         return events
@@ -119,9 +119,10 @@ class Engine:
 
     I write a report of the pipeline run:
 
-    >>> report = trigger["filesystem"].read("/opt/rlci/html/index.html")
-    >>> "test" in report
-    True
+    >>> trigger["events"].filter("WRITE_FILE") # doctest: +ELLIPSIS
+    WRITE_FILE =>
+        contents: "...test..."
+        path: '/opt/rlci/html/index.html'
 
     Pipeline succeeds
     -----------------
@@ -193,7 +194,7 @@ class Engine:
         db.save_pipeline("test", pipeline)
         events = Events()
         terminal = events.listen(Terminal.create_null())
-        filesystem = Filesystem.create_in_memory()
+        filesystem = events.listen(Filesystem.create_null())
         if simulate_failure:
             process_responses.append({
                 "command": Workspace.create_create_command(),
@@ -209,7 +210,6 @@ class Engine:
         return {
             "successful": successful,
             "events": events,
-            "filesystem": filesystem
         }
 
 class StageExecution:
