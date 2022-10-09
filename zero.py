@@ -39,6 +39,7 @@ class ZeroApp:
     DOCTEST_MODULE => 'rlci.cli'
     DOCTEST_MODULE => 'rlci.engine'
     DOCTEST_MODULE => 'rlci.infrastructure'
+    DOCTEST_MODULE => 'rlci.infrastructure.filesystem'
     TEST_RUN => None
 
     I exit with error code if tests fail:
@@ -153,6 +154,7 @@ class ZeroApp:
             self.tests.add_doctest("rlci.cli")
             self.tests.add_doctest("rlci.engine")
             self.tests.add_doctest("rlci.infrastructure")
+            self.tests.add_doctest("rlci.infrastructure.filesystem")
             successful, count = self.tests.run()
             if not successful or count <= 0:
                 sys.exit(1)
